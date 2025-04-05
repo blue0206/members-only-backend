@@ -1,0 +1,27 @@
+{
+  "name": "members-only-backend",
+  "version": "1.0.0",
+  "description": "Backend of Project: Members Only",
+  "keywords": [
+    "node",
+    "express",
+    "prisma",
+    "postgresql",
+    "typescript"
+  ],
+  "homepage": "https://github.com/blue0206/members-only-backend#readme",
+  "bugs": {
+    "url": "https://github.com/blue0206/members-only-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blue0206/members-only-backend.git"
+  },
+  "license": "ISC",
+  "author": "Aayush Rai",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
