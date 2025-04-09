@@ -1,0 +1,17 @@
+model User {
+    id         Int     @id @default(autoincrement())
+    username   String  @unique
+    firstName  String
+    middleName String?
+    lastName   String?
+    password   String
+    avatar     String?
+    role       Role
+    posts      Message[]
+}
+
+enum Role {
+    ADMIN
+    MEMBER
+    USER
+}
