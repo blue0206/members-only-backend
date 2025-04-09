@@ -11,7 +11,8 @@ export default tseslint.config(
       'node_modules/',
       'dist/',
       'eslint.config.js',
-      '.prettierrc.json'
+      '.prettierrc.json',
+      'tools/'
     ]
   },
   // 2. Core ESLint Recommended rules
