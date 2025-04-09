@@ -22,7 +22,8 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:generate": "prisma generate --schema prisma/schema/ && node ./tools/client-fix.js"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
