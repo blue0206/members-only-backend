@@ -2,4 +2,4 @@ node_modules
 dist
 .vscode
 .env
-prisma-client
+src/db/prisma-client
