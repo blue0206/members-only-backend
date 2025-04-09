@@ -25,7 +25,11 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "db:generate": "prisma generate --schema prisma/schema/ && node ./tools/client-fix.js"
+    "db:generate": "prisma generate --schema prisma/schema/ && node ./tools/client-fix.js",
+    "build": "tsc",
+    "dev": "node dist/index.js",
+    "dev-watch": "nodemon dist/index.js",
+    "start": "npm run build && npm run dev"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
