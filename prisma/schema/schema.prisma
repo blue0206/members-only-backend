@@ -6,7 +6,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  output          = "../src/db"
+  output          = "../../prisma-client"
   moduleFormat    = "ejs"
   previewFeatures = ["prismaSchemaFolder"]
 }
