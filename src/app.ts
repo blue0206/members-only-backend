@@ -1,7 +1,7 @@
 import express from "express";
 import "dotenv/config";
-import userRouter from "./routes/user.route.js";
-import messageRouter from "./routes/message.route.js";
+import userRouter from "./features/users/user.route.js";
+import messageRouter from "./features/messages/message.route.js";
 
 const app = express();
 
