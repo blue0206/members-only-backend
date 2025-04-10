@@ -13,7 +13,7 @@ export default tseslint.config(
       'eslint.config.js',
       '.prettierrc.json',
       'tools/',
-      'src/db/prisma-client/',
+      'src/core/db/prisma-client/',
     ]
   },
   // 2. Core ESLint Recommended rules

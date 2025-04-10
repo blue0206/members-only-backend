@@ -6,7 +6,7 @@
 
 generator client {
   provider            = "prisma-client"
-  output              = "../../src/db/prisma-client"
+  output              = "../../src/core/db/prisma-client"
   moduleFormat        = "esm"
   importFileExtension = "js"
   runtime             = "nodejs"

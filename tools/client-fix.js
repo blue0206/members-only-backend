@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const filePath = path.join(import.meta.dirname, "../src/db/prisma-client/client.ts");
+const filePath = path.join(import.meta.dirname, "../src/core/db/prisma-client/client.ts");
 
 let content = fs.readFileSync(filePath, "utf8");
 content = "// @ts-nocheck\n" + content;
