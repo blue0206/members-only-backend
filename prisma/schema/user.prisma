@@ -6,7 +6,7 @@ model User {
     lastName     String?
     password     String
     avatar       String?
-    role         Role
+    role         Role      @default(USER)
     posts        Message[]
     refreshToken String
     createdAt    DateTime  @default(now())
