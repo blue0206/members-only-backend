@@ -6,4 +6,5 @@ model Message {
     authorId  Int
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+    // TODO: Index the fields which need to be indexed.
 }
