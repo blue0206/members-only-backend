@@ -31,7 +31,7 @@ if (!parsedEnv.success) {
     "Invalid environment variables.",
     JSON.stringify(parsedEnv.error.flatten().fieldErrors, null, 2),
   );
-  throw new Error("Invalid environment variables.");
+  process.exit(1);
 }
 
 export const config = parsedEnv.data;
