@@ -1,5 +1,5 @@
-import type { ApiErrorCode } from "@blue0206/members-only-shared-types";
 import { ErrorCodes } from "@blue0206/members-only-shared-types";
+import type { ApiErrorCode } from "@blue0206/members-only-shared-types";
 
 // Base App Error class.
 export class AppError extends Error {
@@ -63,6 +63,14 @@ export class ForbiddenError extends AppError {
   constructor(message = "Forbidden", details?: unknown) {
     super(message, 403, ErrorCodes.FORBIDDEN, details);
     this.name = "ForbiddenError";
+  }
+}
+
+// Validation Error class.
+export class ValidationError extends AppError {
+  constructor(message = "Validation Error", details?: unknown) {
+    super(message, 421, ErrorCodes.VALIDATION_ERROR, details);
+    this.name = "ValidationError";
   }
 }
 
