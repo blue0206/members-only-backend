@@ -12,6 +12,13 @@ class AuthService {
       jwtid: uuidv4(),
     });
   }
+
+  generateRefreshToken(payload: JwtPayload): string {
+    return jwt.sign(payload, config.REFRESH_TOKEN_SECRET, {
+      expiresIn: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
+      jwtid: uuidv4(),
+    });
+  }
 }
 
 export const authService = new AuthService();
