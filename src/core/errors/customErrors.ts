@@ -65,3 +65,11 @@ export class ForbiddenError extends AppError {
     this.name = "ForbiddenError";
   }
 }
+
+// Internal Server Error class.
+export class InternalServerError extends AppError {
+  constructor(message = "Internal Server Error", details?: unknown) {
+    super(message, 500, ErrorCodes.INTERNAL_SERVER_ERROR, details);
+    this.name = "InternalServerError";
+  }
+}
