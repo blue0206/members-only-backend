@@ -22,6 +22,7 @@ const EnvironmentSchema = z.object({
     .min(1, { message: "Refresh Token expiry is missing." })
     .refine((value) => typeof ms(value as StringValue) === "number")
     .default("7d"),
+  SALT_ROUNDS: z.coerce.number().int().positive().default(10),
 });
 
 const parsedEnv = EnvironmentSchema.safeParse(process.env);
