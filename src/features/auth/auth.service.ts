@@ -16,7 +16,10 @@ class AuthService {
     registerData: RegisterRequestDto,
   ): Promise<RegisterServiceReturnType> {
     // Hash the password with bcrypt.
-    const hashedPassword = await bcrypt.hash(registerData.password, 11);
+    const hashedPassword = await bcrypt.hash(
+      registerData.password,
+      config.SALT_ROUNDS,
+    );
 
     // Start a transaction to create new user, generate refresh token from
     // newly created user's id, and add refresh token entry into DB.
@@ -54,7 +57,10 @@ class AuthService {
         );
 
         // Hash the refresh token to store in DB.
-        const hashedRefreshToken = await bcrypt.hash(refreshToken, 11);
+        const hashedRefreshToken = await bcrypt.hash(
+          refreshToken,
+          config.SALT_ROUNDS,
+        );
 
         // Add refresh token to DB.
         await tx.refreshToken.create({
