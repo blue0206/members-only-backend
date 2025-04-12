@@ -1,4 +1,6 @@
 import { z } from "zod";
+import ms from "ms";
+import type { StringValue } from "ms";
 
 const EnvironmentSchema = z.object({
   NODE_ENV: z.enum(["development", "production"]).default("development"),
@@ -10,14 +12,16 @@ const EnvironmentSchema = z.object({
   ACCESS_TOKEN_EXPIRY: z
     .string()
     .min(1, { message: "Access Token expiry is missing." })
-    .default("16m"),
+    .refine((value) => typeof ms(value as StringValue) === "number")
+    .default("15m"),
   REFRESH_TOKEN_SECRET: z
     .string()
     .min(1, { message: "Refresh Token secret is missing." }),
   REFRESH_TOKEN_EXPIRY: z
     .string()
     .min(1, { message: "Refresh Token expiry is missing." })
-    .default("8d"),
+    .refine((value) => typeof ms(value as StringValue) === "number")
+    .default("7d"),
 });
 
 const parsedEnv = EnvironmentSchema.safeParse(process.env);
