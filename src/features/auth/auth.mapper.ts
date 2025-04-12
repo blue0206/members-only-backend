@@ -1,11 +1,10 @@
 import { RegisterResponseSchema } from "@blue0206/members-only-shared-types";
 import type { RegisterResponseDto } from "@blue0206/members-only-shared-types";
-import type { User } from "../../core/db/prisma-client/client.js";
 import { mapPrismaRoleToEnumRole } from "../../core/utils/roleMapper.js";
+import type { RegisterServiceReturnType } from "./auth.types.js";
 
 export const mapToRegisterResponseDto = (
-  userData: User,
-  accessToken: string,
+  userData: RegisterServiceReturnType,
 ): RegisterResponseDto => {
   const mappedData: RegisterResponseDto = {
     id: userData.id,
@@ -15,7 +14,7 @@ export const mapToRegisterResponseDto = (
     lastname: userData.lastName,
     avatar: userData.avatar,
     role: mapPrismaRoleToEnumRole(userData.role),
-    accessToken,
+    accessToken: userData.accessToken,
   };
   const parsedData = RegisterResponseSchema.safeParse(mappedData);
   if (!parsedData.success) {
