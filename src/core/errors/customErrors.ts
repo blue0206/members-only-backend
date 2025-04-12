@@ -49,3 +49,11 @@ export class ConflictError extends AppError {
     this.name = "ConflictError";
   }
 }
+
+// Unauthorized Error class.
+export class UnauthorizedError extends AppError {
+  constructor(message = "Unauthorized", details?: unknown) {
+    super(message, 401, ErrorCodes.UNAUTHORIZED, details);
+    this.name = "UnauthorizedError";
+  }
+}
