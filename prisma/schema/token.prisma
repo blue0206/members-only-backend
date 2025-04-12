@@ -1,0 +1,10 @@
+model RefreshToken {
+    jwtId     String   @id
+    user      User     @relation(fields: [userId], references: [id])
+    userId    Int
+    tokenHash String
+    expiresAt DateTime
+
+    @@index([userId])
+    @@map("refresh_token")
+}
