@@ -1,6 +1,7 @@
 import type { ApiErrorCode } from "@blue0206/members-only-shared-types";
 import { ErrorCodes } from "@blue0206/members-only-shared-types";
 
+// Base App Error class.
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly code: ApiErrorCode;
@@ -25,9 +26,18 @@ export class AppError extends Error {
   }
 }
 
+// Bad Request Error class.
 export class BadRequestError extends AppError {
   constructor(message = "Bad Request", details?: unknown) {
     super(message, 400, ErrorCodes.BAD_REQUEST, details);
     this.name = "BadRequestError";
+  }
+}
+
+// Not Found Error class.
+export class NotFoundError extends AppError {
+  constructor(message = "Requested resource not found.", details?: unknown) {
+    super(message, 404, ErrorCodes.NOT_FOUND, details);
+    this.name = "NotFoundError";
   }
 }
