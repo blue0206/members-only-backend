@@ -1,4 +1,5 @@
 import type { ApiErrorCode } from "@blue0206/members-only-shared-types";
+import { ErrorCodes } from "@blue0206/members-only-shared-types";
 
 export class AppError extends Error {
   public readonly statusCode: number;
@@ -21,5 +22,12 @@ export class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
 
     this.name = this.constructor.name;
+  }
+}
+
+export class BadRequestError extends AppError {
+  constructor(message = "Bad Request", details?: unknown) {
+    super(message, 400, ErrorCodes.BAD_REQUEST, details);
+    this.name = "BadRequestError";
   }
 }
