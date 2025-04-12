@@ -41,3 +41,11 @@ export class NotFoundError extends AppError {
     this.name = "NotFoundError";
   }
 }
+
+// Conflict Error class.
+export class ConflictError extends AppError {
+  constructor(message = "Resource conflict.", details?: unknown) {
+    super(message, 409, ErrorCodes.CONFLICT, details);
+    this.name = "ConflictError";
+  }
+}
