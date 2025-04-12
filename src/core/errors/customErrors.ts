@@ -57,3 +57,11 @@ export class UnauthorizedError extends AppError {
     this.name = "UnauthorizedError";
   }
 }
+
+// Forbidden Error class.
+export class ForbiddenError extends AppError {
+  constructor(message = "Forbidden", details?: unknown) {
+    super(message, 403, ErrorCodes.FORBIDDEN, details);
+    this.name = "ForbiddenError";
+  }
+}
