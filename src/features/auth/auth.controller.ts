@@ -1,12 +1,12 @@
-import type { Request, Response } from "express";
 import { authService } from "./auth.service.js";
 import { RegisterRequestSchema } from "@blue0206/members-only-shared-types";
+import { mapToRegisterResponseDto } from "./auth.mapper.js";
+import type { Request, Response } from "express";
 import type {
   RegisterRequestDto,
   RegisterResponseDto,
 } from "@blue0206/members-only-shared-types";
 import type { RegisterServiceReturnType } from "./auth.types.js";
-import { mapToRegisterResponseDto } from "./auth.mapper.js";
 
 export const registerUser = async (
   req: Request,

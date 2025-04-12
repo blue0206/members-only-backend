@@ -1,15 +1,15 @@
-import type { RegisterRequestDto } from "@blue0206/members-only-shared-types";
-import type { User } from "../../core/db/prisma-client/client.js";
 import { prisma } from "../../core/db/prisma.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
-import { config } from "../../core/config/index.js";
 import ms from "ms";
+import { config } from "../../core/config/index.js";
+import getRefreshTokenExpiryDate from "../../core/utils/tokenExpiryUtil.js";
+import { mapPrismaRoleToEnumRole } from "../../core/utils/roleMapper.js";
+import type { RegisterRequestDto } from "@blue0206/members-only-shared-types";
+import type { User } from "../../core/db/prisma-client/client.js";
 import type { StringValue } from "ms";
 import type { JwtPayload, RegisterServiceReturnType } from "./auth.types.js";
-import { mapPrismaRoleToEnumRole } from "../../core/utils/roleMapper.js";
-import getRefreshTokenExpiryDate from "../../core/utils/tokenExpiryUtil.js";
 
 class AuthService {
   async register(

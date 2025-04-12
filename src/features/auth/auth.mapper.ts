@@ -1,6 +1,6 @@
 import { RegisterResponseSchema } from "@blue0206/members-only-shared-types";
-import type { RegisterResponseDto } from "@blue0206/members-only-shared-types";
 import { mapPrismaRoleToEnumRole } from "../../core/utils/roleMapper.js";
+import type { RegisterResponseDto } from "@blue0206/members-only-shared-types";
 import type { RegisterServiceReturnType } from "./auth.types.js";
 
 export const mapToRegisterResponseDto = (
