@@ -36,25 +36,26 @@ class AuthService {
             password: true,
           },
         });
+
         // Create refresh token payload.
         const refreshTokenPayload: JwtPayload = {
           id: createdUser.id,
           username: createdUser.username,
           role: mapPrismaRoleToEnumRole(createdUser.role),
         };
-        // Generate jwtid for refresh token.
+
+        // Generate jwtid for refresh token. To be stored in DB.
         const jwtId = uuidv4();
+
         // Generate refresh token.
-        const refreshToken = jwt.sign(
+        const refreshToken = this.generateRefreshToken(
           refreshTokenPayload,
-          config.REFRESH_TOKEN_SECRET,
-          {
-            expiresIn: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
-            jwtid: jwtId,
-          },
+          jwtId,
         );
+
         // Hash the refresh token to store in DB.
         const hashedRefreshToken = await bcrypt.hash(refreshToken, 11);
+
         // Add refresh token to DB.
         await tx.refreshToken.create({
           data: {
@@ -64,20 +65,24 @@ class AuthService {
             expiresAt: getRefreshTokenExpiryDate(),
           },
         });
+
         // Return created user and refresh token.
         return {
           ...createdUser,
           refreshToken,
         };
       });
+
     // Create access token payload.
     const accessTokenPayload: JwtPayload = {
       id: user.id,
       role: mapPrismaRoleToEnumRole(user.role),
       username: user.username,
     };
+
     // Generate access token.
     const accessToken = this.generateAccessToken(accessTokenPayload);
+
     // Return user, access token, and refresh token.
     return {
       ...user,
@@ -94,10 +99,10 @@ class AuthService {
   }
 
   // Generate Refresh Token
-  generateRefreshToken(payload: JwtPayload): string {
+  generateRefreshToken(payload: JwtPayload, jwtId: string): string {
     return jwt.sign(payload, config.REFRESH_TOKEN_SECRET, {
       expiresIn: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
-      jwtid: uuidv4(),
+      jwtid: jwtId,
     });
   }
 }
