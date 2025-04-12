@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const EnvironmentSchema = z.object({
   NODE_ENV: z.enum(["development", "production"]).default("development"),
-  PORT: z.coerce.number().default(8000),
+  PORT: z.coerce.number().int().positive().default(8000),
   DATABASE_URL: z.string().min(1, { message: "DATABASE URL is missing." }),
   ACCESS_TOKEN_SECRET: z
     .string()
