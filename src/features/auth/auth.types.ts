@@ -6,6 +6,11 @@ export interface RegisterServiceReturnType extends Omit<User, 'password'> {
     refreshToken: string;
 }
 
+export interface LoginServiceReturnType extends User {
+    accessToken: string;
+    refreshToken: string;
+}
+
 export interface JwtPayload {
     id: number;
     username: string;
