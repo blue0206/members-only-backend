@@ -1,5 +1,9 @@
-import { RegisterResponseSchema } from '@blue0206/members-only-shared-types';
+import {
+    ErrorCodes,
+    RegisterResponseSchema,
+} from '@blue0206/members-only-shared-types';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
+import { InternalServerError } from '../../core/errors/customErrors.js';
 import type { RegisterResponseDto } from '@blue0206/members-only-shared-types';
 import type { RegisterServiceReturnType } from './auth.types.js';
 
@@ -18,7 +22,11 @@ export const mapToRegisterResponseDto = (
     };
     const parsedData = RegisterResponseSchema.safeParse(mappedData);
     if (!parsedData.success) {
-        throw new Error('To be handled later.');
+        throw new InternalServerError(
+            'DTO Mapping Error',
+            ErrorCodes.INTERNAL_SERVER_ERROR,
+            parsedData.error.flatten()
+        );
     }
     return parsedData.data;
 };
