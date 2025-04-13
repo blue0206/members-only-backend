@@ -8,10 +8,19 @@ import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
 import getRefreshTokenExpiryDate from '../../core/utils/tokenExpiryUtil.js';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import { logger } from '../../core/logger.js';
-import type { RegisterRequestDto } from '@blue0206/members-only-shared-types';
+import { UnauthorizedError } from '../../core/errors/customErrors.js';
+import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import type {
+    LoginRequestDto,
+    RegisterRequestDto,
+} from '@blue0206/members-only-shared-types';
 import type { User } from '../../core/db/prisma-client/client.js';
 import type { StringValue } from 'ms';
-import type { JwtPayload, RegisterServiceReturnType } from './auth.types.js';
+import type {
+    JwtPayload,
+    LoginServiceReturnType,
+    RegisterServiceReturnType,
+} from './auth.types.js';
 
 class AuthService {
     async register(
@@ -113,6 +122,84 @@ class AuthService {
         return {
             ...user,
             accessToken,
+        };
+    }
+
+    async login(loginData: LoginRequestDto): Promise<LoginServiceReturnType> {
+        // Log the start of login process.
+        logger.info({ username: loginData.username }, 'Login started');
+
+        // Find user in DB and get details for comparing password and
+        // returning user details.
+        const user: User | null = await prismaErrorHandler(() =>
+            prisma.user.findUnique({
+                where: {
+                    username: loginData.username,
+                },
+            })
+        );
+        // If user not found, username is invalid.
+        if (!user) {
+            throw new UnauthorizedError(
+                'Invalid username or password.',
+                ErrorCodes.UNAUTHORIZED
+            );
+        }
+        const passwordMatch = await bcrypt.compare(
+            loginData.password,
+            user.password
+        );
+        // If password does not match, password is invalid.
+        if (!passwordMatch) {
+            throw new UnauthorizedError(
+                'Invalid username or password.',
+                ErrorCodes.UNAUTHORIZED
+            );
+        }
+
+        // Create access and refresh token payload.
+        const tokenPayload: JwtPayload = {
+            id: user.id,
+            username: user.username,
+            role: mapPrismaRoleToEnumRole(user.role),
+        };
+
+        // Generate access token.
+        const accessToken = this.generateAccessToken(tokenPayload);
+
+        // Generate jwtid for refresh token.
+        const jwtId = uuidv4();
+        // Generate refresh token.
+        const refreshToken = this.generateRefreshToken(tokenPayload, jwtId);
+        // Hash the refresh token to store in DB.
+        const hashedRefreshToken = await bcrypt.hash(
+            refreshToken,
+            config.SALT_ROUNDS
+        );
+
+        // Add refresh token to refresh token table in DB.
+        await prismaErrorHandler(() =>
+            prisma.refreshToken.create({
+                data: {
+                    jwtId,
+                    userId: user.id,
+                    tokenHash: hashedRefreshToken,
+                    expiresAt: getRefreshTokenExpiryDate(),
+                },
+            })
+        );
+
+        // Log login process success.
+        logger.info(
+            { username: user.username, role: user.role },
+            'Login successful'
+        );
+
+        // Return user, access token, and refresh token.
+        return {
+            ...user,
+            accessToken,
+            refreshToken,
         };
     }
 
