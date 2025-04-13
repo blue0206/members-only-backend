@@ -22,17 +22,18 @@ export default async function prismaErrorHandler<QueryReturnType>(
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       switch (error.code) {
         case "P2000": {
-          const target = (error.meta?.target as string[]).join(", ") || "";
+          const target = error.message.split("Column: ")[1];
           const message = target
             ? `Value too long for the field(s): ${target}`
             : "Value too long";
           throw new BadRequestError(message, ErrorCodes.VALUE_TOO_LONG);
         }
         case "P2015":
+        case "P2025":
         case "P2001": {
           const record = error.message.split(".")[1].split("=")[0];
-          const message = record
-            ? `The ${record} does not exist.`
+          const message = error.message.includes("=")
+            ? `The column ${record} does not exist in database.`
             : "The record does not exist.";
           throw new NotFoundError(message);
         }
@@ -47,9 +48,10 @@ export default async function prismaErrorHandler<QueryReturnType>(
           );
         }
         case "P2003": {
-          const field = (error.meta?.target as string[]).join(", ") || "";
-          const message = `Foreign Key constraint failed on field: ${field || "unknown"}.`;
-          throw new BadRequestError(message, ErrorCodes.FOREIGN_KEY_VIOLATION);
+          throw new BadRequestError(
+            error.message,
+            ErrorCodes.FOREIGN_KEY_VIOLATION,
+          );
         }
         case "P2005":
         case "P2006": {
