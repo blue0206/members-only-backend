@@ -23,6 +23,7 @@ const EnvironmentSchema = z.object({
         .refine((value) => typeof ms(value as StringValue) === 'number')
         .default('7d'),
     SALT_ROUNDS: z.coerce.number().int().positive().default(10),
+    LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'fatal']).optional(),
 });
 
 const parsedEnv = EnvironmentSchema.safeParse(process.env);
