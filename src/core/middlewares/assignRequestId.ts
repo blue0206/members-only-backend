@@ -1,11 +1,11 @@
-import type { Request, Response, NextFunction } from "express";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
+import type { Request, Response, NextFunction } from 'express';
 
 export default function assignRequestId(
-  req: Request,
-  _res: Response,
-  next: NextFunction,
+    req: Request,
+    _res: Response,
+    next: NextFunction
 ): void {
-  req.requestId = uuidv4();
-  next();
+    req.requestId = uuidv4();
+    next();
 }

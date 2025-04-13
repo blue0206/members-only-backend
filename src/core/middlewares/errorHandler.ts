@@ -1,15 +1,15 @@
 import type {
-  Request,
-  Response,
-  NextFunction,
-  ErrorRequestHandler,
-} from "express";
+    Request,
+    Response,
+    NextFunction,
+    ErrorRequestHandler,
+} from 'express';
 
 export const errorHandler: ErrorRequestHandler = (
-  error: Error,
-  _req: Request,
-  _res: Response,
-  _next: NextFunction,
+    error: Error,
+    _req: Request,
+    _res: Response,
+    _next: NextFunction
 ): void => {
-  console.error(error);
+    console.error(error);
 };
