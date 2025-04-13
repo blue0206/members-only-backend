@@ -7,6 +7,7 @@ import {
     InternalServerError,
     NotFoundError,
 } from '../errors/customErrors.js';
+import { logger } from '../logger.js';
 
 // This is a wrapper function for all the prisma DB calls in order to
 // handle prisma-specific errors.
@@ -18,7 +19,9 @@ export default async function prismaErrorHandler<QueryReturnType>(
         return queryResult;
     } catch (error) {
         // Log the prisma generated error.
-        console.error(error);
+        logger.error({ err: error }, 'Prisma error caught.');
+
+        // Handle different instances of Prisma Error.
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             switch (error.code) {
                 case 'P2000': {
