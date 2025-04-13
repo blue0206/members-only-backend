@@ -8,13 +8,17 @@ import {
     InternalServerError,
     ValidationError,
 } from '../../core/errors/customErrors.js';
-import type { Request, Response } from 'express';
+import { config } from '../../core/config/index.js';
+import ms from 'ms';
+import crypto from 'crypto';
+import type { CookieOptions, Request, Response } from 'express';
 import type {
     ApiResponseSuccess,
     RegisterRequestDto,
     RegisterResponseDto,
 } from '@blue0206/members-only-shared-types';
 import type { RegisterServiceReturnType } from './auth.types.js';
+import type { StringValue } from 'ms';
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
     // Throw error if request id is missing.
@@ -23,7 +27,6 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
             'Internal server configuration error: Missing Request ID'
         );
     }
-
     // Validate the incoming request to make sure it adheres to the
     // API contract (RegisterRequestDto).
     const parsedBody = RegisterRequestSchema.safeParse(req.body);
@@ -47,12 +50,35 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     // to adhere to API contract.
     const responseData: RegisterResponseDto = mapToRegisterResponseDto(userData);
 
-    // Return response.
+    // Set common refresh token and csrf token cookie options.
+    const commonCookieOptions: CookieOptions = {
+        secure: config.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
+    };
+    // Send refresh token as cookie.
+    res.cookie('refreshToken', userData.refreshToken, {
+        httpOnly: true,
+        path: '/api/v1/auth',
+        ...commonCookieOptions,
+    });
+    // Generate CSRF token and send it as cookie.
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('csrf-token', csrfToken, {
+        // httpOnly is not set because we need JS access
+        // to use double submit protection.
+        path: '/',
+        ...commonCookieOptions,
+    });
+
+    // Create success response object adhering with API Contract.
     const successResponse: ApiResponseSuccess<RegisterResponseDto> = {
         success: true,
         data: responseData,
         requestId: req.requestId,
         statusCode: 201,
     };
+
+    // Send response.
     res.status(201).json(successResponse);
 };
