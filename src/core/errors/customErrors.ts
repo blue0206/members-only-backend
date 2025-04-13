@@ -28,56 +28,84 @@ export class AppError extends Error {
 
 // Bad Request Error class.
 export class BadRequestError extends AppError {
-  constructor(message = "Bad Request", details?: unknown) {
-    super(message, 400, ErrorCodes.BAD_REQUEST, details);
+  constructor(
+    message = "Bad Request",
+    code: ApiErrorCode = ErrorCodes.BAD_REQUEST,
+    details?: unknown,
+  ) {
+    super(message, 400, code, details);
     this.name = "BadRequestError";
   }
 }
 
 // Not Found Error class.
 export class NotFoundError extends AppError {
-  constructor(message = "Requested resource not found.", details?: unknown) {
-    super(message, 404, ErrorCodes.NOT_FOUND, details);
+  constructor(
+    message = "Requested resource not found.",
+    code: ApiErrorCode = ErrorCodes.NOT_FOUND,
+    details?: unknown,
+  ) {
+    super(message, 404, code, details);
     this.name = "NotFoundError";
   }
 }
 
 // Conflict Error class.
 export class ConflictError extends AppError {
-  constructor(message = "Resource conflict.", details?: unknown) {
-    super(message, 409, ErrorCodes.CONFLICT, details);
+  constructor(
+    message = "Resource conflict.",
+    code: ApiErrorCode = ErrorCodes.CONFLICT,
+    details?: unknown,
+  ) {
+    super(message, 409, code, details);
     this.name = "ConflictError";
   }
 }
 
 // Unauthorized Error class.
 export class UnauthorizedError extends AppError {
-  constructor(message = "Unauthorized", details?: unknown) {
-    super(message, 401, ErrorCodes.UNAUTHORIZED, details);
+  constructor(
+    message = "Unauthorized",
+    code: ApiErrorCode = ErrorCodes.UNAUTHORIZED,
+    details?: unknown,
+  ) {
+    super(message, 401, code, details);
     this.name = "UnauthorizedError";
   }
 }
 
 // Forbidden Error class.
 export class ForbiddenError extends AppError {
-  constructor(message = "Forbidden", details?: unknown) {
-    super(message, 403, ErrorCodes.FORBIDDEN, details);
+  constructor(
+    message = "Forbidden",
+    code: ApiErrorCode = ErrorCodes.FORBIDDEN,
+    details?: unknown,
+  ) {
+    super(message, 403, code, details);
     this.name = "ForbiddenError";
   }
 }
 
 // Validation Error class.
 export class ValidationError extends AppError {
-  constructor(message = "Validation Error", details?: unknown) {
-    super(message, 421, ErrorCodes.VALIDATION_ERROR, details);
+  constructor(
+    message = "Validation Error",
+    code: ApiErrorCode = ErrorCodes.VALIDATION_ERROR,
+    details?: unknown,
+  ) {
+    super(message, 421, code, details);
     this.name = "ValidationError";
   }
 }
 
 // Internal Server Error class.
 export class InternalServerError extends AppError {
-  constructor(message = "Internal Server Error", details?: unknown) {
-    super(message, 500, ErrorCodes.INTERNAL_SERVER_ERROR, details);
+  constructor(
+    message = "Internal Server Error",
+    code: ApiErrorCode = ErrorCodes.INTERNAL_SERVER_ERROR,
+    details?: unknown,
+  ) {
+    super(message, 500, code, details);
     this.name = "InternalServerError";
   }
 }
