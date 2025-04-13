@@ -93,7 +93,7 @@ export class ValidationError extends AppError {
         code: ApiErrorCode = ErrorCodes.VALIDATION_ERROR,
         details?: unknown
     ) {
-        super(message, 421, code, details);
+        super(message, 422, code, details);
         this.name = 'ValidationError';
     }
 }
