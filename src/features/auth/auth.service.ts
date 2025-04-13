@@ -7,6 +7,7 @@ import { config } from '../../core/config/index.js';
 import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
 import getRefreshTokenExpiryDate from '../../core/utils/tokenExpiryUtil.js';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
+import { logger } from '../../core/logger.js';
 import type { RegisterRequestDto } from '@blue0206/members-only-shared-types';
 import type { User } from '../../core/db/prisma-client/client.js';
 import type { StringValue } from 'ms';
@@ -16,6 +17,8 @@ class AuthService {
     async register(
         registerData: RegisterRequestDto
     ): Promise<RegisterServiceReturnType> {
+        // Log the start of registration process.
+        logger.info({ username: registerData.username }, 'Registration started');
         // Hash the password with bcrypt.
         // Any errors will automatically be bubbled up and handled
         // in error middleware.
@@ -90,7 +93,6 @@ class AuthService {
                     // Transaction End.
                 })
             );
-
         // Create access token payload from user details.
         const accessTokenPayload: JwtPayload = {
             id: user.id,
@@ -100,6 +102,12 @@ class AuthService {
 
         // Generate access token.
         const accessToken = this.generateAccessToken(accessTokenPayload);
+
+        // Log registration process success.
+        logger.info(
+            { username: user.username, role: user.role },
+            ' User registration successful'
+        );
 
         // Return user, access token, and refresh token.
         return {
