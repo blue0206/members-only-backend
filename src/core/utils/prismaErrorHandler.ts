@@ -26,8 +26,7 @@ export default async function prismaErrorHandler<QueryReturnType>(
           const message = target
             ? `Value too long for the field(s): ${target}`
             : "Value too long";
-          throw new BadRequestError(message);
-          // Use VALUE_TOO_LONG here.
+          throw new BadRequestError(message, ErrorCodes.VALUE_TOO_LONG);
         }
         case "P2015":
         case "P2001": {
@@ -42,14 +41,15 @@ export default async function prismaErrorHandler<QueryReturnType>(
           const message = target
             ? `Value already exists for unique field: ${target}.`
             : "Value already exists";
-          throw new ConflictError(message);
-          // Use UNIQUE_CONSTRAINT_VIOLATION here.
+          throw new ConflictError(
+            message,
+            ErrorCodes.UNIQUE_CONSTRAINT_VIOLATION,
+          );
         }
         case "P2003": {
           const field = (error.meta?.target as string[]).join(", ") || "";
           const message = `Foreign Key constraint failed on field: ${field || "unknown"}.`;
-          throw new BadRequestError(message);
-          // Use FOREIGN_KEY_VIOLATION here.
+          throw new BadRequestError(message, ErrorCodes.FOREIGN_KEY_VIOLATION);
         }
         case "P2005":
         case "P2006": {
@@ -57,19 +57,25 @@ export default async function prismaErrorHandler<QueryReturnType>(
           const field = error.message.split("field")[1].split(" ")[0];
           throw new BadRequestError(
             `Invalid value provided for the field: ${field || "unknown"}.`,
+            ErrorCodes.INVALID_VALUE,
           );
-          // Use INVALID_VALUE here.
         }
         case "P2013":
-          throw new BadRequestError(`Missing required argument.`);
-        // REQUIRED_CONSTRAINT_VIOLATION
+          throw new BadRequestError(
+            `Missing required argument.`,
+            ErrorCodes.REQUIRED_CONSTRAINT_VIOLATION,
+          );
         case "P2014": {
-          throw new BadRequestError(`Required relation violation.`);
-          // REQUIRED_CONSTRAINT_VIOLATION
+          throw new BadRequestError(
+            `Required relation violation.`,
+            ErrorCodes.REQUIRED_CONSTRAINT_VIOLATION,
+          );
         }
         case "P2020": {
-          throw new BadRequestError(`Value out of range.`);
-          // RANGE_ERROR
+          throw new BadRequestError(
+            `Value out of range.`,
+            ErrorCodes.RANGE_ERROR,
+          );
         }
         default: {
           throw new InternalServerError(
@@ -82,8 +88,7 @@ export default async function prismaErrorHandler<QueryReturnType>(
     } else if (error instanceof Prisma.PrismaClientValidationError) {
       throw new BadRequestError(
         "Database validation failed. Invalid data provided to query.",
-        // Use DATABASE_VALIDATION_ERROR
-        ErrorCodes.DATABASE_ERROR,
+        ErrorCodes.DATABASE_VALIDATION_ERROR,
         error.message,
       );
     } else if (error instanceof Prisma.PrismaClientInitializationError) {
