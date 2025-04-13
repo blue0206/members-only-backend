@@ -11,6 +11,7 @@ import { errorHandler } from './core/middlewares/errorHandler.js';
 import { logger } from './core/logger.js';
 import { prisma } from './core/db/prisma.js';
 import type { Server } from 'http';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 // Cors Middleware
@@ -19,6 +20,8 @@ app.use(cors());
 app.use(assignRequestId);
 // Assign logger middleware for http logging.
 app.use(loggerMiddleware);
+// Setup cookie-parser.
+app.use(cookieParser());
 
 // Routes
 app.use('/api/v1/auth', authRouter);
