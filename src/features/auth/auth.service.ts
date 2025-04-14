@@ -204,7 +204,7 @@ class AuthService {
     }
 
     // Access Token generator method.
-    generateAccessToken(payload: JwtPayload): string {
+    private generateAccessToken(payload: JwtPayload): string {
         return jwt.sign(payload, config.ACCESS_TOKEN_SECRET, {
             expiresIn: ms(config.ACCESS_TOKEN_EXPIRY as StringValue),
             jwtid: uuidv4(),
@@ -212,7 +212,7 @@ class AuthService {
     }
 
     // Refresh Token generator method.
-    generateRefreshToken(payload: JwtPayload, jwtId: string): string {
+    private generateRefreshToken(payload: JwtPayload, jwtId: string): string {
         return jwt.sign(payload, config.REFRESH_TOKEN_SECRET, {
             expiresIn: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
             jwtid: jwtId,
