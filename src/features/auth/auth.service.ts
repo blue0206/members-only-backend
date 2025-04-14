@@ -19,8 +19,9 @@ import type { StringValue } from 'ms';
 import type {
     LoginServiceReturnType,
     RegisterServiceReturnType,
+    AccessTokenPayload,
+    RefreshTokenPayload,
 } from './auth.types.js';
-import type { JwtPayload } from 'jsonwebtoken';
 
 class AuthService {
     async register(
@@ -63,7 +64,7 @@ class AuthService {
                     );
 
                     // Create refresh token payload from relevant user details.
-                    const refreshTokenPayload: JwtPayload = {
+                    const refreshTokenPayload: RefreshTokenPayload = {
                         id: createdUser.id,
                     };
 
@@ -101,10 +102,10 @@ class AuthService {
                 })
             );
         // Create access token payload from user details.
-        const accessTokenPayload: JwtPayload = {
+        const accessTokenPayload: AccessTokenPayload = {
             id: user.id,
-            role: mapPrismaRoleToEnumRole(user.role),
             username: user.username,
+            role: mapPrismaRoleToEnumRole(user.role),
         };
 
         // Generate access token.
@@ -156,10 +157,10 @@ class AuthService {
         }
 
         // Create access and refresh token payload.
-        const refreshTokenPayload: JwtPayload = {
+        const refreshTokenPayload: RefreshTokenPayload = {
             id: user.id,
         };
-        const accessTokenPayload: JwtPayload = {
+        const accessTokenPayload: AccessTokenPayload = {
             id: user.id,
             username: user.username,
             role: mapPrismaRoleToEnumRole(user.role),
@@ -205,14 +206,14 @@ class AuthService {
     }
 
     // Access Token generator method.
-    private generateAccessToken(payload: JwtPayload): string {
+    private generateAccessToken(payload: AccessTokenPayload): string {
         return jwt.sign(payload, config.ACCESS_TOKEN_SECRET, {
             expiresIn: ms(config.ACCESS_TOKEN_EXPIRY as StringValue),
         });
     }
 
     // Refresh Token generator method.
-    private generateRefreshToken(payload: JwtPayload, jti: string): string {
+    private generateRefreshToken(payload: RefreshTokenPayload, jti: string): string {
         return jwt.sign(payload, config.REFRESH_TOKEN_SECRET, {
             expiresIn: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
             jwtid: jti,
