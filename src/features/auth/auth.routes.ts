@@ -9,6 +9,6 @@ authRouter.post('/login', loginUser);
 
 // Protected routes.
 authRouter.delete('/logout', accessTokenVerification);
-authRouter.post('/refresh', accessTokenVerification);
+authRouter.post('/refresh');
 
 export default authRouter;
