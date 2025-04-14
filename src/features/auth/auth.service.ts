@@ -17,10 +17,10 @@ import type {
 import type { User } from '../../core/db/prisma-client/client.js';
 import type { StringValue } from 'ms';
 import type {
-    JwtPayload,
     LoginServiceReturnType,
     RegisterServiceReturnType,
 } from './auth.types.js';
+import type { JwtPayload } from 'jsonwebtoken';
 
 class AuthService {
     async register(
