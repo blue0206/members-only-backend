@@ -67,13 +67,13 @@ class AuthService {
                         id: createdUser.id,
                     };
 
-                    // Generate jwtid for refresh token. To be stored in DB.
-                    const jwtId = uuidv4();
+                    // Generate jwtid, a.k.a jti for refresh token. To be stored in DB.
+                    const jti = uuidv4();
 
                     // Generate refresh token.
                     const refreshToken = this.generateRefreshToken(
                         refreshTokenPayload,
-                        jwtId
+                        jti
                     );
 
                     // Hash the refresh token to store in DB.
@@ -85,7 +85,7 @@ class AuthService {
                     // Add refresh token to refresh token table in DB.
                     await tx.refreshToken.create({
                         data: {
-                            jwtId,
+                            jwtId: jti,
                             userId: createdUser.id,
                             tokenHash: hashedRefreshToken,
                             expiresAt: getRefreshTokenExpiryDate(),
@@ -168,10 +168,10 @@ class AuthService {
         // Generate access token.
         const accessToken = this.generateAccessToken(accessTokenPayload);
 
-        // Generate jwtid for refresh token.
-        const jwtId = uuidv4();
+        // Generate jti for refresh token.
+        const jti = uuidv4();
         // Generate refresh token.
-        const refreshToken = this.generateRefreshToken(refreshTokenPayload, jwtId);
+        const refreshToken = this.generateRefreshToken(refreshTokenPayload, jti);
         // Hash the refresh token to store in DB.
         const hashedRefreshToken = await bcrypt.hash(
             refreshToken,
@@ -182,7 +182,7 @@ class AuthService {
         await prismaErrorHandler(() =>
             prisma.refreshToken.create({
                 data: {
-                    jwtId,
+                    jwtId: jti,
                     userId: user.id,
                     tokenHash: hashedRefreshToken,
                     expiresAt: getRefreshTokenExpiryDate(),
@@ -212,10 +212,10 @@ class AuthService {
     }
 
     // Refresh Token generator method.
-    private generateRefreshToken(payload: JwtPayload, jwtId: string): string {
+    private generateRefreshToken(payload: JwtPayload, jti: string): string {
         return jwt.sign(payload, config.REFRESH_TOKEN_SECRET, {
             expiresIn: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
-            jwtid: jwtId,
+            jwtid: jti,
         });
     }
 }
