@@ -65,8 +65,6 @@ class AuthService {
                     // Create refresh token payload from relevant user details.
                     const refreshTokenPayload: JwtPayload = {
                         id: createdUser.id,
-                        username: createdUser.username,
-                        role: mapPrismaRoleToEnumRole(createdUser.role),
                     };
 
                     // Generate jwtid for refresh token. To be stored in DB.
@@ -158,19 +156,22 @@ class AuthService {
         }
 
         // Create access and refresh token payload.
-        const tokenPayload: JwtPayload = {
+        const refreshTokenPayload: JwtPayload = {
+            id: user.id,
+        };
+        const accessTokenPayload: JwtPayload = {
             id: user.id,
             username: user.username,
             role: mapPrismaRoleToEnumRole(user.role),
         };
 
         // Generate access token.
-        const accessToken = this.generateAccessToken(tokenPayload);
+        const accessToken = this.generateAccessToken(accessTokenPayload);
 
         // Generate jwtid for refresh token.
         const jwtId = uuidv4();
         // Generate refresh token.
-        const refreshToken = this.generateRefreshToken(tokenPayload, jwtId);
+        const refreshToken = this.generateRefreshToken(refreshTokenPayload, jwtId);
         // Hash the refresh token to store in DB.
         const hashedRefreshToken = await bcrypt.hash(
             refreshToken,
@@ -207,7 +208,6 @@ class AuthService {
     private generateAccessToken(payload: JwtPayload): string {
         return jwt.sign(payload, config.ACCESS_TOKEN_SECRET, {
             expiresIn: ms(config.ACCESS_TOKEN_EXPIRY as StringValue),
-            jwtid: uuidv4(),
         });
     }
 
