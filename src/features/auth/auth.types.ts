@@ -13,6 +13,11 @@ export interface LoginServiceReturnType extends User {
     refreshToken: string;
 }
 
+export interface RefreshServiceReturnType {
+    accessToken: string;
+    refreshToken: string;
+}
+
 // -----JWT Payload schemas and types-----
 
 // Access Token payload schema.
