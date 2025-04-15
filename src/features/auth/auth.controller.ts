@@ -12,6 +12,7 @@ import {
 import { config } from '../../core/config/index.js';
 import ms from 'ms';
 import crypto from 'crypto';
+import { logger } from '../../core/logger.js';
 import type { CookieOptions, Request, Response } from 'express';
 import type {
     ApiResponseSuccess,
@@ -147,4 +148,53 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 
     // Send response.
     res.status(200).json(successResponse);
+};
+
+export const logoutUser = async (req: Request, res: Response): Promise<void> => {
+    // In this route, we just log the error and not throw it to end execution flow.
+    // This is because we would still want the user to be logged out because it makes things more
+    // secure from security POV. Hence, we send a successful 204 response, clearing cookies with
+    // refresh and CSRF tokens.
+    // No matter the cause of error, be it a missing token or invalid token or a db error, it
+    // would be best to log the user out.
+
+    // Log error if request id is missing.
+    if (!req.requestId) {
+        logger.warn('Logout request but request id was missing from request.');
+    }
+
+    // Extract refresh token from cookie.
+    const refreshToken: string | undefined = req.cookies.refreshToken as
+        | string
+        | undefined;
+
+    if (!refreshToken) {
+        // Log the error if refresh token is missing but still send a success 204.
+        logger.warn(
+            { userId: req.user?.id },
+            'Logout request but refresh token was missing from request.'
+        );
+        res.status(204).json();
+        return;
+    }
+
+    // Wrap service call in try-catch to gracefully handle any errors without breaking
+    // the execution flow and send a 204 response.
+    try {
+        await authService.logout(refreshToken);
+    } catch (error: unknown) {
+        // Log the error from service call. We do not let it pass forward.
+        logger.error(
+            {
+                error,
+                requestId: req.requestId,
+                url: req.url,
+                method: req.method,
+                ip: req.ip,
+            },
+            (error as Error).message || 'An error occurred during logout process.'
+        );
+    }
+    // Send a success response with 204.
+    res.status(204).end();
 };
