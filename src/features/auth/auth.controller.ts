@@ -4,9 +4,14 @@ import {
     LoginRequestSchema,
     RegisterRequestSchema,
 } from '@blue0206/members-only-shared-types';
-import { mapToLoginResponseDto, mapToRegisterResponseDto } from './auth.mapper.js';
+import {
+    mapToLoginResponseDto,
+    mapToRefreshResponseDto,
+    mapToRegisterResponseDto,
+} from './auth.mapper.js';
 import {
     InternalServerError,
+    UnauthorizedError,
     ValidationError,
 } from '../../core/errors/customErrors.js';
 import { config } from '../../core/config/index.js';
@@ -18,11 +23,13 @@ import type {
     ApiResponseSuccess,
     LoginRequestDto,
     LoginResponseDto,
+    RefreshResponseDto,
     RegisterRequestDto,
     RegisterResponseDto,
 } from '@blue0206/members-only-shared-types';
 import type {
     LoginServiceReturnType,
+    RefreshServiceReturnType,
     RegisterServiceReturnType,
 } from './auth.types.js';
 import type { StringValue } from 'ms';
@@ -197,4 +204,68 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
     }
     // Send a success response with 204.
     res.status(204).end();
+};
+
+export const refreshUserTokens = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    // Throw error if request id is missing.
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+
+    // Extract refresh token from cookie.
+    const refreshToken: string | undefined = req.cookies.refreshToken as
+        | string
+        | undefined;
+
+    // Throw error if refresh token is missing.
+    if (!refreshToken) {
+        throw new UnauthorizedError(
+            'Missing refresh token.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    // Pass the refresh token to the service layer.
+    const tokens: RefreshServiceReturnType = await authService.refresh(refreshToken);
+
+    // Map the data returned by the service layer to the RefreshResponseDto to
+    // adhere to API contract.
+    const responseData: RefreshResponseDto = mapToRefreshResponseDto(tokens);
+
+    // Set common cookie options.
+    const commonCookieOptions: CookieOptions = {
+        secure: config.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
+    };
+
+    // Send refresh token as cookie.
+    res.cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        path: '/api/v1/auth',
+        ...commonCookieOptions,
+    });
+
+    // Create CSRF token and send it as cookie.
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('csrf-token', csrfToken, {
+        path: '/',
+        ...commonCookieOptions,
+    });
+
+    // Create success response object adhering with API Contract.
+    const successResponse: ApiResponseSuccess<RefreshResponseDto> = {
+        success: true,
+        data: responseData,
+        statusCode: 200,
+        requestId: req.requestId,
+    };
+
+    // Send response.
+    res.status(200).json(successResponse);
 };
