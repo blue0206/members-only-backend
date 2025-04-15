@@ -10,6 +10,7 @@ import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import { logger } from '../../core/logger.js';
 import { UnauthorizedError } from '../../core/errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { RefreshTokenPayloadSchema } from './auth.types.js';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
@@ -22,6 +23,7 @@ import type {
     AccessTokenPayload,
     RefreshTokenPayload,
 } from './auth.types.js';
+import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
 
 class AuthService {
     async register(
@@ -203,6 +205,41 @@ class AuthService {
             accessToken,
             refreshToken,
         };
+    }
+
+    async logout(refreshToken: string): Promise<void> {
+        // Log the start of logout process.
+        logger.info('Logout started');
+
+        // Decode the refresh token to get user id and jti.
+        const decodedRefreshToken: RefreshTokenPayload = jwtErrorHandler(
+            (): RefreshTokenPayload => {
+                // Verify jwt.
+                const decodedToken = jwt.verify(
+                    refreshToken,
+                    config.REFRESH_TOKEN_SECRET
+                );
+                // Parse against Zod schema for type safety.
+                const parsedToken: RefreshTokenPayload =
+                    RefreshTokenPayloadSchema.parse(decodedToken);
+
+                // Return the typed, parsed token.
+                return parsedToken;
+            }
+        );
+
+        // Delete refresh token from DB based on jti and user id.
+        await prismaErrorHandler(() =>
+            prisma.refreshToken.delete({
+                where: {
+                    userId: decodedRefreshToken.id,
+                    jwtId: decodedRefreshToken.jti,
+                },
+            })
+        );
+
+        // Log logout process success.
+        logger.info({ userId: decodedRefreshToken.id }, 'Logout successful');
     }
 
     // Access Token generator method.
