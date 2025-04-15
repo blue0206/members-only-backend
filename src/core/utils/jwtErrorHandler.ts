@@ -1,12 +1,16 @@
 import { logger } from '../logger.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { InternalServerError, UnauthorizedError } from '../errors/customErrors.js';
-import { JsonWebTokenError } from 'jsonwebtoken';
+import * as jwtLib from 'jsonwebtoken';
 import { ZodError } from 'zod';
 import type {
     AccessTokenPayload,
     RefreshTokenPayload,
 } from '../../features/auth/auth.types.js';
+
+// Direct importing from jwtLib throws error because
+// jsonwebtoken uses CommonJS, hence we destructure it.
+const { JsonWebTokenError } = jwtLib;
 
 export default function jwtErrorHandler<
     TokenType extends AccessTokenPayload | RefreshTokenPayload,
