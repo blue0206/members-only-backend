@@ -8,7 +8,10 @@ import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
 import getRefreshTokenExpiryDate from '../../core/utils/tokenExpiryUtil.js';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import { logger } from '../../core/logger.js';
-import { UnauthorizedError } from '../../core/errors/customErrors.js';
+import {
+    InternalServerError,
+    UnauthorizedError,
+} from '../../core/errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { RefreshTokenPayloadSchema } from './auth.types.js';
 import type {
@@ -22,6 +25,7 @@ import type {
     RegisterServiceReturnType,
     AccessTokenPayload,
     RefreshTokenPayload,
+    RefreshServiceReturnType,
 } from './auth.types.js';
 import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
 
@@ -240,6 +244,108 @@ class AuthService {
 
         // Log logout process success.
         logger.info({ userId: decodedRefreshToken.id }, 'Logout successful');
+    }
+
+    async refresh(refreshToken: string): Promise<RefreshServiceReturnType> {
+        // Log the start of refresh process.
+        logger.info('Token refresh process started.');
+
+        // Verify refresh token and get user id and jti.
+        const decodedRefreshToken: RefreshTokenPayload = jwtErrorHandler(
+            (): RefreshTokenPayload => {
+                // Verify jwt.
+                const decodedToken = jwt.verify(
+                    refreshToken,
+                    config.REFRESH_TOKEN_SECRET
+                );
+                // Parse against Zod schema for type safety.
+                const parsedToken: RefreshTokenPayload =
+                    RefreshTokenPayloadSchema.parse(decodedToken);
+
+                // Return the typed, parsed token.
+                return parsedToken;
+            }
+        );
+
+        // Remove refresh token entry from DB.
+        await prismaErrorHandler(async () => {
+            return await prisma.refreshToken.delete({
+                where: {
+                    userId: decodedRefreshToken.id,
+                    jwtId: decodedRefreshToken.jti,
+                },
+            });
+        });
+
+        // Create new refresh token.
+        const refreshTokenPayload: RefreshTokenPayload = {
+            id: decodedRefreshToken.id,
+        };
+        const jti = uuidv4();
+        const newRefreshToken = this.generateRefreshToken(refreshTokenPayload, jti);
+        // Hash the refresh token to store in DB.
+        const hashedRefreshToken = await bcrypt.hash(
+            newRefreshToken,
+            config.SALT_ROUNDS
+        );
+
+        // Start a transaction: add new refresh token to DB and fetch user role and username.
+        const user: Pick<User, 'username' | 'role'> | null =
+            await prismaErrorHandler(async () => {
+                const userData: Pick<User, 'username' | 'role'> | null =
+                    // Transaction start.
+                    await prisma.$transaction(async (tx) => {
+                        // Add new refresh token to DB.
+                        await tx.refreshToken.create({
+                            data: {
+                                userId: decodedRefreshToken.id,
+                                jwtId: jti,
+                                tokenHash: hashedRefreshToken,
+                                expiresAt: getRefreshTokenExpiryDate(),
+                            },
+                        });
+                        // Fetch user role and username.
+                        return await tx.user.findUnique({
+                            where: {
+                                id: decodedRefreshToken.id,
+                            },
+                            select: {
+                                username: true,
+                                role: true,
+                            },
+                        });
+                    });
+                return userData;
+                // Transaction end.
+            });
+
+        // Throw error if user not found.
+        if (!user) {
+            throw new InternalServerError(
+                'User not found in database.',
+                ErrorCodes.DATABASE_ERROR
+            );
+        }
+
+        // Generate access token.
+        const accessTokenPayload: AccessTokenPayload = {
+            id: decodedRefreshToken.id,
+            username: user.username,
+            role: mapPrismaRoleToEnumRole(user.role),
+        };
+        const accessToken = this.generateAccessToken(accessTokenPayload);
+
+        // Log refresh process success.
+        logger.info(
+            { username: user.username, role: user.role },
+            'Token refresh process successful.'
+        );
+
+        // Return the access and refresh tokens.
+        return {
+            accessToken,
+            refreshToken: newRefreshToken,
+        };
     }
 
     // Access Token generator method.
