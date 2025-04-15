@@ -18,7 +18,7 @@ export default function csrfVerification(
     // fail as it raises the concern of a probable CSRF attack.
 
     // Check if CSRF token is present in header (to be sent by client.)
-    if (!req.headers['X-CSRF-Token']) {
+    if (!req.headers['x-csrf-token']) {
         throw new ForbiddenError(
             'CSRF token missing.',
             ErrorCodes.MISSING_CSRF_HEADER
@@ -32,7 +32,7 @@ export default function csrfVerification(
         );
     }
     // Check if CSRF tokens match
-    if (req.headers['X-CSRF-Token'] !== req.cookies['csrf-token']) {
+    if (req.headers['x-csrf-token'] !== req.cookies['csrf-token']) {
         throw new ForbiddenError(
             'CSRF token mismatch.',
             ErrorCodes.CSRF_TOKEN_MISMATCH
