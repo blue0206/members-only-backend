@@ -34,14 +34,13 @@ app.use(errorHandler);
 // Server
 const PORT = config.PORT;
 const server: Server = app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT.toString()}`);
     logger.info(
         `Server running on port ${config.PORT.toString()} in ${config.NODE_ENV} mode`
     );
     logger.info('Prisma client initialized.');
 });
 
-// GRACEFUL SHUTDOWN
+//---------GRACEFUL SHUTDOWN--------
 
 // Signals to listen for.
 const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
