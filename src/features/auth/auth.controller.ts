@@ -175,6 +175,24 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
         | string
         | undefined;
 
+    // We clear cookies in advance because we are going to send a success 204 for
+    // this route even in case of errors.
+    // To clear cookies, we set res.clearCookie with the SAME options provided when
+    // creating them (excluding maxAge). See https://expressjs.com/en/4x/api.html#res.clearCookie
+    const commonCookieOptions: CookieOptions = {
+        secure: config.NODE_ENV === 'production',
+        sameSite: 'lax',
+    };
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        path: '/api/v1/auth',
+        ...commonCookieOptions,
+    });
+    res.clearCookie('csrf-token', {
+        path: '/',
+        ...commonCookieOptions,
+    });
+
     if (!refreshToken) {
         // Log the error if refresh token is missing but still send a success 204.
         logger.warn(
