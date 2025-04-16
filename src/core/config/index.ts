@@ -12,7 +12,7 @@ const EnvironmentSchema = z.object({
     ACCESS_TOKEN_EXPIRY: z
         .string()
         .min(1, { message: 'Access Token expiry is missing.' })
-        .refine((value) => typeof ms(value as StringValue) === 'number')
+        .refine((value) => value && typeof ms(value as StringValue) === 'number')
         .default('15m'),
     REFRESH_TOKEN_SECRET: z
         .string()
@@ -20,7 +20,7 @@ const EnvironmentSchema = z.object({
     REFRESH_TOKEN_EXPIRY: z
         .string()
         .min(1, { message: 'Refresh Token expiry is missing.' })
-        .refine((value) => typeof ms(value as StringValue) === 'number')
+        .refine((value) => value && typeof ms(value as StringValue) === 'number')
         .default('7d'),
     SALT_ROUNDS: z.coerce.number().int().positive().default(10),
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'fatal']).optional(),
