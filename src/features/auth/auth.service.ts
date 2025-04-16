@@ -2,7 +2,6 @@ import { prisma } from '../../core/db/prisma.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import ms from 'ms';
 import { config } from '../../core/config/index.js';
 import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
 import getRefreshTokenExpiryDate from '../../core/utils/tokenExpiryUtil.js';
@@ -351,14 +350,14 @@ class AuthService {
     // Access Token generator method.
     private generateAccessToken(payload: AccessTokenPayload): string {
         return jwt.sign(payload, config.ACCESS_TOKEN_SECRET, {
-            expiresIn: ms(config.ACCESS_TOKEN_EXPIRY as StringValue),
+            expiresIn: config.ACCESS_TOKEN_EXPIRY as StringValue,
         });
     }
 
     // Refresh Token generator method.
     private generateRefreshToken(payload: RefreshTokenPayload, jti: string): string {
         return jwt.sign(payload, config.REFRESH_TOKEN_SECRET, {
-            expiresIn: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
+            expiresIn: config.REFRESH_TOKEN_EXPIRY as StringValue,
             jwtid: jti,
         });
     }
