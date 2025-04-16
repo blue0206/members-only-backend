@@ -14,6 +14,9 @@ export const loggerMiddleware = pinoHttp({
                 ...req.headers,
                 authorization: req.headers.authorization ? '[REDACTED]' : undefined,
                 cookie: req.headers.cookie ? '[REDACTED]' : undefined,
+                'x-csrf-token': req.headers['x-csrf-token']
+                    ? '[REDACTED]'
+                    : undefined,
             };
             return req;
         },
