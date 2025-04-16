@@ -1,7 +1,7 @@
 import { logger } from '../logger.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { InternalServerError, UnauthorizedError } from '../errors/customErrors.js';
-import * as jwtLib from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { ZodError } from 'zod';
 import type {
     AccessTokenPayload,
@@ -10,7 +10,7 @@ import type {
 
 // Direct importing from jwtLib throws error because
 // jsonwebtoken uses CommonJS, hence we destructure it.
-const { JsonWebTokenError } = jwtLib;
+const { JsonWebTokenError } = jwt;
 
 export default function jwtErrorHandler<
     TokenType extends AccessTokenPayload | RefreshTokenPayload,
