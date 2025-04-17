@@ -23,7 +23,7 @@ export default function jwtErrorHandler<
         if (error instanceof JsonWebTokenError) {
             if (error.name === 'TokenExpiredError') {
                 throw new UnauthorizedError(
-                    'Access token has expired.',
+                    'The token has expired.',
                     ErrorCodes.EXPIRED_TOKEN
                 );
             } else if (error.name === 'JsonWebTokenError') {
