@@ -3,6 +3,7 @@ model Message {
     content   String
     author    User     @relation(fields: [authorId], references: [id])
     authorId  Int
+    edited    Boolean  @default(false)
     createdAt DateTime @default(now()) @db.Timestamptz()
     updatedAt DateTime @updatedAt @db.Timestamptz()
 
