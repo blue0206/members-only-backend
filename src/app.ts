@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import assignRequestId from './core/middlewares/assignRequestId.js';
 import { loggerMiddleware } from './core/middlewares/loggerMiddleware.js';
+import helmet from 'helmet';
 import authRouter from './features/auth/auth.routes.js';
 import userRouter from './features/users/user.route.js';
 import messageRouter from './features/messages/message.route.js';
@@ -24,8 +25,9 @@ app.use(loggerMiddleware);
 app.use(cookieParser());
 
 // Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(helmet()); // Setup helmet
+app.use(express.json()); // Parse JSON request body.
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request body.
 
 // Routes
 app.use('/api/v1/auth', authRouter);
