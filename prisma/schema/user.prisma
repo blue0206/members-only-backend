@@ -1,16 +1,16 @@
 model User {
-    id           Int            @id @default(autoincrement())
-    username     String         @unique
-    firstName    String
-    middleName   String?
-    lastName     String?
-    password     String
-    avatar       String?
-    role         Role           @default(USER)
-    posts        Message[]
-    refreshToken RefreshToken[]
-    createdAt    DateTime       @default(now())
-    updatedAt    DateTime       @updatedAt
+    id            Int            @id @default(autoincrement())
+    username      String         @unique
+    firstName     String
+    middleName    String?
+    lastName      String?
+    password      String
+    avatar        String?
+    role          Role           @default(USER)
+    messages      Message[]
+    refreshTokens RefreshToken[]
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
 }
 
 enum Role {
