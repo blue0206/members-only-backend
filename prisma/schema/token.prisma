@@ -3,8 +3,8 @@ model RefreshToken {
     user      User     @relation(fields: [userId], references: [id])
     userId    Int
     tokenHash String
-    expiresAt DateTime
-    createdAt DateTime @default(now())
+    expiresAt DateTime @db.Timestamptz()
+    createdAt DateTime @default(now()) @db.Timestamptz()
 
     @@index([userId])
     @@map("refresh_token")

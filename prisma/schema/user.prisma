@@ -9,8 +9,8 @@ model User {
     role          Role           @default(USER)
     messages      Message[]
     refreshTokens RefreshToken[]
-    createdAt     DateTime       @default(now())
-    updatedAt     DateTime       @updatedAt
+    createdAt     DateTime       @default(now()) @db.Timestamptz()
+    updatedAt     DateTime       @updatedAt @db.Timestamptz()
 }
 
 enum Role {
