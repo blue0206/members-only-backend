@@ -1,4 +1,6 @@
+import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { prisma } from '../../core/db/prisma.js';
+import { InternalServerError } from '../../core/errors/customErrors.js';
 import { logger } from '../../core/logger.js';
 import type {
     CreateMessageServiceReturnType,
@@ -46,6 +48,15 @@ class MessageService {
                     author: true,
                 },
             });
+
+        // Throw error if user is not returned, which
+        // hints that user in not actually in DB since relation is optional.
+        if (!createdMessage.author) {
+            throw new InternalServerError(
+                'User not found in database.',
+                ErrorCodes.DATABASE_ERROR
+            );
+        }
 
         // Log the success of process and return data.
         logger.info({ message, userId }, 'Message created successfully.');
