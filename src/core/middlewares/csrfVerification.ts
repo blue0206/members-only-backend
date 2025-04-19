@@ -1,6 +1,7 @@
 import { ForbiddenError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import type { Request, Response, NextFunction } from 'express';
+import { logger } from '../logger.js';
 
 // This middleware is used to verify CSRF tokens, a method
 // known as 'Double Submit' method where two CSRF tokens are
@@ -38,6 +39,9 @@ export default function csrfVerification(
             ErrorCodes.CSRF_TOKEN_MISMATCH
         );
     }
+
+    // Log success.
+    logger.debug('CSRF token verification successful.');
     // The checks have passed, pass on the request.
     next();
 }
