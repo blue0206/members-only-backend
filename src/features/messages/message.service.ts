@@ -1,6 +1,9 @@
 import { prisma } from '../../core/db/prisma.js';
 import { logger } from '../../core/logger.js';
-import type { GetMessagesServiceReturnType } from './message.types.js';
+import type {
+    CreateMessageServiceReturnType,
+    GetMessagesServiceReturnType,
+} from './message.types.js';
 
 class MessageService {
     async getMessages(): Promise<GetMessagesServiceReturnType> {
@@ -19,6 +22,34 @@ class MessageService {
         // Log the success of process and return data.
         logger.info('Messages fetched successfully.');
         return messages;
+    }
+
+    async createMessage(
+        message: string,
+        userId: number
+    ): Promise<CreateMessageServiceReturnType> {
+        // Log the start of process.
+        logger.info({ message, userId }, 'Creating message in database.');
+
+        // Create message in DB.
+        const createdMessage: CreateMessageServiceReturnType =
+            await prisma.message.create({
+                data: {
+                    content: message,
+                    author: {
+                        connect: {
+                            id: userId,
+                        },
+                    },
+                },
+                include: {
+                    author: true,
+                },
+            });
+
+        // Log the success of process and return data.
+        logger.info({ message, userId }, 'Message created successfully.');
+        return createdMessage;
     }
 }
 
