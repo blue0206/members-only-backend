@@ -4,14 +4,17 @@ import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import {
     EditUserResponseSchema,
     GetUserMessagesResponseSchema,
+    MemberRoleUpdateResponseSchema,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import type {
     EditUserResponseDto,
     GetUserMessagesResponseDto,
+    MemberRoleUpdateResponseDto,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import type {
     EditUserServiceReturnType,
     GetUserMessagesServiceReturnType,
+    SetMemberRoleServiceReturnType,
 } from './user.types.js';
 
 export const mapToGetUserMessagesResponseDto = (
@@ -67,6 +70,30 @@ export const mapToEditUserResponseDto = (
 
     // Parse mapped data against schema.
     const parsedData = EditUserResponseSchema.safeParse(mappedData);
+
+    // Throw error if parsing fails.
+    if (!parsedData.success) {
+        throw new InternalServerError(
+            'DTO Mapping Error',
+            ErrorCodes.INTERNAL_SERVER_ERROR,
+            parsedData.error.flatten()
+        );
+    }
+
+    // Return mapped, parsed data.
+    return parsedData.data;
+};
+
+export const mapToMemberRoleUpdateResponseDto = (
+    data: SetMemberRoleServiceReturnType
+): MemberRoleUpdateResponseDto => {
+    // Map data.
+    const mappedData: MemberRoleUpdateResponseDto = {
+        role: mapPrismaRoleToEnumRole(data.role),
+    };
+
+    // Parse mapped data against schema.
+    const parsedData = MemberRoleUpdateResponseSchema.safeParse(mappedData);
 
     // Throw error if parsing fails.
     if (!parsedData.success) {
