@@ -8,6 +8,7 @@ import {
     editUser,
     memberRoleUpdate,
     resetUserPassword,
+    setRole,
     userMessages,
 } from './user.controller.js';
 
@@ -35,6 +36,13 @@ userRouter.patch(
     accessTokenVerification,
     csrfVerification,
     memberRoleUpdate
+);
+userRouter.patch(
+    '/role/:username',
+    accessTokenVerification,
+    csrfVerification,
+    adminVerification,
+    setRole
 );
 
 export default userRouter;
