@@ -8,8 +8,13 @@ class MessageService {
         logger.info('Getting messages from database.');
 
         // Get messages from DB.
-        const messages: GetMessagesServiceReturnType =
-            await prisma.message.findMany();
+        const messages: GetMessagesServiceReturnType = await prisma.message.findMany(
+            {
+                include: {
+                    author: true,
+                },
+            }
+        );
 
         // Log the success of process and return data.
         logger.info('Messages fetched successfully.');
