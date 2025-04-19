@@ -15,6 +15,8 @@ import {
     ErrorCodes,
     MemberRoleUpdateRequestSchema,
     ResetPasswordRequestSchema,
+    SetRoleRequestParamsSchema,
+    SetRoleRequestQuerySchema,
 } from '@blue0206/members-only-shared-types';
 import type { Request, Response } from 'express';
 import type {
@@ -31,6 +33,8 @@ import type {
     ResetPasswordRequestDto,
     MemberRoleUpdateRequestDto,
     MemberRoleUpdateResponseDto,
+    SetRoleRequestParamsDto,
+    SetRoleRequestQueryDto,
 } from '@blue0206/members-only-shared-types';
 
 export const userMessages = async (req: Request, res: Response): Promise<void> => {
@@ -275,4 +279,44 @@ export const memberRoleUpdate = async (
 
     // Send success response.
     res.status(200).json(successResponse);
+};
+
+export const setRole = async (req: Request, res: Response): Promise<void> => {
+    // Throw error if request id is missing.
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+
+    // Validate the incoming request to make sure it adheres to the
+    // API contract (SetRoleRequestDto).
+    const parsedParams = SetRoleRequestParamsSchema.safeParse(req.params);
+    const parsedQuery = SetRoleRequestQuerySchema.safeParse(req.query);
+    // Throw Error if validation fails.
+    if (!parsedParams.success) {
+        throw new ValidationError(
+            'Invalid request params.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedParams.error.flatten()
+        );
+    }
+    if (!parsedQuery.success) {
+        throw new ValidationError(
+            'Invalid request query.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedQuery.error.flatten()
+        );
+    }
+
+    // Extract the DTOs for the username and the new role of the user
+    // to be updated.
+    const usernameDto: SetRoleRequestParamsDto = parsedParams.data;
+    const roleDto: SetRoleRequestQueryDto = parsedQuery.data;
+
+    // Pass the parsed data to the service layer.
+    await userService.updateRole(usernameDto.username, roleDto.role);
+
+    // Send a success response with 204.
+    res.status(204).end();
 };
