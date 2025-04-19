@@ -24,6 +24,7 @@ const EnvironmentSchema = z.object({
         .default('7d'),
     SALT_ROUNDS: z.coerce.number().int().positive().default(10),
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'fatal']).optional(),
+    MEMBER_ROLE_SECRET_KEY: z.string(),
 });
 
 const parsedEnv = EnvironmentSchema.safeParse(process.env);
