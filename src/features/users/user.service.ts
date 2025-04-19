@@ -1,13 +1,22 @@
 import { prisma } from '../../core/db/prisma.js';
 import { logger } from '../../core/logger.js';
 import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
-import { InternalServerError } from '../../core/errors/customErrors.js';
+import {
+    InternalServerError,
+    UnauthorizedError,
+} from '../../core/errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import bcrypt from 'bcrypt';
+import { config } from '../../core/config/index.js';
 import type {
     EditUserServiceReturnType,
     GetUserMessagesServiceReturnType,
 } from './user.types.js';
-import type { EditUserRequestDto } from '@blue0206/members-only-shared-types';
+import type {
+    EditUserRequestDto,
+    ResetPasswordRequestDto,
+} from '@blue0206/members-only-shared-types';
+import type { User } from '../../core/db/prisma-client/client.js';
 
 class UserService {
     async getUserMessages(
@@ -121,6 +130,70 @@ class UserService {
 
         // Log the success of process.
         logger.info({ userId }, 'User deleted from database successfully.');
+    }
+
+    async resetPassword(
+        passData: ResetPasswordRequestDto,
+        userId: number
+    ): Promise<void> {
+        // Log the start of process.
+        logger.info({ userId }, 'Resetting user password in database.');
+
+        // Get existing hashed password from database.
+        const user: Pick<User, 'password'> | null = await prismaErrorHandler(
+            async () => {
+                return await prisma.user.findUnique({
+                    where: {
+                        id: userId,
+                    },
+                    select: {
+                        password: true,
+                    },
+                });
+            }
+        );
+
+        // Throw error if user not found.
+        if (!user) {
+            throw new InternalServerError(
+                'User not found in database.',
+                ErrorCodes.DATABASE_ERROR
+            );
+        }
+
+        // Compare the existing hashed password with the provided old password.
+        const passwordMatch = await bcrypt.compare(
+            passData.oldPassword,
+            user.password
+        );
+        // Throw error if password does not match.
+        if (!passwordMatch) {
+            throw new UnauthorizedError(
+                'Incorrect password.',
+                ErrorCodes.INCORRECT_PASSWORD
+            );
+        }
+
+        // Hash the new password with bcrypt.
+        const newHashedPassword = await bcrypt.hash(
+            passData.newPassword,
+            config.SALT_ROUNDS
+        );
+
+        // Update database with new password.
+        await prismaErrorHandler(async () => {
+            return await prisma.user.update({
+                where: {
+                    id: userId,
+                },
+                data: {
+                    password: newHashedPassword,
+                },
+            });
+        });
+
+        // Log the success of process.
+        logger.info({ userId }, 'User password reset in database successfully.');
     }
 }
 
