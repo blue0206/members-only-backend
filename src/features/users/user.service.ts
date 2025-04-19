@@ -11,6 +11,7 @@ import { config } from '../../core/config/index.js';
 import type {
     EditUserServiceReturnType,
     GetUserMessagesServiceReturnType,
+    SetMemberRoleServiceReturnType,
 } from './user.types.js';
 import type {
     EditUserRequestDto,
@@ -194,6 +195,46 @@ class UserService {
 
         // Log the success of process.
         logger.info({ userId }, 'User password reset in database successfully.');
+    }
+
+    async setMemberRole(
+        userId: number,
+        secretKey: string
+    ): Promise<SetMemberRoleServiceReturnType> {
+        // Log the start of process.
+        logger.info({ userId }, 'Setting user role in database.');
+
+        // Check if secret key is correct:
+        if (secretKey !== config.MEMBER_ROLE_SECRET_KEY) {
+            throw new UnauthorizedError(
+                'The secret key is incorrect.',
+                ErrorCodes.INCORRECT_SECRET_KEY
+            );
+        }
+
+        // Update member role in DB.
+        const updatedUser: SetMemberRoleServiceReturnType = await prismaErrorHandler(
+            async () => {
+                return await prisma.user.update({
+                    where: {
+                        id: userId,
+                    },
+                    data: {
+                        role: 'MEMBER',
+                    },
+                    select: {
+                        role: true,
+                    },
+                });
+            }
+        );
+
+        // Log the success of process.
+        logger.info(
+            { userId, role: updatedUser.role },
+            'User role set in database successfully.'
+        );
+        return updatedUser;
     }
 }
 
