@@ -88,6 +88,23 @@ class UserService {
         );
         return user;
     }
+
+    async deleteUserByUsername(username: string): Promise<void> {
+        // Log the start of process.
+        logger.info({ username }, 'Deleting user from database.');
+
+        // Delete user from DB.
+        await prismaErrorHandler(async () => {
+            return await prisma.user.delete({
+                where: {
+                    username,
+                },
+            });
+        });
+
+        // Log the success of process.
+        logger.info({ username }, 'User deleted from database successfully.');
+    }
 }
 
 export const userService = new UserService();
