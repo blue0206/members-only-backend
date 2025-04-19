@@ -1,6 +1,6 @@
 model RefreshToken {
     jwtId     String   @id
-    user      User     @relation(fields: [userId], references: [id])
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId    Int
     tokenHash String
     expiresAt DateTime @db.Timestamptz()
