@@ -1,8 +1,8 @@
 model Message {
     id        Int      @id @default(autoincrement())
     content   String
-    author    User     @relation(fields: [authorId], references: [id])
-    authorId  Int
+    author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+    authorId  Int?
     edited    Boolean  @default(false)
     createdAt DateTime @default(now()) @db.Timestamptz()
     updatedAt DateTime @updatedAt @db.Timestamptz()
