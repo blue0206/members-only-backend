@@ -6,6 +6,7 @@ import {
     adminDeleteUser,
     deleteUserAccount,
     editUser,
+    memberRoleUpdate,
     resetUserPassword,
     userMessages,
 } from './user.controller.js';
@@ -28,6 +29,12 @@ userRouter.patch(
     accessTokenVerification,
     csrfVerification,
     resetUserPassword
+);
+userRouter.patch(
+    '/role',
+    accessTokenVerification,
+    csrfVerification,
+    memberRoleUpdate
 );
 
 export default userRouter;
