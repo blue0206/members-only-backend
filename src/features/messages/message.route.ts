@@ -1,8 +1,17 @@
 import { Router } from 'express';
-import { getMessagesWithoutAuthor } from './message.controller.js';
+import {
+    getMessagesWithAuthor,
+    getMessagesWithoutAuthor,
+} from './message.controller.js';
+import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
 
 const messageRouter = Router();
 
-messageRouter.get('/public', getMessagesWithoutAuthor); // Get all messages (unregistered/user)
+// Get all messages (unregistered/user)
+messageRouter.get('/public', getMessagesWithoutAuthor);
+
+//-----------Protected Routes-----------
+// Get all messages (Admin/Member)
+messageRouter.get('/', accessTokenVerification, getMessagesWithAuthor);
 
 export default messageRouter;
