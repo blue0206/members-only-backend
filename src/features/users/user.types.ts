@@ -12,3 +12,6 @@ export type GetUserMessagesServiceReturnType = Prisma.UserGetPayload<{
 
 // Return type for EditUser service.
 export type EditUserServiceReturnType = Omit<User, 'password'>;
+
+// Return type for SetMemberRole service
+export type SetMemberRoleServiceReturnType = Pick<User, 'role'>;
