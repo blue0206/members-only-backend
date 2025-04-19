@@ -105,6 +105,23 @@ class UserService {
         // Log the success of process.
         logger.info({ username }, 'User deleted from database successfully.');
     }
+
+    async deleteAccount(userId: number): Promise<void> {
+        // Log the start of process.
+        logger.info({ userId }, 'Deleting user from database.');
+
+        // Delete user from DB.
+        await prismaErrorHandler(async () => {
+            return await prisma.user.delete({
+                where: {
+                    id: userId,
+                },
+            });
+        });
+
+        // Log the success of process.
+        logger.info({ userId }, 'User deleted from database successfully.');
+    }
 }
 
 export const userService = new UserService();
