@@ -16,6 +16,7 @@ import type {
 import type {
     EditUserRequestDto,
     ResetPasswordRequestDto,
+    Role,
 } from '@blue0206/members-only-shared-types';
 import type { User } from '../../core/db/prisma-client/client.js';
 
@@ -235,6 +236,26 @@ class UserService {
             'User role set in database successfully.'
         );
         return updatedUser;
+    }
+
+    async updateRole(username: string, role: Role): Promise<void> {
+        // Log the start of process.
+        logger.info({ username, newRole: role }, 'Updating user role in database.');
+
+        // Update user role in DB.
+        await prismaErrorHandler(async () => {
+            return await prisma.user.update({
+                where: {
+                    username,
+                },
+                data: {
+                    role,
+                },
+            });
+        });
+
+        // Log the success of process.
+        logger.info({ username, newRole: role }, 'User role updated successfully.');
     }
 }
 
