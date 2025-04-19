@@ -1,3 +1,7 @@
-import type { Message } from '../../core/db/prisma-client/client.js';
+import type { Prisma } from '../../core/db/prisma-client/client.js';
 
-export type GetMessagesServiceReturnType = Message[];
+export type GetMessagesServiceReturnType = Prisma.MessageGetPayload<{
+    include: {
+        author: true;
+    };
+}>[];
