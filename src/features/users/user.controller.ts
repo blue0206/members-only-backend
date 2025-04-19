@@ -12,6 +12,7 @@ import {
     DeleteUserRequestParamsSchema,
     EditUserRequestSchema,
     ErrorCodes,
+    ResetPasswordRequestSchema,
 } from '@blue0206/members-only-shared-types';
 import type { Request, Response } from 'express';
 import type {
@@ -24,6 +25,7 @@ import type {
     EditUserRequestDto,
     EditUserResponseDto,
     DeleteUserRequestParamsDto,
+    ResetPasswordRequestDto,
 } from '@blue0206/members-only-shared-types';
 
 export const userMessages = async (req: Request, res: Response): Promise<void> => {
@@ -169,6 +171,47 @@ export const deleteUserAccount = async (
 
     // Pass the user ID to the service layer.
     await userService.deleteAccount(req.user.id);
+
+    // Send a success response with 204.
+    res.status(204).end();
+};
+
+export const resetUserPassword = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    // Throw error if request id is missing.
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+
+    // Throw error if request object is not populated correctly by verification middleware.
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    // Validate the incoming request to make sure it adheres to the
+    // API contract (ResetPasswordRequestDto).
+    const parsedBody = ResetPasswordRequestSchema.safeParse(req.body);
+    // Throw Error if validation fails.
+    if (!parsedBody.success) {
+        throw new ValidationError(
+            'Invalid request body.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedBody.error.flatten()
+        );
+    }
+
+    // Extract the ResetPasswordRequestDto object from the parsedBody.
+    const resetPasswordData: ResetPasswordRequestDto = parsedBody.data;
+
+    // Pass the parsed DTO to the service layer.
+    await userService.resetPassword(resetPasswordData, req.user.id);
 
     // Send a success response with 204.
     res.status(204).end();
