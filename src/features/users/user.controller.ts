@@ -9,6 +9,7 @@ import {
     mapToGetUserMessagesResponseDto,
 } from './user.mapper.js';
 import {
+    DeleteUserRequestParamsSchema,
     EditUserRequestSchema,
     ErrorCodes,
 } from '@blue0206/members-only-shared-types';
@@ -22,6 +23,7 @@ import type {
     ApiResponse,
     EditUserRequestDto,
     EditUserResponseDto,
+    DeleteUserRequestParamsDto,
 } from '@blue0206/members-only-shared-types';
 
 export const userMessages = async (req: Request, res: Response): Promise<void> => {
@@ -111,4 +113,37 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
 
     // Send Response.
     res.status(200).json(successResponse);
+};
+
+export const adminDeleteUser = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    // Throw error if request id is missing.
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+
+    // Validate the incoming request to make sure it adheres to the
+    // API contract (EditUserRequestDto).
+    const parsedParams = DeleteUserRequestParamsSchema.safeParse(req.params);
+    // Throw Error if validation fails.
+    if (!parsedParams.success) {
+        throw new ValidationError(
+            'Invalid request parameters.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedParams.error.flatten()
+        );
+    }
+
+    // Extract the DeleteUserRequestParamsDto object from the parsedParams.
+    const requestParam: DeleteUserRequestParamsDto = parsedParams.data;
+
+    // Pass the parsed DTO to the service layer.
+    await userService.deleteUserByUsername(requestParam.username);
+
+    // Send a success response with 204.
+    res.status(204).end();
 };
