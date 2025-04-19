@@ -14,29 +14,45 @@ import {
 
 const userRouter = Router();
 
-// Protected Routes
+//-----------Protected Routes-----------
+
+// Get all of the user's messages.
 userRouter.get('/messages', accessTokenVerification, userMessages);
+
+// TODO: Refresh access token via frontend after the action below to have updated access token payload.
+// Update user details (except password).
 userRouter.patch('/', accessTokenVerification, csrfVerification, editUser);
+
+// Allow admin to delete other users.
 userRouter.delete(
     '/:username',
     accessTokenVerification,
     csrfVerification,
     adminVerification,
     adminDeleteUser
-); // For Admin deleting other users.
-userRouter.delete('/', accessTokenVerification, csrfVerification, deleteUserAccount); // For deleting self account.
+);
+
+// Allow users to delete their account.
+userRouter.delete('/', accessTokenVerification, csrfVerification, deleteUserAccount);
+
+// Reset Password
 userRouter.patch(
     '/reset-password',
     accessTokenVerification,
     csrfVerification,
     resetUserPassword
 );
+
+// // TODO: Refresh access token via frontend after the action below to have updated access token payload.
+// Promote user to member if they provide correct secret key.
 userRouter.patch(
     '/role',
     accessTokenVerification,
     csrfVerification,
     memberRoleUpdate
 );
+
+// Allow admin to set role of other users.
 userRouter.patch(
     '/role/:username',
     accessTokenVerification,
