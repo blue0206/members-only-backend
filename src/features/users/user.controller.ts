@@ -147,3 +147,29 @@ export const adminDeleteUser = async (
     // Send a success response with 204.
     res.status(204).end();
 };
+
+export const deleteUserAccount = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    // Throw error if request id is missing.
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+
+    // Throw error if request object is not populated correctly by verification middleware.
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    // Pass the user ID to the service layer.
+    await userService.deleteAccount(req.user.id);
+
+    // Send a success response with 204.
+    res.status(204).end();
+};
