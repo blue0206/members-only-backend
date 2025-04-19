@@ -1,16 +1,22 @@
 import { messageService } from './message.service.js';
-import { InternalServerError } from '../../core/errors/customErrors.js';
-import type { Request, Response } from 'express';
-import type { GetMessagesServiceReturnType } from './message.types.js';
-import type {
-    ApiResponse,
-    GetMessagesResponseDto,
-    GetMessagesWithoutAuthorResponseDto,
+import {
+    ForbiddenError,
+    InternalServerError,
+    UnauthorizedError,
+} from '../../core/errors/customErrors.js';
+import {
+    ErrorCodes,
+    Role,
+    type ApiResponse,
+    type GetMessagesResponseDto,
+    type GetMessagesWithoutAuthorResponseDto,
 } from '@blue0206/members-only-shared-types';
 import {
     mapToGetMessagesResponseDto,
     mapToGetMessagesWithoutAuthorResponseDto,
 } from './message.mapper.js';
+import type { Request, Response } from 'express';
+import type { GetMessagesServiceReturnType } from './message.types.js';
 
 export const getMessagesWithoutAuthor = async (
     req: Request,
@@ -51,6 +57,22 @@ export const getMessagesWithAuthor = async (
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
+        );
+    }
+
+    // Throw error if request object is not populated correctly by verification middleware.
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    // Throw error if the role of the user is not admin or member.
+    if (req.user.role === Role.USER) {
+        throw new ForbiddenError(
+            'Member or Admin privileges are required.',
+            ErrorCodes.FORBIDDEN
         );
     }
 
