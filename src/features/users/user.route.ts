@@ -6,6 +6,7 @@ import {
     adminDeleteUser,
     deleteUserAccount,
     editUser,
+    resetUserPassword,
     userMessages,
 } from './user.controller.js';
 
@@ -22,5 +23,11 @@ userRouter.delete(
     adminDeleteUser
 ); // For Admin deleting other users.
 userRouter.delete('/', accessTokenVerification, csrfVerification, deleteUserAccount); // For deleting self account.
+userRouter.patch(
+    '/reset-password',
+    accessTokenVerification,
+    csrfVerification,
+    resetUserPassword
+);
 
 export default userRouter;
