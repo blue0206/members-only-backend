@@ -2,7 +2,12 @@ import { Router } from 'express';
 import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
 import adminVerification from '../../core/middlewares/adminVerification.js';
-import { adminDeleteUser, editUser, userMessages } from './user.controller.js';
+import {
+    adminDeleteUser,
+    deleteUserAccount,
+    editUser,
+    userMessages,
+} from './user.controller.js';
 
 const userRouter = Router();
 
@@ -16,5 +21,6 @@ userRouter.delete(
     adminVerification,
     adminDeleteUser
 ); // For Admin deleting other users.
+userRouter.delete('/', accessTokenVerification, csrfVerification, deleteUserAccount); // For deleting self account.
 
 export default userRouter;
