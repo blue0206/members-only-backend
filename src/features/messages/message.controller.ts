@@ -6,6 +6,7 @@ import {
 } from '../../core/errors/customErrors.js';
 import {
     CreateMessageRequestSchema,
+    DeleteMessageRequestParamsSchema,
     EditMessageRequestParamsSchema,
     EditMessageRequestSchema,
     ErrorCodes,
@@ -25,6 +26,7 @@ import type {
     CreateMessageResponseDto,
     EditMessageRequestDto,
     EditMessageResponseDto,
+    DeleteMessageRequestParamsDto,
 } from '@blue0206/members-only-shared-types';
 import type {
     CreateMessageServiceReturnType,
@@ -218,4 +220,43 @@ export const editMessage = async (req: Request, res: Response): Promise<void> =>
 
     // Send success response.
     res.status(200).json(successResponse);
+};
+
+export const deleteMessage = async (req: Request, res: Response): Promise<void> => {
+    // Throw error if request id is missing.
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+
+    // Throw error if request object is not populated correctly by verification middleware.
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    // Validate the incoming request to make sure it adheres to the
+    // API contract (DeleteMessageRequestParamsDto).
+    const parsedParams = DeleteMessageRequestParamsSchema.safeParse(req.params);
+
+    // Throw Error if validation fails.
+    if (!parsedParams.success) {
+        throw new ValidationError(
+            'Invalid request params.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedParams.error.flatten()
+        );
+    }
+
+    // Extract the params data from parsed data.
+    const deleteData: DeleteMessageRequestParamsDto = parsedParams.data;
+
+    // Pass the extracted DTO to the service layer along with user ID from request object.
+    await messageService.deleteMessage(deleteData.messageId, req.user);
+
+    // End the response with a 204 success.
+    res.status(204).end();
 };
