@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../../core/config/index.js';
 import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
+import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
 import getRefreshTokenExpiryDate from '../../core/utils/tokenExpiryUtil.js';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import { logger } from '../../core/logger.js';
@@ -26,7 +27,6 @@ import type {
     RefreshTokenPayload,
     RefreshServiceReturnType,
 } from './auth.types.js';
-import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
 
 class AuthService {
     async register(
