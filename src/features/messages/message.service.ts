@@ -135,6 +135,56 @@ class MessageService {
         logger.info({ newMessage, messageId, user }, 'Message edited successfully.');
         return editedMessageDetails;
     }
+
+    async deleteMessage(messageId: number, user: AccessTokenPayload): Promise<void> {
+        // Log the start of process.
+        logger.info({ messageId, user }, 'Deleting message from database.');
+
+        // Conditionally perform a DB call to check if the user is not deleting another
+        // user's message while not being an admin.
+        if (user.role !== Role.ADMIN) {
+            const messageAuthorDetails: Pick<Message, 'authorId'> | null =
+                await prismaErrorHandler(async () => {
+                    return await prisma.message.findUnique({
+                        where: {
+                            id: messageId,
+                        },
+                        select: {
+                            authorId: true,
+                        },
+                    });
+                });
+
+            // Throw error if message is not found.
+            if (!messageAuthorDetails) {
+                throw new InternalServerError(
+                    'Message not found in database.',
+                    ErrorCodes.DATABASE_ERROR
+                );
+            }
+
+            // Check if the message author id is the same as the user id of the
+            // user who is trying to delete the message.
+            if (messageAuthorDetails.authorId !== user.id) {
+                throw new ForbiddenError(
+                    'You do not have permission to delete this message.',
+                    ErrorCodes.FORBIDDEN
+                );
+            }
+        }
+
+        // Delete message from DB.
+        await prismaErrorHandler(async () => {
+            return await prisma.message.delete({
+                where: {
+                    id: messageId,
+                },
+            });
+        });
+
+        // Log the success of process.
+        logger.info({ messageId, user }, 'Message deleted successfully.');
+    }
 }
 
 export const messageService = new MessageService();
