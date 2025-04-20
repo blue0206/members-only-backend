@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
     createNewMessage,
+    deleteMessage,
     editMessage,
     getMessagesWithAuthor,
     getMessagesWithoutAuthor,
@@ -31,6 +32,13 @@ messageRouter.patch(
     csrfVerification,
     memberVerification,
     editMessage
+);
+// Delete message
+messageRouter.delete(
+    '/:messageId',
+    accessTokenVerification,
+    csrfVerification,
+    deleteMessage
 );
 
 export default messageRouter;
