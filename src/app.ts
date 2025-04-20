@@ -11,8 +11,10 @@ import messageRouter from './features/messages/message.route.js';
 import { errorHandler } from './core/middlewares/errorHandler.js';
 import { logger } from './core/logger.js';
 import { prisma } from './core/db/prisma.js';
-import type { Server } from 'http';
 import cookieParser from 'cookie-parser';
+import { NotFoundError } from './core/errors/customErrors.js';
+import type { Server } from 'http';
+import type { Request, Response } from 'express';
 
 const app = express();
 // Cors Middleware
@@ -33,6 +35,10 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bo
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/messages', messageRouter);
+// Catch-all route.
+app.use((_req: Request, _res: Response) => {
+    throw new NotFoundError('This route does not exist.');
+});
 
 // Error Middleware
 app.use(errorHandler);
