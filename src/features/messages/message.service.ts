@@ -1,5 +1,6 @@
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { prisma } from '../../core/db/prisma.js';
+import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
 import { InternalServerError } from '../../core/errors/customErrors.js';
 import { logger } from '../../core/logger.js';
 import type {
@@ -13,11 +14,13 @@ class MessageService {
         logger.info('Getting messages from database.');
 
         // Get messages from DB.
-        const messages: GetMessagesServiceReturnType = await prisma.message.findMany(
-            {
-                include: {
-                    author: true,
-                },
+        const messages: GetMessagesServiceReturnType = await prismaErrorHandler(
+            async () => {
+                return await prisma.message.findMany({
+                    include: {
+                        author: true,
+                    },
+                });
             }
         );
 
@@ -35,18 +38,20 @@ class MessageService {
 
         // Create message in DB.
         const createdMessage: CreateMessageServiceReturnType =
-            await prisma.message.create({
-                data: {
-                    content: message,
-                    author: {
-                        connect: {
-                            id: userId,
+            await prismaErrorHandler(async () => {
+                return await prisma.message.create({
+                    data: {
+                        content: message,
+                        author: {
+                            connect: {
+                                id: userId,
+                            },
                         },
                     },
-                },
-                include: {
-                    author: true,
-                },
+                    include: {
+                        author: true,
+                    },
+                });
             });
 
         // Throw error if user is not returned, which
