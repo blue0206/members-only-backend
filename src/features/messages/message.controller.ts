@@ -1,6 +1,5 @@
 import { messageService } from './message.service.js';
 import {
-    ForbiddenError,
     InternalServerError,
     UnauthorizedError,
     ValidationError,
@@ -8,7 +7,6 @@ import {
 import {
     CreateMessageRequestSchema,
     ErrorCodes,
-    Role,
 } from '@blue0206/members-only-shared-types';
 import {
     mapToCreateMessageResponseDto,
@@ -75,14 +73,6 @@ export const getMessagesWithAuthor = async (
         throw new UnauthorizedError(
             'Authentication details missing.',
             ErrorCodes.AUTHENTICATION_REQUIRED
-        );
-    }
-
-    // Throw error if the role of the user is not admin or member.
-    if (req.user.role === Role.USER) {
-        throw new ForbiddenError(
-            'Member or Admin privileges are required.',
-            ErrorCodes.FORBIDDEN
         );
     }
 

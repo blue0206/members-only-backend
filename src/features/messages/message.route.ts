@@ -6,6 +6,7 @@ import {
 } from './message.controller.js';
 import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
+import memberVerification from '../../core/middlewares/memberVerification.js';
 
 const messageRouter = Router();
 
@@ -14,7 +15,12 @@ messageRouter.get('/public', getMessagesWithoutAuthor);
 
 //-----------Protected Routes-----------
 // Get all messages (Admin/Member)
-messageRouter.get('/', accessTokenVerification, getMessagesWithAuthor);
+messageRouter.get(
+    '/',
+    accessTokenVerification,
+    memberVerification,
+    getMessagesWithAuthor
+);
 // Create a new message.
 messageRouter.post('/', accessTokenVerification, csrfVerification, createNewMessage);
 
