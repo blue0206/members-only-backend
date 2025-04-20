@@ -1,16 +1,19 @@
 import {
     CreateMessageResponseSchema,
+    EditMessageResponseSchema,
     ErrorCodes,
     GetMessagesResponseSchema,
     GetMessagesWithoutAuthorResponseSchema,
 } from '@blue0206/members-only-shared-types';
 import type {
     CreateMessageResponseDto,
+    EditMessageResponseDto,
     GetMessagesResponseDto,
     GetMessagesWithoutAuthorResponseDto,
 } from '@blue0206/members-only-shared-types';
 import type {
     CreateMessageServiceReturnType,
+    EditMessageServiceReturnType,
     GetMessagesServiceReturnType,
 } from './message.types.js';
 import { InternalServerError } from '../../core/errors/customErrors.js';
@@ -98,6 +101,34 @@ export const mapToCreateMessageResponseDto = (
 
     // Parse mapped data against schema.
     const parsedData = CreateMessageResponseSchema.safeParse(mappedData);
+
+    // Throw error if parsing fails.
+    if (!parsedData.success) {
+        throw new InternalServerError(
+            'DTO Mapping Error',
+            ErrorCodes.INTERNAL_SERVER_ERROR,
+            parsedData.error.flatten()
+        );
+    }
+
+    // Return mapped, parsed data.
+    return parsedData.data;
+};
+
+export const mapToEditMessageResponseDto = (
+    data: EditMessageServiceReturnType
+): EditMessageResponseDto => {
+    // Map data.
+    const mappedData: EditMessageResponseDto = {
+        messageId: data.id,
+        message: data.content,
+        timestamp: data.createdAt,
+        edited: data.edited,
+        username: data.author?.username,
+    };
+
+    // Parse mapped data against schema.
+    const parsedData = EditMessageResponseSchema.safeParse(mappedData);
 
     // Throw error if parsing fails.
     if (!parsedData.success) {
