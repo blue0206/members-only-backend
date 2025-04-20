@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
     createNewMessage,
+    editMessage,
     getMessagesWithAuthor,
     getMessagesWithoutAuthor,
 } from './message.controller.js';
@@ -23,5 +24,13 @@ messageRouter.get(
 );
 // Create a new message.
 messageRouter.post('/', accessTokenVerification, csrfVerification, createNewMessage);
+// Edit message (Admin/Member)
+messageRouter.patch(
+    '/:messageId',
+    accessTokenVerification,
+    csrfVerification,
+    memberVerification,
+    editMessage
+);
 
 export default messageRouter;
