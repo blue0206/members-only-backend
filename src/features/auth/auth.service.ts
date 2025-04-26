@@ -10,6 +10,7 @@ import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import { logger } from '../../core/logger.js';
 import {
     InternalServerError,
+    NotFoundError,
     UnauthorizedError,
 } from '../../core/errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
@@ -266,15 +267,26 @@ class AuthService {
             }
         );
 
-        // Remove refresh token entry from DB.
-        await prismaErrorHandler(async () => {
-            return await prisma.refreshToken.delete({
-                where: {
-                    userId: decodedRefreshToken.id,
-                    jwtId: decodedRefreshToken.jti,
-                },
+        // Remove refresh token entry from DB and catch
+        // and throw proper error for invalid token.
+        try {
+            await prismaErrorHandler(async () => {
+                return await prisma.refreshToken.delete({
+                    where: {
+                        userId: decodedRefreshToken.id,
+                        jwtId: decodedRefreshToken.jti,
+                    },
+                });
             });
-        });
+        } catch (error: unknown) {
+            if (error instanceof NotFoundError) {
+                throw new UnauthorizedError(
+                    'The refresh token is invalid.',
+                    ErrorCodes.INVALID_TOKEN
+                );
+            }
+            throw error;
+        }
 
         // Create new refresh token.
         const refreshTokenPayload: RefreshTokenPayload = {
