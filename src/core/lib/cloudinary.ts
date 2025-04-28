@@ -47,6 +47,7 @@ export const uploadFile = (file: Buffer, username: string): Promise<string> => {
                         );
                         return;
                     }
+
                     logger.info(
                         { avatarId: result.public_id },
                         'File uploaded to Cloudinary successfully.'
@@ -59,6 +60,7 @@ export const uploadFile = (file: Buffer, username: string): Promise<string> => {
     });
 };
 
+// Delete file.
 export const deleteFile = async (publicId: string): Promise<void> => {
     try {
         await cloudinary.uploader.destroy(publicId);
@@ -70,4 +72,20 @@ export const deleteFile = async (publicId: string): Promise<void> => {
             error
         );
     }
+};
+
+// Return avatar url after performing transformations and optimization.
+export const getAvatarUrl = (publicId: string): string => {
+    return cloudinary.url(publicId, {
+        // Optimizations
+        fetch_format: 'auto',
+        quality: 'auto',
+        // Transformations
+        width: 150,
+        height: 150,
+        crop: 'thumb',
+        gravity: 'face',
+        radius: 'max',
+        dpr: 'auto',
+    });
 };
