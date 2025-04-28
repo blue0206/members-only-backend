@@ -58,3 +58,16 @@ export const uploadFile = (file: Buffer, username: string): Promise<string> => {
             .end(file);
     });
 };
+
+export const deleteFile = async (publicId: string): Promise<void> => {
+    try {
+        await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+        logger.error({ error }, 'Error deleting file from Cloudinary.');
+        throw new InternalServerError(
+            'File deletion from Cloudinary failed.',
+            ErrorCodes.FILE_DELETE_ERROR,
+            error
+        );
+    }
+};
