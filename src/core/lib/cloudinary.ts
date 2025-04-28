@@ -18,8 +18,8 @@ export const uploadFile = (file: Buffer, username: string): Promise<string> => {
         cloudinary.uploader
             .upload_stream(
                 {
-                    overwrite: true,
-                    format: 'auto',
+                    overwrite: true, // Replaces the file if already existing (matching the public_id).
+                    resource_type: 'auto',
                     public_id: `avatar/${username}`, // Allows us to replace avatar in case user changes their avatar.
                 },
                 (err, result) => {
@@ -66,6 +66,7 @@ export const deleteFile = async (publicId: string): Promise<void> => {
         await cloudinary.uploader.destroy(publicId);
     } catch (error) {
         logger.error({ error }, 'Error deleting file from Cloudinary.');
+
         throw new InternalServerError(
             'File deletion from Cloudinary failed.',
             ErrorCodes.FILE_DELETE_ERROR,
@@ -83,8 +84,7 @@ export const getAvatarUrl = (publicId: string): string => {
         // Transformations
         width: 150,
         height: 150,
-        crop: 'thumb',
-        gravity: 'face',
+        crop: 'fill',
         radius: 'max',
         dpr: 'auto',
     });
