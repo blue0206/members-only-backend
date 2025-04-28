@@ -15,6 +15,7 @@ import {
 } from '../../core/errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { RefreshTokenPayloadSchema } from './auth.types.js';
+import { uploadFile } from '../../core/lib/cloudinary.js';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
@@ -31,10 +32,19 @@ import type {
 
 class AuthService {
     async register(
-        registerData: RegisterRequestDto
+        registerData: RegisterRequestDto,
+        avatarImage: Buffer | undefined
     ): Promise<RegisterServiceReturnType> {
         // Log the start of registration process.
         logger.info({ username: registerData.username }, 'Registration started');
+
+        // Initialize avatarPublicId variable and if avatarImage buffer has been
+        // provided, upload it to cloudinary and store the public id in it to store in DB.
+        let avatarPublicId: string | null;
+        if (avatarImage) {
+            avatarPublicId = await uploadFile(avatarImage, registerData.username);
+        }
+
         // Hash the password with bcrypt.
         // Any errors will automatically be bubbled up and handled
         // in error middleware.
@@ -61,7 +71,7 @@ class AuthService {
                                 firstName: registerData.firstname,
                                 middleName: registerData.middlename ?? null,
                                 lastName: registerData.lastname ?? null,
-                                avatar: registerData.avatar ?? null,
+                                avatar: avatarPublicId,
                             },
                             omit: {
                                 password: true,

@@ -56,9 +56,11 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     // and pass it to the service layer.
     const registerData: RegisterRequestDto = parsedBody.data;
 
-    // Pass the parsed DTO to the service layer.
-    const userData: RegisterServiceReturnType =
-        await authService.register(registerData);
+    // Pass the parsed DTO and the avatar buffer to the service layer.
+    const userData: RegisterServiceReturnType = await authService.register(
+        registerData,
+        req.file?.buffer
+    );
 
     // Map the data returned by the service layer to the RegisterResponseDto
     // to adhere to API contract.

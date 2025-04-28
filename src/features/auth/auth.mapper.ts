@@ -6,6 +6,7 @@ import {
 } from '@blue0206/members-only-shared-types';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import { InternalServerError } from '../../core/errors/customErrors.js';
+import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import type {
     LoginResponseDto,
     RefreshResponseDto,
@@ -27,7 +28,7 @@ export const mapToRegisterResponseDto = (
         firstname: userData.firstName,
         middlename: userData.middleName,
         lastname: userData.lastName,
-        avatar: userData.avatar,
+        avatar: userData.avatar ? getAvatarUrl(userData.avatar) : null,
         role: mapPrismaRoleToEnumRole(userData.role),
         accessToken: userData.accessToken,
     };
