@@ -6,6 +6,7 @@ import {
     GetUserMessagesResponseSchema,
     MemberRoleUpdateResponseSchema,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
+import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import type {
     EditUserResponseDto,
     GetUserMessagesResponseDto,
@@ -64,7 +65,7 @@ export const mapToEditUserResponseDto = (
         firstname: user.firstName,
         middlename: user.middleName,
         lastname: user.lastName,
-        avatar: user.avatar,
+        avatar: user.avatar ? getAvatarUrl(user.avatar) : null,
         role: mapPrismaRoleToEnumRole(user.role),
     };
 

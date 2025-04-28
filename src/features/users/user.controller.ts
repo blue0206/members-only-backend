@@ -107,7 +107,8 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     // Pass the parsed DTO to the service layer.
     const userData: EditUserServiceReturnType = await userService.editUser(
         editUserData,
-        req.user.id
+        req.user,
+        req.file?.buffer
     );
 
     // Map the data returned by the service layer to the EditUserResponseDto

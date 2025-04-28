@@ -8,6 +8,7 @@ import {
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import bcrypt from 'bcrypt';
 import { config } from '../../core/config/index.js';
+import { uploadFile } from '../../core/lib/cloudinary.js';
 import type {
     EditUserServiceReturnType,
     GetUserMessagesServiceReturnType,
@@ -19,6 +20,7 @@ import type {
     Role,
 } from '@blue0206/members-only-shared-types';
 import type { User } from '../../core/db/prisma-client/client.js';
+import type { AccessTokenPayload } from '../auth/auth.types.js';
 
 class UserService {
     async getUserMessages(
@@ -60,24 +62,35 @@ class UserService {
 
     async editUser(
         updateData: EditUserRequestDto,
-        userId: number
+        userPayload: AccessTokenPayload,
+        avatarImage: Buffer | undefined
     ): Promise<EditUserServiceReturnType> {
         // Log the start of process.
-        logger.info({ userId }, 'Updating user details in database.');
+        logger.info(
+            { userId: userPayload.id },
+            'Updating user details in database.'
+        );
+
+        // Initialize avatarPublicId variable and if avatarImage buffer has been
+        // provided, upload it to cloudinary and store the public id in it to store in DB.
+        let avatarPublicId: string | null;
+        if (avatarImage) {
+            avatarPublicId = await uploadFile(avatarImage, userPayload.username);
+        }
 
         // Update user details in DB.
         const user: EditUserServiceReturnType = await prismaErrorHandler(
             async () => {
                 return await prisma.user.update({
                     where: {
-                        id: userId,
+                        id: userPayload.id,
                     },
                     data: {
                         username: updateData.newUsername,
                         firstName: updateData.newFirstname,
                         middleName: updateData.newMiddlename,
                         lastName: updateData.newLastname,
-                        avatar: updateData.newAvatar,
+                        avatar: avatarPublicId,
                     },
                     omit: {
                         password: true,
