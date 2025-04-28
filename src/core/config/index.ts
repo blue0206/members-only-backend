@@ -3,9 +3,13 @@ import ms from 'ms';
 import type { StringValue } from 'ms';
 
 const EnvironmentSchema = z.object({
+    // node
     NODE_ENV: z.enum(['development', 'production']).default('development'),
+    // server
     PORT: z.coerce.number().int().positive().default(8000),
+    // db
     DATABASE_URL: z.string().min(1, { message: 'DATABASE URL is missing.' }),
+    // jsonwebtoken
     ACCESS_TOKEN_SECRET: z
         .string()
         .min(1, { message: 'Access Token secret is missing.' }),
@@ -22,8 +26,15 @@ const EnvironmentSchema = z.object({
         .min(1, { message: 'Refresh Token expiry is missing.' })
         .refine((value) => value && typeof ms(value as StringValue) === 'number')
         .default('7d'),
+    // bcrypt
     SALT_ROUNDS: z.coerce.number().int().positive().default(10),
+    // pino logger
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'fatal']).optional(),
+    // cloudinary
+    CLOUDINARY_CLOUD_NAME: z.string(),
+    CLOUDINARY_API_KEY: z.string(),
+    CLOUDINARY_API_SECRET: z.string(),
+    // member role access secret key
     MEMBER_ROLE_SECRET_KEY: z.string(),
 });
 
