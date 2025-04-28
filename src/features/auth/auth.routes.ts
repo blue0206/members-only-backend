@@ -7,10 +7,11 @@ import {
 } from './auth.controller.js';
 import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
+import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
 
 const authRouter = Router();
 
-authRouter.post('/register', registerUser);
+authRouter.post('/register', multerMiddleware, registerUser);
 authRouter.post('/login', loginUser);
 
 // Protected routes.

@@ -11,6 +11,7 @@ import {
     setRole,
     userMessages,
 } from './user.controller.js';
+import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
 
 const userRouter = Router();
 
@@ -21,7 +22,13 @@ userRouter.get('/messages', accessTokenVerification, userMessages);
 
 // TODO: Refresh access token via frontend after the action below to have updated access token payload.
 // Update user details (except password).
-userRouter.patch('/', accessTokenVerification, csrfVerification, editUser);
+userRouter.patch(
+    '/',
+    accessTokenVerification,
+    csrfVerification,
+    multerMiddleware,
+    editUser
+);
 
 // Allow admin to delete other users.
 userRouter.delete(
