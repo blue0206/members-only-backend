@@ -59,7 +59,10 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     // Pass the parsed DTO and the avatar buffer to the service layer.
     const userData: RegisterServiceReturnType = await authService.register(
         registerData,
-        req.file?.buffer
+        // Narrow the avatar buffer type to Buffer or undefined.
+        req.files && 'avatar' in req.files && Array.isArray(req.files.avatar)
+            ? req.files.avatar[0]?.buffer
+            : undefined
     );
 
     // Map the data returned by the service layer to the RegisterResponseDto

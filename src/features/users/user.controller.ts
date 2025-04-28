@@ -104,11 +104,14 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     // Extract the EditUserRequestDto object from the parsedBody.
     const editUserData: EditUserRequestDto = parsedBody.data;
 
-    // Pass the parsed DTO to the service layer.
+    // Pass the parsed DTO and the avatar buffer to the service layer.
     const userData: EditUserServiceReturnType = await userService.editUser(
         editUserData,
         req.user,
-        req.file?.buffer
+        // Narrow the avatar buffer type to Buffer or undefined.
+        req.files && 'newAvatar' in req.files && Array.isArray(req.files.newAvatar)
+            ? req.files.newAvatar[0]?.buffer
+            : undefined
     );
 
     // Map the data returned by the service layer to the EditUserResponseDto
