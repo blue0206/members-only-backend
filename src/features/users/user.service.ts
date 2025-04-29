@@ -8,7 +8,7 @@ import {
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import bcrypt from 'bcrypt';
 import { config } from '../../core/config/index.js';
-import { uploadFile } from '../../core/lib/cloudinary.js';
+import { deleteFile, uploadFile } from '../../core/lib/cloudinary.js';
 import type {
     EditUserServiceReturnType,
     GetUserMessagesServiceReturnType,
@@ -269,6 +269,57 @@ class UserService {
 
         // Log the success of process.
         logger.info({ username, newRole: role }, 'User role updated successfully.');
+    }
+
+    async deleteUserAvatar(username: string): Promise<void> {
+        // Log the start of process.
+        logger.info(
+            { username },
+            'Deleting user avatar from database and cloudinary.'
+        );
+
+        // Extract publicId of avatar and delete it from DB.
+        const avatarPublicId: User['avatar'] = await prismaErrorHandler(async () => {
+            return await prisma.$transaction(async (tx) => {
+                // Get user with public ID.
+                const user = await tx.user.findUnique({
+                    where: {
+                        username,
+                    },
+                    select: {
+                        avatar: true,
+                    },
+                });
+
+                if (!user?.avatar) {
+                    throw new InternalServerError(
+                        'User avatar not found in database.',
+                        ErrorCodes.DATABASE_ERROR
+                    );
+                }
+
+                // Delete avatar from DB.
+                await tx.user.update({
+                    where: {
+                        username,
+                    },
+                    data: {
+                        avatar: null,
+                    },
+                });
+
+                return user.avatar;
+            });
+        });
+
+        // Delete avatar from cloudinary.
+        await deleteFile(avatarPublicId);
+
+        // Log the success of process.
+        logger.info(
+            { username },
+            'User avatar deleted from database and cloudinary successfully.'
+        );
     }
 }
 
