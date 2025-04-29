@@ -3,6 +3,7 @@ import { config } from '../config/index.js';
 import { logger } from '../logger.js';
 import { InternalServerError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import type { UploadApiResponse } from 'cloudinary';
 
 // Configure Cloudinary.
 cloudinary.config({
@@ -11,53 +12,65 @@ cloudinary.config({
     api_secret: config.CLOUDINARY_API_SECRET,
 });
 
-// Upload a buffer file to Cloudinary.
-export const uploadFile = (file: Buffer, username: string): Promise<string> => {
+// Upload a buffer file to Cloudinary, returns public_id of uploaded file.
+export const uploadFile = async (
+    file: Buffer,
+    username: string
+): Promise<string> => {
     logger.info({ username }, 'Uploading file to Cloudinary.');
-    return new Promise((resolve, reject) => {
-        cloudinary.uploader
-            .upload_stream(
-                {
-                    overwrite: true, // Replaces the file if already existing (matching the public_id).
-                    resource_type: 'auto',
-                    public_id: `avatar/${username}`, // Allows us to replace avatar in case user changes their avatar.
-                },
-                (err, result) => {
-                    if (err) {
-                        // Log the error and reject with a custom error.
-                        logger.error(
-                            { error: err },
-                            'Error uploading file to Cloudinary.'
-                        );
-                        reject(
-                            new InternalServerError(
-                                'File upload to Cloudinary failed.',
-                                ErrorCodes.FILE_UPLOAD_ERROR,
-                                err
-                            )
-                        );
-                        return;
-                    }
-                    // Just serves as a dummy check for TS to recognize result as defined.
-                    if (!result) {
-                        reject(
-                            new InternalServerError(
-                                'File upload to Cloudinary failed.'
-                            )
-                        );
-                        return;
-                    }
 
-                    logger.info(
-                        { avatarId: result.public_id },
-                        'File uploaded to Cloudinary successfully.'
-                    );
-                    // Resolve with the public ID of the uploaded file.
-                    resolve(result.public_id);
-                }
-            )
-            .end(file);
-    });
+    const uploadPromise: Promise<UploadApiResponse> = new Promise<UploadApiResponse>(
+        (resolve, reject) => {
+            cloudinary.uploader
+                .upload_stream(
+                    {
+                        overwrite: true, // Replaces the file if already existing (matching the public_id).
+                        resource_type: 'auto',
+                        public_id: `avatar/${username}`, // Allows us to replace avatar in case user changes their avatar.
+                        // Fixes deferred unhandled rejection from Cloudinary SDK which causes app to crash if global
+                        // unhandledRejection is setup. This is because SDK uses Q.defer() to defer the promise rejection.
+                        // https://github.com/cloudinary/cloudinary_npm/issues/215
+                        disable_promises: true,
+                    },
+                    (err, result) => {
+                        if (err) {
+                            // Reject with a custom error.
+                            reject(
+                                new InternalServerError(
+                                    'File upload to Cloudinary failed.',
+                                    ErrorCodes.FILE_UPLOAD_ERROR,
+                                    err
+                                )
+                            );
+                            return;
+                        }
+                        // Just serves as a defensive check.
+                        if (!result) {
+                            reject(
+                                new InternalServerError(
+                                    'File upload to Cloudinary failed.'
+                                )
+                            );
+                            return;
+                        }
+
+                        // Resolve with the public ID of the uploaded file.
+                        resolve(result);
+                    }
+                )
+                .end(file);
+        }
+    );
+
+    // Await the promise and log success.
+    const result: UploadApiResponse = await uploadPromise;
+
+    logger.info(
+        { avatarId: result, format: result.format, size: result.bytes },
+        'File uploaded to Cloudinary successfully.'
+    );
+
+    return result.public_id;
 };
 
 // Delete file.
