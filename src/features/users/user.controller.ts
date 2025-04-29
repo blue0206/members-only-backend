@@ -10,13 +10,12 @@ import {
     mapToMemberRoleUpdateResponseDto,
 } from './user.mapper.js';
 import {
-    DeleteUserRequestParamsSchema,
     EditUserRequestSchema,
     ErrorCodes,
     MemberRoleUpdateRequestSchema,
     ResetPasswordRequestSchema,
-    SetRoleRequestParamsSchema,
     SetRoleRequestQuerySchema,
+    UsernameParamsSchema,
 } from '@blue0206/members-only-shared-types';
 import type { Request, Response } from 'express';
 import type {
@@ -29,12 +28,11 @@ import type {
     ApiResponse,
     EditUserRequestDto,
     EditUserResponseDto,
-    DeleteUserRequestParamsDto,
     ResetPasswordRequestDto,
     MemberRoleUpdateRequestDto,
     MemberRoleUpdateResponseDto,
-    SetRoleRequestParamsDto,
     SetRoleRequestQueryDto,
+    UsernameParamsDto,
 } from '@blue0206/members-only-shared-types';
 
 export const userMessages = async (req: Request, res: Response): Promise<void> => {
@@ -142,8 +140,8 @@ export const adminDeleteUser = async (
     }
 
     // Validate the incoming request to make sure it adheres to the
-    // API contract (EditUserRequestDto).
-    const parsedParams = DeleteUserRequestParamsSchema.safeParse(req.params);
+    // API contract.
+    const parsedParams = UsernameParamsSchema.safeParse(req.params);
     // Throw Error if validation fails.
     if (!parsedParams.success) {
         throw new ValidationError(
@@ -153,8 +151,8 @@ export const adminDeleteUser = async (
         );
     }
 
-    // Extract the DeleteUserRequestParamsDto object from the parsedParams.
-    const requestParam: DeleteUserRequestParamsDto = parsedParams.data;
+    // Extract the UsernameParamsDto object from the parsedParams.
+    const requestParam: UsernameParamsDto = parsedParams.data;
 
     // Pass the parsed DTO to the service layer.
     await userService.deleteUserByUsername(requestParam.username);
@@ -294,8 +292,8 @@ export const setRole = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Validate the incoming request to make sure it adheres to the
-    // API contract (SetRoleRequestDto).
-    const parsedParams = SetRoleRequestParamsSchema.safeParse(req.params);
+    // API contract.
+    const parsedParams = UsernameParamsSchema.safeParse(req.params);
     const parsedQuery = SetRoleRequestQuerySchema.safeParse(req.query);
     // Throw Error if validation fails.
     if (!parsedParams.success) {
@@ -315,7 +313,7 @@ export const setRole = async (req: Request, res: Response): Promise<void> => {
 
     // Extract the DTOs for the username and the new role of the user
     // to be updated.
-    const usernameDto: SetRoleRequestParamsDto = parsedParams.data;
+    const usernameDto: UsernameParamsDto = parsedParams.data;
     const roleDto: SetRoleRequestQueryDto = parsedQuery.data;
 
     // Pass the parsed data to the service layer.

@@ -6,8 +6,7 @@ import {
 } from '../../core/errors/customErrors.js';
 import {
     CreateMessageRequestSchema,
-    DeleteMessageRequestParamsSchema,
-    EditMessageRequestParamsSchema,
+    MessageParamsSchema,
     EditMessageRequestSchema,
     ErrorCodes,
 } from '@blue0206/members-only-shared-types';
@@ -26,7 +25,7 @@ import type {
     CreateMessageResponseDto,
     EditMessageRequestDto,
     EditMessageResponseDto,
-    DeleteMessageRequestParamsDto,
+    MessageParamsDto,
 } from '@blue0206/members-only-shared-types';
 import type {
     CreateMessageServiceReturnType,
@@ -175,9 +174,9 @@ export const editMessage = async (req: Request, res: Response): Promise<void> =>
     }
 
     // Validate the incoming request to make sure it adheres to the
-    // API contract (EditMessageRequestDto).
+    // API contract (EditMessageRequestDto and MessageParamsDto).
     const parsedBody = EditMessageRequestSchema.safeParse(req.body);
-    const parsedParams = EditMessageRequestParamsSchema.safeParse(req.params);
+    const parsedParams = MessageParamsSchema.safeParse(req.params);
 
     // Throw Error if validation fails.
     if (!parsedBody.success) {
@@ -195,14 +194,15 @@ export const editMessage = async (req: Request, res: Response): Promise<void> =>
         );
     }
 
-    // Extract the EditMessageRequestDto object from the parsedBody.
+    // Extract the DTOs from the parsedBody.
     const messageEditData: EditMessageRequestDto = parsedBody.data;
+    const messageParams: MessageParamsDto = parsedParams.data;
 
     // Pass the extracted DTO to the service layer along with user ID from request object.
     const editedMessage: EditMessageServiceReturnType =
         await messageService.editMessage(
             messageEditData.newMessage,
-            parsedParams.data.messageId,
+            messageParams.messageId,
             req.user
         );
 
@@ -239,8 +239,8 @@ export const deleteMessage = async (req: Request, res: Response): Promise<void> 
     }
 
     // Validate the incoming request to make sure it adheres to the
-    // API contract (DeleteMessageRequestParamsDto).
-    const parsedParams = DeleteMessageRequestParamsSchema.safeParse(req.params);
+    // API contract (MessageParamsDto).
+    const parsedParams = MessageParamsSchema.safeParse(req.params);
 
     // Throw Error if validation fails.
     if (!parsedParams.success) {
@@ -252,7 +252,7 @@ export const deleteMessage = async (req: Request, res: Response): Promise<void> 
     }
 
     // Extract the params data from parsed data.
-    const deleteData: DeleteMessageRequestParamsDto = parsedParams.data;
+    const deleteData: MessageParamsDto = parsedParams.data;
 
     // Pass the extracted DTO to the service layer along with user ID from request object.
     await messageService.deleteMessage(deleteData.messageId, req.user);
