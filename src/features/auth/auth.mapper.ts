@@ -56,7 +56,7 @@ export const mapToLoginResponseDto = (
         firstname: userData.firstName,
         middlename: userData.middleName,
         lastname: userData.lastName,
-        avatar: userData.avatar,
+        avatar: userData.avatar ? getAvatarUrl(userData.avatar) : null,
         role: mapPrismaRoleToEnumRole(userData.role),
         accessToken: userData.accessToken,
     };
