@@ -5,6 +5,7 @@ import adminVerification from '../../core/middlewares/adminVerification.js';
 import {
     adminDeleteUser,
     deleteUserAccount,
+    deleteUserAvatar,
     editUser,
     memberRoleUpdate,
     resetUserPassword,
@@ -66,6 +67,14 @@ userRouter.patch(
     csrfVerification,
     adminVerification,
     setRole
+);
+
+// Allow registered users to delete avatar.
+userRouter.delete(
+    '/avatar/:username',
+    accessTokenVerification,
+    csrfVerification,
+    deleteUserAvatar
 );
 
 export default userRouter;
