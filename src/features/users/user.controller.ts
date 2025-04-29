@@ -322,3 +322,44 @@ export const setRole = async (req: Request, res: Response): Promise<void> => {
     // Send a success response with 204.
     res.status(204).end();
 };
+
+export const deleteUserAvatar = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    // Throw error if request id is missing.
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+
+    // Throw error if request object is not populated correctly by verification middleware.
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    // Validate incoming request params against schema.
+    const parsedParams = UsernameParamsSchema.safeParse(req.params);
+
+    // Throw Error if validation fails.
+    if (!parsedParams.success) {
+        throw new ValidationError(
+            'Invalid request params.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedParams.error.flatten()
+        );
+    }
+
+    // Extract the params data from parsed data.
+    const usernameDto: UsernameParamsDto = parsedParams.data;
+
+    // Pass the parsed data to the service layer.
+    await userService.deleteUserAvatar(usernameDto.username);
+
+    // Send a success response with 204.
+    res.status(204).end();
+};
