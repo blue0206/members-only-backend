@@ -18,7 +18,12 @@ import type { Request, Response } from 'express';
 
 const app = express();
 // Cors Middleware
-app.use(cors());
+app.use(
+    cors({
+        credentials: true,
+        origin: ['http://localhost:5173'],
+    })
+);
 // Assign request id via middleware.
 app.use(assignRequestId);
 // Assign logger middleware for http logging.
