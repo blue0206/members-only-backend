@@ -55,7 +55,7 @@ export const getMessagesWithoutAuthor = async (
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponse<GetMessagesWithoutAuthorResponseDto> = {
         success: true,
-        data: mappedMessages,
+        payload: mappedMessages,
         requestId: req.requestId,
         statusCode: 200,
     };
@@ -94,7 +94,7 @@ export const getMessagesWithAuthor = async (
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponse<GetMessagesResponseDto> = {
         success: true,
-        data: mappedMessages,
+        payload: mappedMessages,
         requestId: req.requestId,
         statusCode: 200,
     };
@@ -148,7 +148,7 @@ export const createNewMessage = async (
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponse<CreateMessageResponseDto> = {
         success: true,
-        data: mappedCreatedMessage,
+        payload: mappedCreatedMessage,
         requestId: req.requestId,
         statusCode: 201,
     };
@@ -213,7 +213,7 @@ export const editMessage = async (req: Request, res: Response): Promise<void> =>
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponse<EditMessageResponseDto> = {
         success: true,
-        data: mappedMessage,
+        payload: mappedMessage,
         requestId: req.requestId,
         statusCode: 200,
     };

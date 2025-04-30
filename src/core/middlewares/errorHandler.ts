@@ -45,7 +45,7 @@ export const errorHandler: ErrorRequestHandler = (
     }
     // Return api response for error.
     const ErrorResponse: ApiResponseError = {
-        error: ErrorPayload,
+        errorPayload: ErrorPayload,
         requestId: req.requestId,
         success: false,
     };

@@ -62,7 +62,7 @@ export const userMessages = async (req: Request, res: Response): Promise<void> =
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponse<GetUserMessagesResponseDto> = {
         success: true,
-        data: userMessages,
+        payload: userMessages,
         requestId: req.requestId,
         statusCode: 200,
     };
@@ -119,7 +119,7 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponse<EditUserResponseDto> = {
         success: true,
-        data: mappedUserData,
+        payload: mappedUserData,
         requestId: req.requestId,
         statusCode: 200,
     };
@@ -274,7 +274,7 @@ export const memberRoleUpdate = async (
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponse<MemberRoleUpdateResponseDto> = {
         success: true,
-        data: mappedData,
+        payload: mappedData,
         requestId: req.requestId,
         statusCode: 200,
     };

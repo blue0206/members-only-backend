@@ -93,7 +93,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponseSuccess<RegisterResponseDto> = {
         success: true,
-        data: responseData,
+        payload: responseData,
         requestId: req.requestId,
         statusCode: 201,
     };
@@ -153,7 +153,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponseSuccess<LoginResponseDto> = {
         success: true,
-        data: responseData,
+        payload: responseData,
         requestId: req.requestId,
         statusCode: 200,
     };
@@ -284,7 +284,7 @@ export const refreshUserTokens = async (
     // Create success response object adhering with API Contract.
     const successResponse: ApiResponseSuccess<RefreshResponseDto> = {
         success: true,
-        data: responseData,
+        payload: responseData,
         statusCode: 200,
         requestId: req.requestId,
     };
