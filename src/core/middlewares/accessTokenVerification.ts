@@ -6,7 +6,10 @@ import { UnauthorizedError } from '../errors/customErrors.js';
 import jwtErrorHandler from '../utils/jwtErrorHandler.js';
 import { AccessTokenPayloadSchema } from '../../features/auth/auth.types.js';
 import type { AccessTokenPayload } from '../../features/auth/auth.types.js';
-import type { ApiErrorPayload } from '@blue0206/members-only-shared-types';
+import type {
+    ApiErrorPayload,
+    ApiResponseError,
+} from '@blue0206/members-only-shared-types';
 import type { Request, Response, NextFunction } from 'express';
 
 export default function accessTokenVerification(
@@ -67,14 +70,20 @@ export default function accessTokenVerification(
                 },
                 `Access token validation failed: ${error.code}`
             );
-            // Prepare error payload as per API contract.
+            // Prepare error payload as per API contract and
+            // attach to error response.
             const ErrorPayload: ApiErrorPayload = {
                 message: error.message,
                 code: error.code,
                 statusCode: 401,
             };
+            const ErrorResponse: ApiResponseError = {
+                success: false,
+                errorPayload: ErrorPayload,
+                requestId: req.requestId,
+            };
             // Send error response.
-            res.status(401).json(ErrorPayload);
+            res.status(401).json(ErrorResponse);
         }
         // Forward to error middleware if error not instance of UnauthorizedError
         next(error);
