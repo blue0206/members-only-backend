@@ -1,12 +1,11 @@
+import mappedDtoValidator from '../../core/utils/mappedDtoValidator.js';
+import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
+import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import {
-    ErrorCodes,
     LoginResponseSchema,
     RefreshResponseSchema,
     RegisterResponseSchema,
 } from '@blue0206/members-only-shared-types';
-import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
-import { InternalServerError } from '../../core/errors/customErrors.js';
-import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import type {
     LoginResponseDto,
     RefreshResponseDto,
@@ -32,18 +31,13 @@ export const mapToRegisterResponseDto = (
         role: mapPrismaRoleToEnumRole(userData.role),
         accessToken: userData.accessToken,
     };
-    // Parse mapped data against schema.
-    const parsedData = RegisterResponseSchema.safeParse(mappedData);
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-    // Return mapped, parsed data.
-    return parsedData.data;
+
+    // Validate mapped data against schema.
+    const validatedData: RegisterResponseDto = mappedDtoValidator(
+        mappedData,
+        RegisterResponseSchema
+    );
+    return validatedData;
 };
 
 export const mapToLoginResponseDto = (
@@ -60,18 +54,13 @@ export const mapToLoginResponseDto = (
         role: mapPrismaRoleToEnumRole(userData.role),
         accessToken: userData.accessToken,
     };
-    // Parse mapped data against schema.
-    const parsedData = LoginResponseSchema.safeParse(mappedData);
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-    // Return mapped, parsed data.
-    return parsedData.data;
+
+    // Validate mapped data against schema.
+    const validatedData: LoginResponseDto = mappedDtoValidator(
+        mappedData,
+        LoginResponseSchema
+    );
+    return validatedData;
 };
 
 export const mapToRefreshResponseDto = (
@@ -81,16 +70,11 @@ export const mapToRefreshResponseDto = (
     const mappedData: RefreshResponseDto = {
         accessToken: data.accessToken,
     };
-    // Parse mapped data against schema.
-    const parsedData = RefreshResponseSchema.safeParse(mappedData);
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-    // Return mapped, parsed data.
-    return parsedData.data;
+
+    // Validate mapped data against schema.
+    const validatedData: RefreshResponseDto = mappedDtoValidator(
+        mappedData,
+        RefreshResponseSchema
+    );
+    return validatedData;
 };

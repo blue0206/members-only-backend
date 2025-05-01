@@ -1,7 +1,7 @@
+import mappedDtoValidator from '../../core/utils/mappedDtoValidator.js';
 import {
     CreateMessageResponseSchema,
     EditMessageResponseSchema,
-    ErrorCodes,
     GetMessagesResponseSchema,
     GetMessagesWithoutAuthorResponseSchema,
 } from '@blue0206/members-only-shared-types';
@@ -16,7 +16,6 @@ import type {
     EditMessageServiceReturnType,
     GetMessagesServiceReturnType,
 } from './message.types.js';
-import { InternalServerError } from '../../core/errors/customErrors.js';
 
 export const mapToGetMessagesWithoutAuthorResponseDto = (
     messages: GetMessagesServiceReturnType
@@ -32,20 +31,12 @@ export const mapToGetMessagesWithoutAuthorResponseDto = (
         }
     );
 
-    // Parse mapped data against schema.
-    const parsedData = GetMessagesWithoutAuthorResponseSchema.safeParse(mappedData);
-
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-
-    // Return mapped, parsed data.
-    return parsedData.data;
+    // Validate mapped data against schema.
+    const validatedData: GetMessagesWithoutAuthorResponseDto = mappedDtoValidator(
+        mappedData,
+        GetMessagesWithoutAuthorResponseSchema
+    );
+    return validatedData;
 };
 
 export const mapToGetMessagesResponseDto = (
@@ -62,20 +53,12 @@ export const mapToGetMessagesResponseDto = (
         };
     });
 
-    // Parse mapped data against schema.
-    const parsedData = GetMessagesResponseSchema.safeParse(mappedData);
-
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-
-    // Return mapped, parsed data.
-    return parsedData.data;
+    // Validate mapped data against schema.
+    const validatedData: GetMessagesResponseDto = mappedDtoValidator(
+        mappedData,
+        GetMessagesResponseSchema
+    );
+    return validatedData;
 };
 
 export const mapToCreateMessageResponseDto = (
@@ -99,20 +82,12 @@ export const mapToCreateMessageResponseDto = (
         };
     }
 
-    // Parse mapped data against schema.
-    const parsedData = CreateMessageResponseSchema.safeParse(mappedData);
-
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-
-    // Return mapped, parsed data.
-    return parsedData.data;
+    // Validate mapped data against schema.
+    const validatedData: CreateMessageResponseDto = mappedDtoValidator(
+        mappedData,
+        CreateMessageResponseSchema
+    );
+    return validatedData;
 };
 
 export const mapToEditMessageResponseDto = (
@@ -127,18 +102,10 @@ export const mapToEditMessageResponseDto = (
         username: data.author?.username,
     };
 
-    // Parse mapped data against schema.
-    const parsedData = EditMessageResponseSchema.safeParse(mappedData);
-
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-
-    // Return mapped, parsed data.
-    return parsedData.data;
+    // Validate mapped data against schema.
+    const validatedData: EditMessageResponseDto = mappedDtoValidator(
+        mappedData,
+        EditMessageResponseSchema
+    );
+    return validatedData;
 };

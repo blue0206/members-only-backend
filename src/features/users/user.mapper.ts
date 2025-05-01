@@ -1,5 +1,4 @@
-import { InternalServerError } from '../../core/errors/customErrors.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import mappedDtoValidator from '../../core/utils/mappedDtoValidator.js';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import {
     EditUserResponseSchema,
@@ -39,20 +38,12 @@ export const mapToGetUserMessagesResponseDto = (
         };
     });
 
-    // Parse mapped data against schema.
-    const parsedData = GetUserMessagesResponseSchema.safeParse(mappedData);
-
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-
-    // Return mapped, parsed data.
-    return parsedData.data;
+    // Validate mapped data against schema.
+    const validatedData: GetUserMessagesResponseDto = mappedDtoValidator(
+        mappedData,
+        GetUserMessagesResponseSchema
+    );
+    return validatedData;
 };
 
 export const mapToEditUserResponseDto = (
@@ -69,20 +60,12 @@ export const mapToEditUserResponseDto = (
         role: mapPrismaRoleToEnumRole(user.role),
     };
 
-    // Parse mapped data against schema.
-    const parsedData = EditUserResponseSchema.safeParse(mappedData);
-
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-
-    // Return mapped, parsed data.
-    return parsedData.data;
+    // Validate mapped data against schema.
+    const validatedData: EditUserResponseDto = mappedDtoValidator(
+        mappedData,
+        EditUserResponseSchema
+    );
+    return validatedData;
 };
 
 export const mapToMemberRoleUpdateResponseDto = (
@@ -93,18 +76,10 @@ export const mapToMemberRoleUpdateResponseDto = (
         role: mapPrismaRoleToEnumRole(data.role),
     };
 
-    // Parse mapped data against schema.
-    const parsedData = MemberRoleUpdateResponseSchema.safeParse(mappedData);
-
-    // Throw error if parsing fails.
-    if (!parsedData.success) {
-        throw new InternalServerError(
-            'DTO Mapping Error',
-            ErrorCodes.INTERNAL_SERVER_ERROR,
-            parsedData.error.flatten()
-        );
-    }
-
-    // Return mapped, parsed data.
-    return parsedData.data;
+    // Validate mapped data against schema.
+    const validatedData: MemberRoleUpdateResponseDto = mappedDtoValidator(
+        mappedData,
+        MemberRoleUpdateResponseSchema
+    );
+    return validatedData;
 };
