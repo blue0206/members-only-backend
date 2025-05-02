@@ -27,8 +27,8 @@ export const uploadFile = async (
                         overwrite: true, // Replaces the file if already existing (matching the public_id).
                         resource_type: 'auto',
                         public_id: `avatar/${username}`, // Allows us to replace avatar in case user changes their avatar.
-                        // Fixes deferred unhandled rejection from Cloudinary SDK which causes app to crash if global
-                        // unhandledRejection is setup. This is because SDK uses Q.defer() to defer the promise rejection.
+                        // Fixes deferred promise rejection from Cloudinary SDK which causes app to crash if global
+                        // unhandledRejection is setup. This is because SDK uses Q.defer() to defer the promise resolve/rejection.
                         // https://github.com/cloudinary/cloudinary_npm/issues/215
                         disable_promises: true,
                     },
@@ -54,7 +54,7 @@ export const uploadFile = async (
                             return;
                         }
 
-                        // Resolve with the public ID of the uploaded file.
+                        // Resolve with the uploaded file.
                         resolve(result);
                     }
                 )
