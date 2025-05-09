@@ -21,7 +21,6 @@ const userRouter = Router();
 // Get all of the user's messages.
 userRouter.get('/messages', accessTokenVerification, userMessages);
 
-// TODO: Refresh access token via frontend after the action below to have updated access token payload.
 // Update user details (except password).
 userRouter.patch(
     '/',
@@ -51,7 +50,6 @@ userRouter.patch(
     resetUserPassword
 );
 
-// // TODO: Refresh access token via frontend after the action below to have updated access token payload.
 // Promote user to member if they provide correct secret key.
 userRouter.patch(
     '/role',
@@ -71,7 +69,7 @@ userRouter.patch(
 
 // Allow registered users to delete avatar.
 userRouter.delete(
-    '/avatar/:username',
+    '/avatar',
     accessTokenVerification,
     csrfVerification,
     deleteUserAvatar

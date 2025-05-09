@@ -342,23 +342,11 @@ export const deleteUserAvatar = async (
         );
     }
 
-    // Validate incoming request params against schema.
-    const parsedParams = UsernameParamsSchema.safeParse(req.params);
+    // Extract the username from request object populated by verification middleware.
+    const username = req.user.username;
 
-    // Throw Error if validation fails.
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request params.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-
-    // Extract the params data from parsed data.
-    const usernameDto: UsernameParamsDto = parsedParams.data;
-
-    // Pass the parsed data to the service layer.
-    await userService.deleteUserAvatar(usernameDto.username);
+    // Pass the username to the service layer.
+    await userService.deleteUserAvatar(username);
 
     // Send a success response with 204.
     res.status(204).end();
