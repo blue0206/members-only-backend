@@ -12,7 +12,6 @@ import { deleteFile, uploadFile } from '../../core/lib/cloudinary.js';
 import type {
     EditUserServiceReturnType,
     GetUserMessagesServiceReturnType,
-    SetMemberRoleServiceReturnType,
 } from './user.types.js';
 import type {
     EditUserRequestDto,
@@ -211,10 +210,7 @@ class UserService {
         logger.info({ userId }, 'User password reset in database successfully.');
     }
 
-    async setMemberRole(
-        userId: number,
-        secretKey: string
-    ): Promise<SetMemberRoleServiceReturnType> {
+    async setMemberRole(userId: number, secretKey: string): Promise<void> {
         // Log the start of process.
         logger.info({ userId }, 'Setting user role in database.');
 
@@ -227,28 +223,25 @@ class UserService {
         }
 
         // Update member role in DB.
-        const updatedUser: SetMemberRoleServiceReturnType = await prismaErrorHandler(
-            async () => {
-                return await prisma.user.update({
-                    where: {
-                        id: userId,
-                    },
-                    data: {
-                        role: 'MEMBER',
-                    },
-                    select: {
-                        role: true,
-                    },
-                });
-            }
-        );
+        await prismaErrorHandler(async () => {
+            return await prisma.user.update({
+                where: {
+                    id: userId,
+                },
+                data: {
+                    role: 'MEMBER',
+                },
+                select: {
+                    role: true,
+                },
+            });
+        });
 
         // Log the success of process.
         logger.info(
-            { userId, role: updatedUser.role },
+            { userId, role: 'MEMBER' },
             'User role set in database successfully.'
         );
-        return updatedUser;
     }
 
     async updateRole(username: string, role: Role): Promise<void> {

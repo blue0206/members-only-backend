@@ -3,18 +3,15 @@ import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import {
     EditUserResponseSchema,
     GetUserMessagesResponseSchema,
-    MemberRoleUpdateResponseSchema,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import type {
     EditUserResponseDto,
     GetUserMessagesResponseDto,
-    MemberRoleUpdateResponseDto,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import type {
     EditUserServiceReturnType,
     GetUserMessagesServiceReturnType,
-    SetMemberRoleServiceReturnType,
 } from './user.types.js';
 
 export const mapToGetUserMessagesResponseDto = (
@@ -64,22 +61,6 @@ export const mapToEditUserResponseDto = (
     const validatedData: EditUserResponseDto = mappedDtoValidator(
         mappedData,
         EditUserResponseSchema
-    );
-    return validatedData;
-};
-
-export const mapToMemberRoleUpdateResponseDto = (
-    data: SetMemberRoleServiceReturnType
-): MemberRoleUpdateResponseDto => {
-    // Map data.
-    const mappedData: MemberRoleUpdateResponseDto = {
-        role: mapPrismaRoleToEnumRole(data.role),
-    };
-
-    // Validate mapped data against schema.
-    const validatedData: MemberRoleUpdateResponseDto = mappedDtoValidator(
-        mappedData,
-        MemberRoleUpdateResponseSchema
     );
     return validatedData;
 };

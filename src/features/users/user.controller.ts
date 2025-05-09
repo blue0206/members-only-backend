@@ -7,7 +7,6 @@ import {
 import {
     mapToEditUserResponseDto,
     mapToGetUserMessagesResponseDto,
-    mapToMemberRoleUpdateResponseDto,
 } from './user.mapper.js';
 import {
     EditUserRequestSchema,
@@ -21,7 +20,6 @@ import type { Request, Response } from 'express';
 import type {
     EditUserServiceReturnType,
     GetUserMessagesServiceReturnType,
-    SetMemberRoleServiceReturnType,
 } from './user.types.js';
 import type {
     GetUserMessagesResponseDto,
@@ -30,7 +28,6 @@ import type {
     EditUserResponseDto,
     ResetPasswordRequestDto,
     MemberRoleUpdateRequestDto,
-    MemberRoleUpdateResponseDto,
     SetRoleRequestQueryDto,
     UsernameParamsDto,
 } from '@blue0206/members-only-shared-types';
@@ -263,24 +260,10 @@ export const memberRoleUpdate = async (
     const memberRoleUpdateData: MemberRoleUpdateRequestDto = parsedBody.data;
 
     // Pass the parsed DTO to the service layer.
-    const updatedUser: SetMemberRoleServiceReturnType =
-        await userService.setMemberRole(req.user.id, memberRoleUpdateData.secretKey);
+    await userService.setMemberRole(req.user.id, memberRoleUpdateData.secretKey);
 
-    // Map the data returned by the service layer to the SetMemberRoleResponseDto
-    // to adhere to API contract.
-    const mappedData: MemberRoleUpdateResponseDto =
-        mapToMemberRoleUpdateResponseDto(updatedUser);
-
-    // Create success response object adhering with API Contract.
-    const successResponse: ApiResponse<MemberRoleUpdateResponseDto> = {
-        success: true,
-        payload: mappedData,
-        requestId: req.requestId,
-        statusCode: 200,
-    };
-
-    // Send success response.
-    res.status(200).json(successResponse);
+    // End with a 204 success response.
+    res.status(204).end();
 };
 
 export const setRole = async (req: Request, res: Response): Promise<void> => {
