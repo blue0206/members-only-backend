@@ -26,6 +26,7 @@
         "lint": "eslint . --ext .ts",
         "lint:fix": "eslint . --ext .ts --fix",
         "db:generate": "prisma generate --schema prisma/schema/ && node ./tools/client-fix.js",
+        "db:prisma-engine-fix": "cp ./src/core/db/prisma-client/*.node ./dist/core/db/prisma-client/",
         "build": "tsc",
         "dev": "node dist/index.js",
         "dev-watch": "nodemon dist/index.js",
