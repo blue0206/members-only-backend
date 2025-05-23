@@ -1,0 +1,28 @@
+FROM node:20
+
+# Set working directory.
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies.
+RUN npm install
+
+# Copy the rest of the application.
+COPY . .
+
+# Generate the prisma client.
+RUN npm run db:generate
+
+# Build the application.
+RUN npm run build
+
+# Copy prisma engine to dist.
+RUN npm run db:prisma-engine-fix
+
+# Expose dev port.
+EXPOSE 8000
+
+# Run application.
+CMD ["npm", "run", "dev-watch"]
