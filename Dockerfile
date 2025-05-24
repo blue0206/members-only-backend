@@ -33,7 +33,10 @@ WORKDIR /app
 # Copy necessary files from builder stage
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-# COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
+# Make entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
 
 # Expose port 8000
 EXPOSE 8000
@@ -41,4 +44,6 @@ EXPOSE 8000
 # Set NODE_ENV to production
 ENV NODE_ENV=production
 
+# Set entrypoint script and run the application.
+ENTRYPOINT [ "app/entrypoint.sh" ]
 CMD ["node", "dist/index.js"]
