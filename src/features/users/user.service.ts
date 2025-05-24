@@ -25,10 +25,8 @@ class UserService {
     async getUserMessages(
         userId: number
     ): Promise<GetUserMessagesServiceReturnType> {
-        // Log the start of process.
         logger.info({ userId }, 'Getting user messages from database.');
 
-        // Get user messages from DB.
         const userWithMessages: GetUserMessagesServiceReturnType | null =
             await prismaErrorHandler(async () => {
                 return await prisma.user.findUnique({
@@ -43,7 +41,7 @@ class UserService {
                     },
                 });
             });
-        // Throw error if user not found.
+
         if (!userWithMessages) {
             throw new InternalServerError(
                 'User not found in database.',
@@ -51,7 +49,6 @@ class UserService {
             );
         }
 
-        // Log the success of process and return data.
         logger.info(
             { username: userWithMessages.username, role: userWithMessages.role },
             'User messages retrieved from database successfully.'
@@ -64,20 +61,17 @@ class UserService {
         userPayload: AccessTokenPayload,
         avatarImage: Buffer | undefined
     ): Promise<EditUserServiceReturnType> {
-        // Log the start of process.
         logger.info(
             { userId: userPayload.id },
             'Updating user details in database.'
         );
 
-        // Initialize avatarPublicId variable and if avatarImage buffer has been
-        // provided, upload it to cloudinary and store the public id in it to store in DB.
+        // If avatarImage buffer has been provided, upload it to cloudinary.
         let avatarPublicId: string | null;
         if (avatarImage) {
             avatarPublicId = await uploadFile(avatarImage, userPayload.username);
         }
 
-        // Update user details in DB.
         const user: EditUserServiceReturnType = await prismaErrorHandler(
             async () => {
                 return await prisma.user.update({
@@ -98,7 +92,6 @@ class UserService {
             }
         );
 
-        // Log the success of process and return data.
         logger.info(
             {
                 id: user.id,
@@ -113,10 +106,8 @@ class UserService {
     }
 
     async deleteUserByUsername(username: string): Promise<void> {
-        // Log the start of process.
         logger.info({ username }, 'Deleting user from database.');
 
-        // Delete user from DB.
         await prismaErrorHandler(async () => {
             return await prisma.user.delete({
                 where: {
@@ -125,15 +116,12 @@ class UserService {
             });
         });
 
-        // Log the success of process.
         logger.info({ username }, 'User deleted from database successfully.');
     }
 
     async deleteAccount(userId: number): Promise<void> {
-        // Log the start of process.
         logger.info({ userId }, 'Deleting user from database.');
 
-        // Delete user from DB.
         await prismaErrorHandler(async () => {
             return await prisma.user.delete({
                 where: {
@@ -142,7 +130,6 @@ class UserService {
             });
         });
 
-        // Log the success of process.
         logger.info({ userId }, 'User deleted from database successfully.');
     }
 
@@ -150,10 +137,8 @@ class UserService {
         passData: ResetPasswordRequestDto,
         userId: number
     ): Promise<void> {
-        // Log the start of process.
         logger.info({ userId }, 'Resetting user password in database.');
 
-        // Get existing hashed password from database.
         const user: Pick<User, 'password'> | null = await prismaErrorHandler(
             async () => {
                 return await prisma.user.findUnique({
@@ -167,7 +152,6 @@ class UserService {
             }
         );
 
-        // Throw error if user not found.
         if (!user) {
             throw new InternalServerError(
                 'User not found in database.',
@@ -175,12 +159,11 @@ class UserService {
             );
         }
 
-        // Compare the existing hashed password with the provided old password.
         const passwordMatch = await bcrypt.compare(
             passData.oldPassword,
             user.password
         );
-        // Throw error if password does not match.
+
         if (!passwordMatch) {
             throw new UnauthorizedError(
                 'Incorrect password.',
@@ -188,13 +171,11 @@ class UserService {
             );
         }
 
-        // Hash the new password with bcrypt.
         const newHashedPassword = await bcrypt.hash(
             passData.newPassword,
             config.SALT_ROUNDS
         );
 
-        // Update database with new password.
         await prismaErrorHandler(async () => {
             return await prisma.user.update({
                 where: {
@@ -206,15 +187,12 @@ class UserService {
             });
         });
 
-        // Log the success of process.
         logger.info({ userId }, 'User password reset in database successfully.');
     }
 
     async setMemberRole(userId: number, secretKey: string): Promise<void> {
-        // Log the start of process.
         logger.info({ userId }, 'Setting user role in database.');
 
-        // Check if secret key is correct:
         if (secretKey !== config.MEMBER_ROLE_SECRET_KEY) {
             throw new UnauthorizedError(
                 'The secret key is incorrect.',
@@ -222,7 +200,6 @@ class UserService {
             );
         }
 
-        // Update member role in DB.
         await prismaErrorHandler(async () => {
             return await prisma.user.update({
                 where: {
@@ -237,7 +214,6 @@ class UserService {
             });
         });
 
-        // Log the success of process.
         logger.info(
             { userId, role: 'MEMBER' },
             'User role set in database successfully.'
@@ -245,10 +221,8 @@ class UserService {
     }
 
     async updateRole(username: string, role: Role): Promise<void> {
-        // Log the start of process.
         logger.info({ username, newRole: role }, 'Updating user role in database.');
 
-        // Update user role in DB.
         await prismaErrorHandler(async () => {
             return await prisma.user.update({
                 where: {
@@ -260,7 +234,6 @@ class UserService {
             });
         });
 
-        // Log the success of process.
         logger.info({ username, newRole: role }, 'User role updated successfully.');
     }
 
@@ -271,10 +244,8 @@ class UserService {
             'Deleting user avatar from database and cloudinary.'
         );
 
-        // Extract publicId of avatar and delete it from DB.
         const avatarPublicId: User['avatar'] = await prismaErrorHandler(async () => {
             return await prisma.$transaction(async (tx) => {
-                // Get user with public ID.
                 const user = await tx.user.findUnique({
                     where: {
                         username,
@@ -291,7 +262,6 @@ class UserService {
                     );
                 }
 
-                // Delete avatar from DB.
                 await tx.user.update({
                     where: {
                         username,
@@ -305,10 +275,8 @@ class UserService {
             });
         });
 
-        // Delete avatar from cloudinary.
         await deleteFile(avatarPublicId);
 
-        // Log the success of process.
         logger.info(
             { username },
             'User avatar deleted from database and cloudinary successfully.'

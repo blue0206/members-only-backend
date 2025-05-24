@@ -14,7 +14,6 @@ import { BadRequestError, ValidationError } from '../errors/customErrors.js';
 // Setup multer memory storage.
 const storage = multer.memoryStorage();
 
-// Configure multer upload middleware with validation.
 const upload = multer({
     storage,
     limits: {
@@ -24,10 +23,8 @@ const upload = multer({
         parts: 8,
     },
     fileFilter: (_req, file, cb) => {
-        // Initialize error code as VALIDATION_ERROR.
         let errorCode: ApiErrorCode = ErrorCodes.VALIDATION_ERROR;
 
-        // Check if the image type is supported. If not, update error code to FILE_TYPE_NOT_SUPPORTED.
         if (
             !supportedImageFormats.includes(
                 file.mimetype as SupportedImageFormatsType
@@ -36,15 +33,12 @@ const upload = multer({
             errorCode = ErrorCodes.FILE_TYPE_NOT_SUPPORTED;
         }
 
-        // Check if the image size is too large. If so, update error code to FILE_TOO_LARGE.
         if (file.size > 8000000) {
             errorCode = ErrorCodes.FILE_TOO_LARGE;
         }
 
-        // Parse the file against schema.
         const parsedFile = AvatarSchema.safeParse(file);
 
-        // Send error if validation fails.
         if (!parsedFile.success) {
             cb(
                 new ValidationError(
@@ -56,12 +50,11 @@ const upload = multer({
             return;
         }
 
-        // If validation passes, accept the file.
         cb(null, true);
     },
 });
 
-// Create a wrapper around multer upload middleware
+// A wrapper around multer upload middleware
 // to invoke inside our main middleware.
 const uploadHandler = upload.fields([
     {
@@ -74,7 +67,7 @@ const uploadHandler = upload.fields([
     },
 ]);
 
-// Main middleware, handles file upload and errors.
+// Main middleware; handles file upload and errors.
 export default function multerMiddleware(
     req: Request,
     res: Response,
@@ -93,7 +86,7 @@ export default function multerMiddleware(
                             )
                         );
                         break;
-                    // Send multer error message as-is for other errors.
+                    // Send multer error message as-is for all other errors.
                     default:
                         next(
                             new BadRequestError(

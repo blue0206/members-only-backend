@@ -8,7 +8,7 @@ export const loggerMiddleware = pinoHttp({
         requestId: req.requestId ?? '',
     }),
     serializers: {
-        // Don't log authorization header (access token) and cookie (refresh token) for security reasons.
+        // Redact authorization header (access token) and cookie (refresh token) for security reasons.
         req: (req: Request) => {
             req.headers = {
                 ...req.headers,

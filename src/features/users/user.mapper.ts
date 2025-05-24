@@ -17,7 +17,6 @@ import type {
 export const mapToGetUserMessagesResponseDto = (
     data: GetUserMessagesServiceReturnType
 ): GetUserMessagesResponseDto => {
-    // Map data.
     const mappedData: GetUserMessagesResponseDto = data.messages.map((message) => {
         if (data.role === 'USER') {
             return {
@@ -35,7 +34,6 @@ export const mapToGetUserMessagesResponseDto = (
         };
     });
 
-    // Validate mapped data against schema.
     const validatedData: GetUserMessagesResponseDto = mappedDtoValidator(
         mappedData,
         GetUserMessagesResponseSchema
@@ -46,7 +44,6 @@ export const mapToGetUserMessagesResponseDto = (
 export const mapToEditUserResponseDto = (
     user: EditUserServiceReturnType
 ): EditUserResponseDto => {
-    // Map data.
     const mappedData: EditUserResponseDto = {
         id: user.id,
         username: user.username,
@@ -57,7 +54,6 @@ export const mapToEditUserResponseDto = (
         role: mapPrismaRoleToEnumRole(user.role),
     };
 
-    // Validate mapped data against schema.
     const validatedData: EditUserResponseDto = mappedDtoValidator(
         mappedData,
         EditUserResponseSchema

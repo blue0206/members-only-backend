@@ -11,7 +11,6 @@ export default function memberVerification(
     // Get user payload from req.user (populated by access token verification middleware).
     const userPayload = req.user;
 
-    // The user is not Member or Admin, throw error.
     if (userPayload && userPayload.role === Role.USER) {
         throw new ForbiddenError(
             'Member or Admin privileges are required.',
@@ -20,11 +19,9 @@ export default function memberVerification(
     }
 
     // The user is a Member or Admin, grant access by passing request forward.
-    // Log success.
     logger.debug(
         { userPayload },
         'Member or Admin privileges verified successfully.'
     );
-    // Pass request forward.
     next();
 }

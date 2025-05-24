@@ -15,9 +15,6 @@ export default function csrfVerification(
     _res: Response,
     next: NextFunction
 ): void {
-    // We throw error and block the request if any of the following checks
-    // fail as it raises the concern of a probable CSRF attack.
-
     // Check if CSRF token is present in header (to be sent by client.)
     if (!req.headers['x-csrf-token']) {
         throw new ForbiddenError(
@@ -40,8 +37,6 @@ export default function csrfVerification(
         );
     }
 
-    // Log success.
     logger.debug('CSRF token verification successful.');
-    // The checks have passed, pass on the request.
     next();
 }

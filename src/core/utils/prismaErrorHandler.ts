@@ -18,7 +18,6 @@ export default async function prismaErrorHandler<QueryReturnType>(
         const queryResult: QueryReturnType = await queryFn();
         return queryResult;
     } catch (error) {
-        // Log the prisma generated error.
         logger.error({ err: error }, 'Prisma error caught.');
 
         // Handle different instances of Prisma Error.

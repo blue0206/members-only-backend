@@ -20,7 +20,6 @@ import type {
 export const mapToRegisterResponseDto = (
     userData: RegisterServiceReturnType
 ): RegisterResponseDto => {
-    // Map data.
     const mappedData: RegisterResponseDto = {
         id: userData.id,
         username: userData.username,
@@ -32,7 +31,6 @@ export const mapToRegisterResponseDto = (
         accessToken: userData.accessToken,
     };
 
-    // Validate mapped data against schema.
     const validatedData: RegisterResponseDto = mappedDtoValidator(
         mappedData,
         RegisterResponseSchema
@@ -43,7 +41,6 @@ export const mapToRegisterResponseDto = (
 export const mapToLoginResponseDto = (
     userData: LoginServiceReturnType
 ): LoginResponseDto => {
-    // Map data.
     const mappedData: LoginResponseDto = {
         id: userData.id,
         username: userData.username,
@@ -55,7 +52,6 @@ export const mapToLoginResponseDto = (
         accessToken: userData.accessToken,
     };
 
-    // Validate mapped data against schema.
     const validatedData: LoginResponseDto = mappedDtoValidator(
         mappedData,
         LoginResponseSchema
@@ -66,12 +62,10 @@ export const mapToLoginResponseDto = (
 export const mapToRefreshResponseDto = (
     data: RefreshServiceReturnType
 ): RefreshResponseDto => {
-    // Map data.
     const mappedData: RefreshResponseDto = {
         accessToken: data.accessToken,
     };
 
-    // Validate mapped data against schema.
     const validatedData: RefreshResponseDto = mappedDtoValidator(
         mappedData,
         RefreshResponseSchema

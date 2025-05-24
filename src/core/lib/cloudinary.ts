@@ -5,7 +5,6 @@ import { InternalServerError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import type { UploadApiResponse } from 'cloudinary';
 
-// Configure Cloudinary.
 cloudinary.config({
     cloud_name: config.CLOUDINARY_CLOUD_NAME,
     api_key: config.CLOUDINARY_API_KEY,
@@ -34,7 +33,6 @@ export const uploadFile = async (
                     },
                     (err, result) => {
                         if (err) {
-                            // Reject with a custom error.
                             reject(
                                 new InternalServerError(
                                     'File upload to Cloudinary failed.',
@@ -44,7 +42,6 @@ export const uploadFile = async (
                             );
                             return;
                         }
-                        // Just serves as a defensive check.
                         if (!result) {
                             reject(
                                 new InternalServerError(
@@ -54,7 +51,6 @@ export const uploadFile = async (
                             return;
                         }
 
-                        // Resolve with the uploaded file.
                         resolve(result);
                     }
                 )
@@ -62,9 +58,7 @@ export const uploadFile = async (
         }
     );
 
-    // Await the promise and log success.
     const result: UploadApiResponse = await uploadPromise;
-
     logger.info(
         { avatarId: result, format: result.format, size: result.bytes },
         'File uploaded to Cloudinary successfully.'
@@ -73,7 +67,6 @@ export const uploadFile = async (
     return result.public_id;
 };
 
-// Delete file.
 export const deleteFile = async (publicId: string): Promise<void> => {
     try {
         await cloudinary.uploader.destroy(publicId);

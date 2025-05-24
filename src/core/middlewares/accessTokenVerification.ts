@@ -17,32 +17,27 @@ export default function accessTokenVerification(
     res: Response,
     next: NextFunction
 ): void {
-    // Get access token from authorization header.
     const accessToken = req.headers.authorization?.split(' ')[1];
 
     // Verify access token and pass the token payload the request for further access
     // of user details in protected routes.
     try {
         req.user = jwtErrorHandler((): AccessTokenPayload => {
-            // Throw error if token is missing. Handled in catch statement.
             if (!accessToken) {
                 throw new UnauthorizedError(
                     'Missing access token.',
                     ErrorCodes.AUTHENTICATION_REQUIRED
                 );
             }
-            // Decode token and populate user details in request.
             const decodedToken = jwt.verify(accessToken, config.ACCESS_TOKEN_SECRET);
 
             // Parse the decoded token against the defined zod schema. This approach
             // is more type safe and asserts consistency in payloads across signing and verification.
             const parsedToken = AccessTokenPayloadSchema.parse(decodedToken);
 
-            // Return correctly typed parsed token.
             return parsedToken;
         });
 
-        // Log success
         logger.debug(
             {
                 username: req.user.username,
@@ -70,8 +65,7 @@ export default function accessTokenVerification(
                 },
                 `Access token validation failed: ${error.code}`
             );
-            // Prepare error payload as per API contract and
-            // attach to error response.
+
             const ErrorPayload: ApiErrorPayload = {
                 message: error.message,
                 code: error.code,
@@ -82,10 +76,10 @@ export default function accessTokenVerification(
                 errorPayload: ErrorPayload,
                 requestId: req.requestId,
             };
-            // Send error response.
+
             res.status(401).json(ErrorResponse);
         }
-        // Forward to error middleware if error not instance of UnauthorizedError
+        // Forward to error middleware.
         next(error);
     }
 }

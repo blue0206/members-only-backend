@@ -28,13 +28,13 @@ app.use(
 app.use(assignRequestId);
 // Assign logger middleware for http logging.
 app.use(loggerMiddleware);
-// Setup cookie-parser.
+// Setup cookie-parser for parsing cookies.
 app.use(cookieParser());
 
 // Middlewares
-app.use(helmet()); // Setup helmet
-app.use(express.json()); // Parse JSON request body.
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request body.
+app.use(helmet());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/v1/auth', authRouter);
@@ -61,7 +61,6 @@ const server: Server = app.listen(PORT, () => {
 
 // Signals to listen for.
 const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-// Shut down flag to prevent multiple shutdown calls.
 let shuttingDown = false;
 
 // eslint-disable-next-line @typescript-eslint/require-await
@@ -71,7 +70,7 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
         logger.warn(`Already shutting down. Ignoring signal: ${signal}`);
         return;
     }
-    shuttingDown = true; // Set flag to true to ignore subsequent calls.
+    shuttingDown = true;
     logger.warn(`Received ${signal}. Gracefully shutting down....`);
 
     // 1. Stop server.

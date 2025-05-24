@@ -26,7 +26,6 @@ export class AppError extends Error {
     }
 }
 
-// Bad Request Error class.
 export class BadRequestError extends AppError {
     constructor(
         message = 'Bad Request',
@@ -38,7 +37,6 @@ export class BadRequestError extends AppError {
     }
 }
 
-// Not Found Error class.
 export class NotFoundError extends AppError {
     constructor(
         message = 'Requested resource not found.',
@@ -50,7 +48,6 @@ export class NotFoundError extends AppError {
     }
 }
 
-// Conflict Error class.
 export class ConflictError extends AppError {
     constructor(
         message = 'Resource conflict.',
@@ -62,7 +59,6 @@ export class ConflictError extends AppError {
     }
 }
 
-// Unauthorized Error class.
 export class UnauthorizedError extends AppError {
     constructor(
         message = 'Unauthorized',
@@ -74,7 +70,6 @@ export class UnauthorizedError extends AppError {
     }
 }
 
-// Forbidden Error class.
 export class ForbiddenError extends AppError {
     constructor(
         message = 'Forbidden',
@@ -86,7 +81,6 @@ export class ForbiddenError extends AppError {
     }
 }
 
-// Validation Error class.
 export class ValidationError extends AppError {
     constructor(
         message = 'Validation Error',
@@ -98,7 +92,6 @@ export class ValidationError extends AppError {
     }
 }
 
-// Internal Server Error class.
 export class InternalServerError extends AppError {
     constructor(
         message = 'Internal Server Error',

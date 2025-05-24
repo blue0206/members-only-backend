@@ -20,7 +20,6 @@ import type {
 export const mapToGetMessagesWithoutAuthorResponseDto = (
     messages: GetMessagesServiceReturnType
 ): GetMessagesWithoutAuthorResponseDto => {
-    // Map data.
     const mappedData: GetMessagesWithoutAuthorResponseDto = messages.map(
         (message) => {
             return {
@@ -31,7 +30,6 @@ export const mapToGetMessagesWithoutAuthorResponseDto = (
         }
     );
 
-    // Validate mapped data against schema.
     const validatedData: GetMessagesWithoutAuthorResponseDto = mappedDtoValidator(
         mappedData,
         GetMessagesWithoutAuthorResponseSchema
@@ -42,7 +40,6 @@ export const mapToGetMessagesWithoutAuthorResponseDto = (
 export const mapToGetMessagesResponseDto = (
     messages: GetMessagesServiceReturnType
 ): GetMessagesResponseDto => {
-    // Map data.
     const mappedData: GetMessagesResponseDto = messages.map((message) => {
         return {
             messageId: message.id,
@@ -53,7 +50,6 @@ export const mapToGetMessagesResponseDto = (
         };
     });
 
-    // Validate mapped data against schema.
     const validatedData: GetMessagesResponseDto = mappedDtoValidator(
         mappedData,
         GetMessagesResponseSchema
@@ -64,7 +60,6 @@ export const mapToGetMessagesResponseDto = (
 export const mapToCreateMessageResponseDto = (
     data: CreateMessageServiceReturnType
 ): CreateMessageResponseDto => {
-    // Map data.
     let mappedData: CreateMessageResponseDto;
     if (data.author?.role === 'USER') {
         mappedData = {
@@ -82,7 +77,6 @@ export const mapToCreateMessageResponseDto = (
         };
     }
 
-    // Validate mapped data against schema.
     const validatedData: CreateMessageResponseDto = mappedDtoValidator(
         mappedData,
         CreateMessageResponseSchema
@@ -93,7 +87,6 @@ export const mapToCreateMessageResponseDto = (
 export const mapToEditMessageResponseDto = (
     data: EditMessageServiceReturnType
 ): EditMessageResponseDto => {
-    // Map data.
     const mappedData: EditMessageResponseDto = {
         messageId: data.id,
         message: data.content,
@@ -102,7 +95,6 @@ export const mapToEditMessageResponseDto = (
         username: data.author?.username,
     };
 
-    // Validate mapped data against schema.
     const validatedData: EditMessageResponseDto = mappedDtoValidator(
         mappedData,
         EditMessageResponseSchema
