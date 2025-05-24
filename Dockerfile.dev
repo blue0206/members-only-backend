@@ -12,6 +12,9 @@ RUN npm install
 # Copy the rest of the application.
 COPY . .
 
+# Make entrypoint script executable.
+RUN chmod +x ./entrypoint.dev.sh
+
 # Generate the prisma client.
 RUN npm run db:generate
 
@@ -24,5 +27,6 @@ RUN npm run db:prisma-engine-fix
 # Expose dev port.
 EXPOSE 8000
 
-# Run application.
+# Set entrypoint script and run the application.
+ENTRYPOINT [ "./entrypoint.dev.sh" ]
 CMD ["npm", "run", "dev-watch"]
