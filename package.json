@@ -27,10 +27,14 @@
         "lint:fix": "eslint . --ext .ts --fix",
         "db:generate": "prisma generate --schema prisma/schema/ && node ./tools/client-fix.js",
         "db:prisma-engine-fix": "cp ./src/core/db/prisma-client/*.node ./dist/core/db/prisma-client/",
+        "db:seed": "node ./dist/core/db/seed.js",
         "build": "tsc",
         "dev": "node dist/index.js",
         "dev-watch": "nodemon dist/index.js",
         "start": "npm run build && npm run dev"
+    },
+    "prisma": {
+        "seed": "npm run db:seed"
     },
     "dependencies": {
         "@blue0206/members-only-shared-types": "^4.0.0",
