@@ -8,6 +8,7 @@ model User {
     avatar        String?
     role          Role           @default(USER)
     messages      Message[]
+    likes         Like[]
     bookmarks     Bookmark[]
     refreshTokens RefreshToken[]
     createdAt     DateTime       @default(now()) @db.Timestamptz()

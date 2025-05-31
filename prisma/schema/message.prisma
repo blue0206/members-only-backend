@@ -3,7 +3,7 @@ model Message {
     content   String
     author    User?      @relation(fields: [authorId], references: [id], onDelete: SetNull)
     authorId  Int?
-    likes     Int        @default(0)
+    likes     Like[]
     bookmarks Bookmark[]
     edited    Boolean    @default(false)
     createdAt DateTime   @default(now()) @db.Timestamptz()
