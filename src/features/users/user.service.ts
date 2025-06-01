@@ -19,7 +19,7 @@ import type {
     ResetPasswordRequestDto,
     Role,
 } from '@blue0206/members-only-shared-types';
-import type { User } from '../../core/db/prisma-client/client.js';
+import type { Bookmark, User } from '../../core/db/prisma-client/client.js';
 import type { AccessTokenPayload } from '../auth/auth.types.js';
 
 class UserService {
@@ -327,6 +327,24 @@ class UserService {
         );
 
         return bookmarks;
+    }
+
+    async addBookmark(userId: number, messageId: number): Promise<void> {
+        logger.info({ userId, messageId }, 'Adding bookmark to database.');
+
+        const bookmark: Bookmark = await prismaErrorHandler(async () => {
+            return await prisma.bookmark.create({
+                data: {
+                    userId,
+                    messageId,
+                },
+            });
+        });
+
+        logger.info(
+            { id: bookmark.id, userId, messageId },
+            'Bookmark added to database successfully.'
+        );
     }
 }
 

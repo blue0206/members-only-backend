@@ -10,8 +10,9 @@ import {
     memberRoleUpdate,
     resetUserPassword,
     setRole,
-    userBookmarks,
     userMessages,
+    userBookmarks,
+    addUserBookmark,
 } from './user.controller.js';
 import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
 import memberVerification from '../../core/middlewares/memberVerification.js';
@@ -83,6 +84,15 @@ userRouter.get(
     accessTokenVerification,
     memberVerification,
     userBookmarks
+);
+
+// Add bookmark.
+userRouter.post(
+    '/bookmarks/:messageId',
+    accessTokenVerification,
+    csrfVerification,
+    memberVerification,
+    addUserBookmark
 );
 
 export default userRouter;

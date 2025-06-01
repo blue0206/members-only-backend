@@ -13,6 +13,7 @@ import {
     EditUserRequestSchema,
     ErrorCodes,
     MemberRoleUpdateRequestSchema,
+    MessageParamsSchema,
     ResetPasswordRequestSchema,
     SetRoleRequestQuerySchema,
     UsernameParamsSchema,
@@ -34,6 +35,7 @@ import type {
     UsernameParamsDto,
     GetUserBookmarksResponseDto,
     ApiResponseSuccess,
+    MessageParamsDto,
 } from '@blue0206/members-only-shared-types';
 
 export const userMessages = async (req: Request, res: Response): Promise<void> => {
@@ -288,4 +290,41 @@ export const userBookmarks = async (req: Request, res: Response): Promise<void> 
         statusCode: 200,
     };
     res.status(200).json(successResponse);
+};
+
+export const addUserBookmark = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    const parsedParams = MessageParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+        throw new ValidationError(
+            'Invalid request params.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedParams.error.flatten()
+        );
+    }
+    const messageParams: MessageParamsDto = parsedParams.data;
+
+    await userService.addBookmark(req.user.id, messageParams.messageId);
+
+    const successResponse: ApiResponse<null> = {
+        success: true,
+        payload: null,
+        requestId: req.requestId,
+        statusCode: 201,
+    };
+    res.status(201).json(successResponse);
 };
