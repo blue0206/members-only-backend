@@ -4,7 +4,6 @@ import {
     EditMessageResponseSchema,
     GetMessagesResponseSchema,
     GetMessagesWithoutAuthorResponseSchema,
-    LikeMessageResponseSchema,
 } from '@blue0206/members-only-shared-types';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import { getAvatarUrl } from '../../core/lib/cloudinary.js';
@@ -13,13 +12,11 @@ import type {
     EditMessageResponseDto,
     GetMessagesResponseDto,
     GetMessagesWithoutAuthorResponseDto,
-    LikeMessageResponseDto,
 } from '@blue0206/members-only-shared-types';
 import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,
     GetMessagesServiceReturnType,
-    LikeMessageServiceReturnType,
 } from './message.types.js';
 
 export const mapToGetMessagesWithoutAuthorResponseDto = (
@@ -159,23 +156,6 @@ export const mapToEditMessageResponseDto = (
     const validatedData: EditMessageResponseDto = mappedDtoValidator(
         mappedData,
         EditMessageResponseSchema
-    );
-    return validatedData;
-};
-
-export const mapToLikeMessageResponseDto = (
-    data: LikeMessageServiceReturnType,
-    userId: number
-): LikeMessageResponseDto => {
-    const mappedData: LikeMessageResponseDto = {
-        messageId: data.messageId,
-        likes: data.message.likes.length,
-        liked: data.message.likes.some((like) => like.userId === userId),
-    };
-
-    const validatedData: LikeMessageResponseDto = mappedDtoValidator(
-        mappedData,
-        LikeMessageResponseSchema
     );
     return validatedData;
 };

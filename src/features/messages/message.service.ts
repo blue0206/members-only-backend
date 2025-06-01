@@ -10,10 +10,9 @@ import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,
     GetMessagesServiceReturnType,
-    LikeMessageServiceReturnType,
 } from './message.types.js';
 import type { AccessTokenPayload } from '../auth/auth.types.js';
-import type { Message } from '../../core/db/prisma-client/client.js';
+import type { Like, Message } from '../../core/db/prisma-client/client.js';
 
 class MessageService {
     async getMessages(): Promise<GetMessagesServiceReturnType> {
@@ -190,35 +189,22 @@ class MessageService {
         logger.info({ messageId, user }, 'Message deleted successfully.');
     }
 
-    async likeMessage(
-        messageId: number,
-        userId: number
-    ): Promise<LikeMessageServiceReturnType> {
+    async likeMessage(messageId: number, userId: number): Promise<void> {
         logger.info({ messageId, userId }, 'Liking message in database.');
 
-        const like: LikeMessageServiceReturnType = await prismaErrorHandler(
-            async () => {
-                return await prisma.like.create({
-                    data: {
-                        messageId,
-                        userId,
-                    },
-                    include: {
-                        message: {
-                            include: {
-                                likes: true,
-                            },
-                        },
-                    },
-                });
-            }
-        );
+        const like: Like = await prismaErrorHandler(async () => {
+            return await prisma.like.create({
+                data: {
+                    messageId,
+                    userId,
+                },
+            });
+        });
 
         logger.info(
             { id: like.id, messageId, userId },
             'Message liked successfully.'
         );
-        return like;
     }
 
     async unlikeMessage(messageId: number, userId: number): Promise<void> {

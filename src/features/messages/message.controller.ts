@@ -15,7 +15,6 @@ import {
     mapToEditMessageResponseDto,
     mapToGetMessagesResponseDto,
     mapToGetMessagesWithoutAuthorResponseDto,
-    mapToLikeMessageResponseDto,
 } from './message.mapper.js';
 import type { Request, Response } from 'express';
 import type {
@@ -28,13 +27,11 @@ import type {
     EditMessageResponseDto,
     MessageParamsDto,
     ApiResponseSuccess,
-    LikeMessageResponseDto,
 } from '@blue0206/members-only-shared-types';
 import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,
     GetMessagesServiceReturnType,
-    LikeMessageServiceReturnType,
 } from './message.types.js';
 
 export const getMessagesWithoutAuthor = async (
@@ -258,19 +255,11 @@ export const likeMessage = async (req: Request, res: Response): Promise<void> =>
     }
     const messageParams: MessageParamsDto = parsedParams.data;
 
-    const like: LikeMessageServiceReturnType = await messageService.likeMessage(
-        messageParams.messageId,
-        req.user.id
-    );
+    await messageService.likeMessage(messageParams.messageId, req.user.id);
 
-    const mappedLikeData: LikeMessageResponseDto = mapToLikeMessageResponseDto(
-        like,
-        req.user.id
-    );
-
-    const successResponse: ApiResponseSuccess<LikeMessageResponseDto> = {
+    const successResponse: ApiResponseSuccess<null> = {
         success: true,
-        payload: mappedLikeData,
+        payload: null,
         requestId: req.requestId,
         statusCode: 201,
     };

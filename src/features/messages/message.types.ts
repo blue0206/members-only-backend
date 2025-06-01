@@ -15,13 +15,3 @@ export type GetMessagesServiceReturnType = Prisma.MessageGetPayload<{
 export type CreateMessageServiceReturnType = GetMessagesServiceReturnType[number];
 
 export type EditMessageServiceReturnType = CreateMessageServiceReturnType;
-
-export type LikeMessageServiceReturnType = Prisma.LikeGetPayload<{
-    include: {
-        message: {
-            include: {
-                likes: true;
-            };
-        };
-    };
-}>;
