@@ -127,7 +127,7 @@ export const createNewMessage = async (
         await messageService.createMessage(newMessageContent.message, req.user.id);
 
     const mappedCreatedMessage: CreateMessageResponseDto =
-        mapToCreateMessageResponseDto(createdMessage);
+        mapToCreateMessageResponseDto(createdMessage, req.user.id);
 
     const successResponse: ApiResponse<CreateMessageResponseDto> = {
         success: true,
@@ -181,8 +181,10 @@ export const editMessage = async (req: Request, res: Response): Promise<void> =>
             req.user
         );
 
-    const mappedMessage: EditMessageResponseDto =
-        mapToEditMessageResponseDto(editedMessage);
+    const mappedMessage: EditMessageResponseDto = mapToEditMessageResponseDto(
+        editedMessage,
+        req.user.id
+    );
 
     const successResponse: ApiResponse<EditMessageResponseDto> = {
         success: true,

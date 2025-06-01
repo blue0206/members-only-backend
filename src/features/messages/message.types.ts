@@ -12,10 +12,6 @@ export type GetMessagesServiceReturnType = Prisma.MessageGetPayload<{
     };
 }>[];
 
-export type CreateMessageServiceReturnType = Prisma.MessageGetPayload<{
-    include: {
-        author: true;
-    };
-}>;
+export type CreateMessageServiceReturnType = GetMessagesServiceReturnType[number];
 
 export type EditMessageServiceReturnType = CreateMessageServiceReturnType;

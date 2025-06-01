@@ -80,21 +80,41 @@ export const mapToGetMessagesResponseDto = (
 };
 
 export const mapToCreateMessageResponseDto = (
-    data: CreateMessageServiceReturnType
+    data: CreateMessageServiceReturnType,
+    userId: number
 ): CreateMessageResponseDto => {
     let mappedData: CreateMessageResponseDto;
     if (data.author?.role === 'USER') {
         mappedData = {
             messageId: data.id,
             message: data.content,
+            likes: data.likes.length,
+            bookmarks: data.bookmarks.length,
             timestamp: data.createdAt,
         };
     } else {
         mappedData = {
             messageId: data.id,
             message: data.content,
+            user: data.author
+                ? {
+                      username: data.author.username,
+                      firstname: data.author.firstName,
+                      middlename: data.author.middleName,
+                      lastname: data.author.lastName,
+                      role: mapPrismaRoleToEnumRole(data.author.role),
+                      avatar: data.author.avatar
+                          ? getAvatarUrl(data.author.avatar)
+                          : null,
+                  }
+                : null,
+            bookmarked: data.bookmarks.some(
+                (bookmark) => bookmark.userId === userId
+            ),
+            liked: data.likes.some((like) => like.userId === userId),
+            bookmarks: data.bookmarks.length,
+            likes: data.likes.length,
             timestamp: data.createdAt,
-            username: data.author?.username,
             edited: data.edited,
         };
     }
@@ -107,14 +127,30 @@ export const mapToCreateMessageResponseDto = (
 };
 
 export const mapToEditMessageResponseDto = (
-    data: EditMessageServiceReturnType
+    data: EditMessageServiceReturnType,
+    userId: number
 ): EditMessageResponseDto => {
     const mappedData: EditMessageResponseDto = {
         messageId: data.id,
         message: data.content,
+        user: data.author
+            ? {
+                  username: data.author.username,
+                  firstname: data.author.firstName,
+                  middlename: data.author.middleName,
+                  lastname: data.author.lastName,
+                  role: mapPrismaRoleToEnumRole(data.author.role),
+                  avatar: data.author.avatar
+                      ? getAvatarUrl(data.author.avatar)
+                      : null,
+              }
+            : null,
+        bookmarked: data.bookmarks.some((bookmark) => bookmark.userId === userId),
+        liked: data.likes.some((like) => like.userId === userId),
+        bookmarks: data.bookmarks.length,
+        likes: data.likes.length,
         timestamp: data.createdAt,
         edited: data.edited,
-        username: data.author?.username,
     };
 
     const validatedData: EditMessageResponseDto = mappedDtoValidator(

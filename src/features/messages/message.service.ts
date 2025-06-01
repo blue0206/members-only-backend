@@ -56,7 +56,13 @@ class MessageService {
                         },
                     },
                     include: {
-                        author: true,
+                        author: {
+                            omit: {
+                                password: true,
+                            },
+                        },
+                        likes: true,
+                        bookmarks: true,
                     },
                 });
             });
@@ -122,7 +128,13 @@ class MessageService {
                         content: newMessage,
                     },
                     include: {
-                        author: true,
+                        author: {
+                            omit: {
+                                password: true,
+                            },
+                        },
+                        likes: true,
+                        bookmarks: true,
                     },
                 });
             });
