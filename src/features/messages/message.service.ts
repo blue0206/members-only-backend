@@ -220,6 +220,23 @@ class MessageService {
         );
         return like;
     }
+
+    async unlikeMessage(messageId: number, userId: number): Promise<void> {
+        logger.info({ messageId, userId }, 'Unliking message in database.');
+
+        await prismaErrorHandler(async () => {
+            await prisma.like.delete({
+                where: {
+                    userId_messageId: {
+                        userId,
+                        messageId,
+                    },
+                },
+            });
+        });
+
+        logger.info({ messageId, userId }, 'Message unliked successfully.');
+    }
 }
 
 export const messageService = new MessageService();

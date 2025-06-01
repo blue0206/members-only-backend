@@ -6,6 +6,7 @@ import {
     getMessagesWithAuthor,
     getMessagesWithoutAuthor,
     likeMessage,
+    unlikeMessage,
 } from './message.controller.js';
 import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
@@ -52,6 +53,15 @@ messageRouter.post(
     csrfVerification,
     memberVerification,
     likeMessage
+);
+
+// Unlike Message
+messageRouter.delete(
+    '/:messageId/like',
+    accessTokenVerification,
+    csrfVerification,
+    memberVerification,
+    unlikeMessage
 );
 
 export default messageRouter;
