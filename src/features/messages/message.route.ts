@@ -5,6 +5,7 @@ import {
     editMessage,
     getMessagesWithAuthor,
     getMessagesWithoutAuthor,
+    likeMessage,
 } from './message.controller.js';
 import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
@@ -23,8 +24,10 @@ messageRouter.get(
     memberVerification,
     getMessagesWithAuthor
 );
+
 // Create a new message.
 messageRouter.post('/', accessTokenVerification, csrfVerification, createNewMessage);
+
 // Edit message (Admin/Member)
 messageRouter.patch(
     '/:messageId',
@@ -33,12 +36,22 @@ messageRouter.patch(
     memberVerification,
     editMessage
 );
+
 // Delete message
 messageRouter.delete(
     '/:messageId',
     accessTokenVerification,
     csrfVerification,
     deleteMessage
+);
+
+// Like Message
+messageRouter.post(
+    '/:messageId/like',
+    accessTokenVerification,
+    csrfVerification,
+    memberVerification,
+    likeMessage
 );
 
 export default messageRouter;

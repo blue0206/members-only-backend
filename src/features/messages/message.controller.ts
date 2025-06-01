@@ -15,6 +15,7 @@ import {
     mapToEditMessageResponseDto,
     mapToGetMessagesResponseDto,
     mapToGetMessagesWithoutAuthorResponseDto,
+    mapToLikeMessageResponseDto,
 } from './message.mapper.js';
 import type { Request, Response } from 'express';
 import type {
@@ -26,11 +27,14 @@ import type {
     EditMessageRequestDto,
     EditMessageResponseDto,
     MessageParamsDto,
+    ApiResponseSuccess,
+    LikeMessageResponseDto,
 } from '@blue0206/members-only-shared-types';
 import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,
     GetMessagesServiceReturnType,
+    LikeMessageServiceReturnType,
 } from './message.types.js';
 
 export const getMessagesWithoutAuthor = async (
@@ -227,4 +231,49 @@ export const deleteMessage = async (req: Request, res: Response): Promise<void> 
     await messageService.deleteMessage(deleteData.messageId, req.user);
 
     res.status(204).end();
+};
+
+export const likeMessage = async (req: Request, res: Response): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    // Validate the incoming request to make sure it adheres to the
+    // API contract (MessageParamsDto).
+    const parsedParams = MessageParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+        throw new ValidationError(
+            'Invalid request params.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedParams.error.flatten()
+        );
+    }
+    const messageParams: MessageParamsDto = parsedParams.data;
+
+    const like: LikeMessageServiceReturnType = await messageService.likeMessage(
+        messageParams.messageId,
+        req.user.id
+    );
+
+    const mappedLikeData: LikeMessageResponseDto = mapToLikeMessageResponseDto(
+        like,
+        req.user.id
+    );
+
+    const successResponse: ApiResponseSuccess<LikeMessageResponseDto> = {
+        success: true,
+        payload: mappedLikeData,
+        requestId: req.requestId,
+        statusCode: 201,
+    };
+
+    res.status(201).json(successResponse);
 };
