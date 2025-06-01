@@ -20,3 +20,19 @@ export type GetUserMessagesServiceReturnType = Prisma.UserGetPayload<{
 }>;
 
 export type EditUserServiceReturnType = Omit<User, 'password'>;
+
+export type GetUserBookmarksServiceReturnType = Prisma.BookmarkGetPayload<{
+    include: {
+        message: {
+            include: {
+                author: {
+                    omit: {
+                        password: true;
+                    };
+                };
+                likes: true;
+                bookmarks: true;
+            };
+        };
+    };
+}>[];

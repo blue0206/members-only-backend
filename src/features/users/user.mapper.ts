@@ -2,15 +2,18 @@ import mappedDtoValidator from '../../core/utils/mappedDtoValidator.js';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import {
     EditUserResponseSchema,
+    GetUserBookmarksResponseSchema,
     GetUserMessagesResponseSchema,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import type {
     EditUserResponseDto,
+    GetUserBookmarksResponseDto,
     GetUserMessagesResponseDto,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import type {
     EditUserServiceReturnType,
+    GetUserBookmarksServiceReturnType,
     GetUserMessagesServiceReturnType,
 } from './user.types.js';
 
@@ -79,6 +82,43 @@ export const mapToEditUserResponseDto = (
     const validatedData: EditUserResponseDto = mappedDtoValidator(
         mappedData,
         EditUserResponseSchema
+    );
+    return validatedData;
+};
+
+export const mapToGetUserBookmarksResponseDto = (
+    bookmarks: GetUserBookmarksServiceReturnType
+): GetUserBookmarksResponseDto => {
+    const mappedData: GetUserBookmarksResponseDto = bookmarks.map((bookmark) => {
+        return {
+            messageId: bookmark.messageId,
+            message: bookmark.message.content,
+            user: bookmark.message.author
+                ? {
+                      username: bookmark.message.author.username,
+                      firstname: bookmark.message.author.firstName,
+                      middlename: bookmark.message.author.middleName,
+                      lastname: bookmark.message.author.lastName,
+                      role: mapPrismaRoleToEnumRole(bookmark.message.author.role),
+                      avatar: bookmark.message.author.avatar
+                          ? getAvatarUrl(bookmark.message.author.avatar)
+                          : null,
+                  }
+                : null,
+            bookmarked: true,
+            liked: bookmark.message.likes.some(
+                (like) => like.userId === bookmark.userId
+            ),
+            bookmarks: bookmark.message.bookmarks.length,
+            likes: bookmark.message.likes.length,
+            edited: bookmark.message.edited,
+            timestamp: bookmark.message.createdAt,
+        };
+    });
+
+    const validatedData: GetUserBookmarksResponseDto = mappedDtoValidator(
+        mappedData,
+        GetUserBookmarksResponseSchema
     );
     return validatedData;
 };

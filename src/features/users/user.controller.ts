@@ -6,6 +6,7 @@ import {
 } from '../../core/errors/customErrors.js';
 import {
     mapToEditUserResponseDto,
+    mapToGetUserBookmarksResponseDto,
     mapToGetUserMessagesResponseDto,
 } from './user.mapper.js';
 import {
@@ -19,6 +20,7 @@ import {
 import type { Request, Response } from 'express';
 import type {
     EditUserServiceReturnType,
+    GetUserBookmarksServiceReturnType,
     GetUserMessagesServiceReturnType,
 } from './user.types.js';
 import type {
@@ -30,6 +32,8 @@ import type {
     MemberRoleUpdateRequestDto,
     SetRoleRequestQueryDto,
     UsernameParamsDto,
+    GetUserBookmarksResponseDto,
+    ApiResponseSuccess,
 } from '@blue0206/members-only-shared-types';
 
 export const userMessages = async (req: Request, res: Response): Promise<void> => {
@@ -255,4 +259,33 @@ export const deleteUserAvatar = async (
     const username = req.user.username;
     await userService.deleteUserAvatar(username);
     res.status(204).end();
+};
+
+export const userBookmarks = async (req: Request, res: Response): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+    const userId = req.user.id;
+
+    const bookmarks: GetUserBookmarksServiceReturnType =
+        await userService.getUserBookmarks(userId);
+
+    const mappedBookmarks: GetUserBookmarksResponseDto =
+        mapToGetUserBookmarksResponseDto(bookmarks);
+
+    const successResponse: ApiResponseSuccess<GetUserBookmarksResponseDto> = {
+        success: true,
+        payload: mappedBookmarks,
+        requestId: req.requestId,
+        statusCode: 200,
+    };
+    res.status(200).json(successResponse);
 };

@@ -11,6 +11,7 @@ import { config } from '../../core/config/index.js';
 import { deleteFile, uploadFile } from '../../core/lib/cloudinary.js';
 import type {
     EditUserServiceReturnType,
+    GetUserBookmarksServiceReturnType,
     GetUserMessagesServiceReturnType,
 } from './user.types.js';
 import type {
@@ -291,6 +292,41 @@ class UserService {
             { username },
             'User avatar deleted from database and cloudinary successfully.'
         );
+    }
+
+    async getUserBookmarks(
+        userId: number
+    ): Promise<GetUserBookmarksServiceReturnType> {
+        logger.info({ userId }, 'Getting user bookmarks from database.');
+
+        const bookmarks: GetUserBookmarksServiceReturnType =
+            await prismaErrorHandler(async () => {
+                return await prisma.bookmark.findMany({
+                    where: {
+                        userId,
+                    },
+                    include: {
+                        message: {
+                            include: {
+                                author: {
+                                    omit: {
+                                        password: true,
+                                    },
+                                },
+                                likes: true,
+                                bookmarks: true,
+                            },
+                        },
+                    },
+                });
+            });
+
+        logger.info(
+            { userId },
+            'User bookmarks retrieved from database successfully.'
+        );
+
+        return bookmarks;
     }
 }
 

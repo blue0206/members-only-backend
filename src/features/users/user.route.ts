@@ -10,9 +10,11 @@ import {
     memberRoleUpdate,
     resetUserPassword,
     setRole,
+    userBookmarks,
     userMessages,
 } from './user.controller.js';
 import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
+import memberVerification from '../../core/middlewares/memberVerification.js';
 
 const userRouter = Router();
 
@@ -73,6 +75,14 @@ userRouter.delete(
     accessTokenVerification,
     csrfVerification,
     deleteUserAvatar
+);
+
+// Get bookmarked messages of Admin/Member users.
+userRouter.get(
+    '/bookmarks',
+    accessTokenVerification,
+    memberVerification,
+    userBookmarks
 );
 
 export default userRouter;
