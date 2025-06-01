@@ -346,6 +346,26 @@ class UserService {
             'Bookmark added to database successfully.'
         );
     }
+
+    async removeBookmark(userId: number, messageId: number): Promise<void> {
+        logger.info({ userId, messageId }, 'Removing bookmark from database.');
+
+        await prismaErrorHandler(async () => {
+            return await prisma.bookmark.delete({
+                where: {
+                    userId_messageId: {
+                        userId,
+                        messageId,
+                    },
+                },
+            });
+        });
+
+        logger.info(
+            { userId, messageId },
+            'Bookmark removed from database successfully.'
+        );
+    }
 }
 
 export const userService = new UserService();

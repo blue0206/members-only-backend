@@ -328,3 +328,34 @@ export const addUserBookmark = async (
     };
     res.status(201).json(successResponse);
 };
+
+export const removeUserBookmark = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    const parsedParams = MessageParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+        throw new ValidationError(
+            'Invalid request params.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedParams.error.flatten()
+        );
+    }
+    const messageParams: MessageParamsDto = parsedParams.data;
+
+    await userService.removeBookmark(req.user.id, messageParams.messageId);
+
+    res.status(204).end();
+};

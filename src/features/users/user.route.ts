@@ -13,6 +13,7 @@ import {
     userMessages,
     userBookmarks,
     addUserBookmark,
+    removeUserBookmark,
 } from './user.controller.js';
 import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
 import memberVerification from '../../core/middlewares/memberVerification.js';
@@ -93,6 +94,15 @@ userRouter.post(
     csrfVerification,
     memberVerification,
     addUserBookmark
+);
+
+// Remove bookmark.
+userRouter.delete(
+    '/bookmarks/:messageId',
+    accessTokenVerification,
+    csrfVerification,
+    memberVerification,
+    removeUserBookmark
 );
 
 export default userRouter;
