@@ -34,7 +34,17 @@ class UserService {
                         id: userId,
                     },
                     include: {
-                        messages: true,
+                        messages: {
+                            include: {
+                                author: {
+                                    omit: {
+                                        password: true,
+                                    },
+                                },
+                                likes: true,
+                                bookmarks: true,
+                            },
+                        },
                     },
                     omit: {
                         password: true,

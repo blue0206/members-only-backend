@@ -22,14 +22,36 @@ export const mapToGetUserMessagesResponseDto = (
             return {
                 messageId: message.id,
                 message: message.content,
+                likes: message.likes.length,
+                bookmarks: message.bookmarks.length,
                 timestamp: message.createdAt,
             };
         }
         return {
             messageId: message.id,
             message: message.content,
+            // The message author details.
+            user: message.author
+                ? {
+                      username: message.author.username,
+                      firstname: message.author.firstName,
+                      middlename: message.author.middleName,
+                      lastname: message.author.lastName,
+                      role: mapPrismaRoleToEnumRole(message.author.role),
+                      avatar: message.author.avatar
+                          ? getAvatarUrl(message.author.avatar)
+                          : null,
+                  }
+                : null,
+            likes: message.likes.length,
+            bookmarks: message.bookmarks.length,
+            // Boolean for whether message is bookmarked by logged-in user.
+            bookmarked: message.bookmarks.some(
+                (bookmark) => bookmark.userId === data.id
+            ),
+            // Boolean for whether message is liked by logged-in user.
+            liked: message.likes.some((like) => like.userId === data.id),
             timestamp: message.createdAt,
-            username: data.username,
             edited: message.edited,
         };
     });
