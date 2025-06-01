@@ -5,6 +5,8 @@ import {
     GetMessagesResponseSchema,
     GetMessagesWithoutAuthorResponseSchema,
 } from '@blue0206/members-only-shared-types';
+import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
+import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import type {
     CreateMessageResponseDto,
     EditMessageResponseDto,
@@ -25,6 +27,8 @@ export const mapToGetMessagesWithoutAuthorResponseDto = (
             return {
                 messageId: message.id,
                 message: message.content,
+                likes: message.likes.length,
+                bookmarks: message.bookmarks.length,
                 timestamp: message.createdAt,
             };
         }
@@ -38,14 +42,32 @@ export const mapToGetMessagesWithoutAuthorResponseDto = (
 };
 
 export const mapToGetMessagesResponseDto = (
-    messages: GetMessagesServiceReturnType
+    messages: GetMessagesServiceReturnType,
+    userId: number
 ): GetMessagesResponseDto => {
     const mappedData: GetMessagesResponseDto = messages.map((message) => {
         return {
             messageId: message.id,
             message: message.content,
+            user: message.author
+                ? {
+                      username: message.author.username,
+                      firstname: message.author.firstName,
+                      middlename: message.author.middleName,
+                      lastname: message.author.lastName,
+                      role: mapPrismaRoleToEnumRole(message.author.role),
+                      avatar: message.author.avatar
+                          ? getAvatarUrl(message.author.avatar)
+                          : null,
+                  }
+                : null,
+            bookmarked: message.bookmarks.some(
+                (bookmark) => bookmark.userId === userId
+            ),
+            liked: message.likes.some((like) => like.userId === userId),
+            bookmarks: message.bookmarks.length,
+            likes: message.likes.length,
             timestamp: message.createdAt,
-            username: message.author?.username,
             edited: message.edited,
         };
     });

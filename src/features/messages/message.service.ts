@@ -22,7 +22,13 @@ class MessageService {
             async () => {
                 return await prisma.message.findMany({
                     include: {
-                        author: true,
+                        author: {
+                            omit: {
+                                password: true,
+                            },
+                        },
+                        likes: true,
+                        bookmarks: true,
                     },
                 });
             }

@@ -79,8 +79,10 @@ export const getMessagesWithAuthor = async (
     const messages: GetMessagesServiceReturnType =
         await messageService.getMessages();
 
-    const mappedMessages: GetMessagesResponseDto =
-        mapToGetMessagesResponseDto(messages);
+    const mappedMessages: GetMessagesResponseDto = mapToGetMessagesResponseDto(
+        messages,
+        req.user.id
+    );
 
     const successResponse: ApiResponse<GetMessagesResponseDto> = {
         success: true,
