@@ -27,6 +27,7 @@ export const mapToGetUserMessagesResponseDto = (
                 message: message.content,
                 likes: message.likes.length,
                 bookmarks: message.bookmarks.length,
+                userId: message.authorId,
                 timestamp: message.createdAt,
             };
         }
@@ -36,6 +37,7 @@ export const mapToGetUserMessagesResponseDto = (
             // The message author details.
             user: message.author
                 ? {
+                      id: message.author.id,
                       username: message.author.username,
                       firstname: message.author.firstName,
                       middlename: message.author.middleName,
@@ -95,6 +97,7 @@ export const mapToGetUserBookmarksResponseDto = (
             message: bookmark.message.content,
             user: bookmark.message.author
                 ? {
+                      id: bookmark.message.author.id,
                       username: bookmark.message.author.username,
                       firstname: bookmark.message.author.firstName,
                       middlename: bookmark.message.author.middleName,

@@ -29,6 +29,7 @@ export const mapToGetMessagesWithoutAuthorResponseDto = (
                 message: message.content,
                 likes: message.likes.length,
                 bookmarks: message.bookmarks.length,
+                userId: message.authorId,
                 timestamp: message.createdAt,
             };
         }
@@ -51,6 +52,7 @@ export const mapToGetMessagesResponseDto = (
             message: message.content,
             user: message.author
                 ? {
+                      id: message.author.id,
                       username: message.author.username,
                       firstname: message.author.firstName,
                       middlename: message.author.middleName,
@@ -90,6 +92,7 @@ export const mapToCreateMessageResponseDto = (
             message: data.content,
             likes: data.likes.length,
             bookmarks: data.bookmarks.length,
+            userId: data.authorId,
             timestamp: data.createdAt,
         };
     } else {
@@ -98,6 +101,7 @@ export const mapToCreateMessageResponseDto = (
             message: data.content,
             user: data.author
                 ? {
+                      id: data.author.id,
                       username: data.author.username,
                       firstname: data.author.firstName,
                       middlename: data.author.middleName,
@@ -135,6 +139,7 @@ export const mapToEditMessageResponseDto = (
         message: data.content,
         user: data.author
             ? {
+                  id: data.author.id,
                   username: data.author.username,
                   firstname: data.author.firstName,
                   middlename: data.author.middleName,
