@@ -126,6 +126,7 @@ class MessageService {
                     },
                     data: {
                         content: newMessage,
+                        edited: true,
                     },
                     include: {
                         author: {
