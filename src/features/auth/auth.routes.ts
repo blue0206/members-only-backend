@@ -8,14 +8,20 @@ import {
 import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
 import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
+import assignClientDetails from '../../core/middlewares/assignClientDetails.js';
 
 const authRouter = Router();
 
-authRouter.post('/register', multerMiddleware, registerUser);
-authRouter.post('/login', loginUser);
+authRouter.post('/register', multerMiddleware, assignClientDetails, registerUser);
+authRouter.post('/login', assignClientDetails, loginUser);
 
 // Protected routes.
 authRouter.delete('/logout', accessTokenVerification, csrfVerification, logoutUser);
-authRouter.post('/refresh', csrfVerification, refreshUserTokens);
+authRouter.post(
+    '/refresh',
+    csrfVerification,
+    assignClientDetails,
+    refreshUserTokens
+);
 
 export default authRouter;
