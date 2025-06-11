@@ -11,6 +11,7 @@ model User {
     likes         Like[]
     bookmarks     Bookmark[]
     refreshTokens RefreshToken[]
+    lastActive    DateTime       @default(now()) @db.Timestamptz()
     createdAt     DateTime       @default(now()) @db.Timestamptz()
     updatedAt     DateTime       @updatedAt @db.Timestamptz()
 }
