@@ -3,9 +3,13 @@ model RefreshToken {
     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId    Int
     tokenHash String
+    ip        String
+    userAgent String
+    location  String
     expiresAt DateTime @db.Timestamptz()
-    createdAt DateTime @default(now()) @db.Timestamptz()
+    createdAt DateTime @default(now()) @db.Timestamptz() // Equivalent to last-used.
 
+    @@index([userId, jwtId])
     @@index([userId])
     @@map("refresh_token")
 }
