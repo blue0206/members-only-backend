@@ -40,6 +40,11 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
             'Internal server configuration error: Missing Request ID'
         );
     }
+    if (!req.clientDetails) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Client Details'
+        );
+    }
 
     // Validate the incoming request to make sure it adheres to the
     // API contract (RegisterRequestDto).
@@ -58,7 +63,8 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         // Narrow the avatar buffer type to Buffer or undefined.
         req.files && 'avatar' in req.files && Array.isArray(req.files.avatar)
             ? req.files.avatar[0]?.buffer
-            : undefined
+            : undefined,
+        req.clientDetails
     );
     const responseData: RegisterResponseDto = mapToRegisterResponseDto(userData);
 
@@ -97,6 +103,11 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             'Internal server configuration error: Missing Request ID'
         );
     }
+    if (!req.clientDetails) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Client Details'
+        );
+    }
 
     // Validate the incoming request to make sure it adheres to the
     // API contract (LoginRequestDto).
@@ -110,7 +121,10 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
     const loginData: LoginRequestDto = parsedBody.data;
 
-    const userData: LoginServiceReturnType = await authService.login(loginData);
+    const userData: LoginServiceReturnType = await authService.login(
+        loginData,
+        req.clientDetails
+    );
     const responseData: LoginResponseDto = mapToLoginResponseDto(userData);
 
     const commonCookieOptions: CookieOptions = {
@@ -215,6 +229,11 @@ export const refreshUserTokens = async (
             'Internal server configuration error: Missing Request ID'
         );
     }
+    if (!req.clientDetails) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Client Details'
+        );
+    }
 
     const refreshToken: string | undefined = req.cookies.refreshToken as
         | string
@@ -226,7 +245,10 @@ export const refreshUserTokens = async (
         );
     }
 
-    const tokens: RefreshServiceReturnType = await authService.refresh(refreshToken);
+    const tokens: RefreshServiceReturnType = await authService.refresh(
+        refreshToken,
+        req.clientDetails
+    );
     const responseData: RefreshResponseDto = mapToRefreshResponseDto(tokens);
 
     const commonCookieOptions: CookieOptions = {

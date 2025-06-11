@@ -29,11 +29,13 @@ import type {
     RefreshTokenPayload,
     RefreshServiceReturnType,
 } from './auth.types.js';
+import type { ClientDetailsType } from '../../core/middlewares/assignClientDetails.js';
 
 class AuthService {
     async register(
         registerData: RegisterRequestDto,
-        avatarImage: Buffer | undefined
+        avatarImage: Buffer | undefined,
+        clientDetails: ClientDetailsType
     ): Promise<RegisterServiceReturnType> {
         logger.info({ username: registerData.username }, 'Registration started');
 
@@ -95,6 +97,9 @@ class AuthService {
                             userId: createdUser.id,
                             tokenHash: hashedRefreshToken,
                             expiresAt: getRefreshTokenExpiryDate(),
+                            ip: clientDetails.ip,
+                            userAgent: clientDetails.userAgent,
+                            location: clientDetails.location,
                         },
                     });
 
@@ -125,7 +130,10 @@ class AuthService {
         };
     }
 
-    async login(loginData: LoginRequestDto): Promise<LoginServiceReturnType> {
+    async login(
+        loginData: LoginRequestDto,
+        clientDetails: ClientDetailsType
+    ): Promise<LoginServiceReturnType> {
         logger.info({ username: loginData.username }, 'Login started');
 
         // Find user in DB and get details for comparing password and
@@ -180,6 +188,9 @@ class AuthService {
                     userId: user.id,
                     tokenHash: hashedRefreshToken,
                     expiresAt: getRefreshTokenExpiryDate(),
+                    ip: clientDetails.ip,
+                    location: clientDetails.location,
+                    userAgent: clientDetails.userAgent,
                 },
             })
         );
@@ -225,7 +236,10 @@ class AuthService {
         logger.info({ userId: decodedRefreshToken.id }, 'Logout successful');
     }
 
-    async refresh(refreshToken: string): Promise<RefreshServiceReturnType> {
+    async refresh(
+        refreshToken: string,
+        clientDetails: ClientDetailsType
+    ): Promise<RefreshServiceReturnType> {
         logger.info('Token refresh process started.');
 
         const decodedRefreshToken: RefreshTokenPayload = jwtErrorHandler(
@@ -284,6 +298,9 @@ class AuthService {
                                 jwtId: jti,
                                 tokenHash: hashedRefreshToken,
                                 expiresAt: getRefreshTokenExpiryDate(),
+                                ip: clientDetails.ip,
+                                location: clientDetails.location,
+                                userAgent: clientDetails.userAgent,
                             },
                         });
 
