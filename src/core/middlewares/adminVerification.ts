@@ -11,7 +11,7 @@ export default function adminVerification(
     // Get user payload from req.user (populated by access token verification middleware).
     const userPayload = req.user;
 
-    if (userPayload && userPayload.role !== Role.ADMIN) {
+    if (!userPayload || userPayload.role !== Role.ADMIN) {
         throw new ForbiddenError(
             'Admin privileges are required.',
             ErrorCodes.FORBIDDEN
