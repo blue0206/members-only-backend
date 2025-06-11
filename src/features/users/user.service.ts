@@ -12,7 +12,7 @@ import { deleteFile, uploadFile } from '../../core/lib/cloudinary.js';
 import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,
-    GetUserMessagesServiceReturnType,
+    GetUsersServiceReturnType,
 } from './user.types.js';
 import type {
     EditUserRequestDto,
@@ -23,48 +23,21 @@ import type { Bookmark, User } from '../../core/db/prisma-client/client.js';
 import type { AccessTokenPayload } from '../auth/auth.types.js';
 
 class UserService {
-    async getUserMessages(
-        userId: number
-    ): Promise<GetUserMessagesServiceReturnType> {
-        logger.info({ userId }, 'Getting user messages from database.');
+    async getUsers(): Promise<GetUsersServiceReturnType> {
+        logger.info('Getting all users from database.');
 
-        const userWithMessages: GetUserMessagesServiceReturnType | null =
-            await prismaErrorHandler(async () => {
-                return await prisma.user.findUnique({
-                    where: {
-                        id: userId,
-                    },
-                    include: {
-                        messages: {
-                            include: {
-                                author: {
-                                    omit: {
-                                        password: true,
-                                    },
-                                },
-                                likes: true,
-                                bookmarks: true,
-                            },
-                        },
-                    },
+        const users: GetUsersServiceReturnType = await prismaErrorHandler(
+            async () => {
+                return await prisma.user.findMany({
                     omit: {
                         password: true,
                     },
                 });
-            });
-
-        if (!userWithMessages) {
-            throw new InternalServerError(
-                'User not found in database.',
-                ErrorCodes.DATABASE_ERROR
-            );
-        }
-
-        logger.info(
-            { username: userWithMessages.username, role: userWithMessages.role },
-            'User messages retrieved from database successfully.'
+            }
         );
-        return userWithMessages;
+
+        logger.info('Users retrieved from database successfully.');
+        return users;
     }
 
     async editUser(

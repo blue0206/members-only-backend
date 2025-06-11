@@ -3,67 +3,39 @@ import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import {
     EditUserResponseSchema,
     GetUserBookmarksResponseSchema,
-    GetUserMessagesResponseSchema,
+    GetUsersResponseSchema,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import type {
     EditUserResponseDto,
     GetUserBookmarksResponseDto,
-    GetUserMessagesResponseDto,
+    GetUsersResponseDto,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,
-    GetUserMessagesServiceReturnType,
+    GetUsersServiceReturnType,
 } from './user.types.js';
 
-export const mapToGetUserMessagesResponseDto = (
-    data: GetUserMessagesServiceReturnType
-): GetUserMessagesResponseDto => {
-    const mappedData: GetUserMessagesResponseDto = data.messages.map((message) => {
-        if (data.role === 'USER') {
-            return {
-                messageId: message.id,
-                message: message.content,
-                likes: message.likes.length,
-                bookmarks: message.bookmarks.length,
-                userId: message.authorId,
-                timestamp: message.createdAt,
-            };
-        }
-        return {
-            messageId: message.id,
-            message: message.content,
-            // The message author details.
-            user: message.author
-                ? {
-                      id: message.author.id,
-                      username: message.author.username,
-                      firstname: message.author.firstName,
-                      middlename: message.author.middleName,
-                      lastname: message.author.lastName,
-                      role: mapPrismaRoleToEnumRole(message.author.role),
-                      avatar: message.author.avatar
-                          ? getAvatarUrl(message.author.avatar)
-                          : null,
-                  }
-                : null,
-            likes: message.likes.length,
-            bookmarks: message.bookmarks.length,
-            // Boolean for whether message is bookmarked by logged-in user.
-            bookmarked: message.bookmarks.some(
-                (bookmark) => bookmark.userId === data.id
-            ),
-            // Boolean for whether message is liked by logged-in user.
-            liked: message.likes.some((like) => like.userId === data.id),
-            timestamp: message.createdAt,
-            edited: message.edited,
-        };
-    });
+export const mapToGetUsersResponseDto = (
+    data: GetUsersServiceReturnType
+): GetUsersResponseDto => {
+    const mappedData: GetUsersResponseDto = data.map((user) => ({
+        id: user.id,
+        username: user.username,
+        firstname: user.firstName,
+        middlename: user.middleName,
+        lastname: user.lastName,
+        role: mapPrismaRoleToEnumRole(user.role),
+        avatar: user.avatar,
+        lastActive: user.lastActive,
+        joinDate: user.createdAt,
+        lastUpdate: user.updatedAt,
+    }));
 
-    const validatedData: GetUserMessagesResponseDto = mappedDtoValidator(
+    const validatedData: GetUsersResponseDto = mappedDtoValidator(
         mappedData,
-        GetUserMessagesResponseSchema
+        GetUsersResponseSchema
     );
     return validatedData;
 };

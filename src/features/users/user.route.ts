@@ -10,7 +10,7 @@ import {
     memberRoleUpdate,
     resetUserPassword,
     setRole,
-    userMessages,
+    getUsers,
     userBookmarks,
     addUserBookmark,
     removeUserBookmark,
@@ -22,8 +22,8 @@ const userRouter = Router();
 
 //-----------Protected Routes-----------
 
-// Get all of the user's messages.
-userRouter.get('/messages', accessTokenVerification, userMessages);
+// Get all the users.
+userRouter.get('/', accessTokenVerification, adminVerification, getUsers);
 
 // Update user details (except password).
 userRouter.patch(

@@ -7,7 +7,7 @@ import {
 import {
     mapToEditUserResponseDto,
     mapToGetUserBookmarksResponseDto,
-    mapToGetUserMessagesResponseDto,
+    mapToGetUsersResponseDto,
 } from './user.mapper.js';
 import {
     EditUserRequestSchema,
@@ -22,10 +22,9 @@ import type { Request, Response } from 'express';
 import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,
-    GetUserMessagesServiceReturnType,
+    GetUsersServiceReturnType,
 } from './user.types.js';
 import type {
-    GetUserMessagesResponseDto,
     ApiResponse,
     EditUserRequestDto,
     EditUserResponseDto,
@@ -36,31 +35,23 @@ import type {
     GetUserBookmarksResponseDto,
     ApiResponseSuccess,
     MessageParamsDto,
+    GetUsersResponseDto,
 } from '@blue0206/members-only-shared-types';
 
-export const userMessages = async (req: Request, res: Response): Promise<void> => {
+export const getUsers = async (req: Request, res: Response): Promise<void> => {
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
         );
     }
-    if (!req.user) {
-        throw new UnauthorizedError(
-            'Authentication details missing.',
-            ErrorCodes.AUTHENTICATION_REQUIRED
-        );
-    }
 
-    const data: GetUserMessagesServiceReturnType = await userService.getUserMessages(
-        req.user.id
-    );
+    const users: GetUsersServiceReturnType = await userService.getUsers();
 
-    const userMessages: GetUserMessagesResponseDto =
-        mapToGetUserMessagesResponseDto(data);
+    const mappedUsers: GetUsersResponseDto = mapToGetUsersResponseDto(users);
 
-    const successResponse: ApiResponse<GetUserMessagesResponseDto> = {
+    const successResponse: ApiResponse<GetUsersResponseDto> = {
         success: true,
-        payload: userMessages,
+        payload: mappedUsers,
         requestId: req.requestId,
         statusCode: 200,
     };
