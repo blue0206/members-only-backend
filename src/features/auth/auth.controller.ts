@@ -353,3 +353,34 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
 
     res.status(204).end();
 };
+
+export const revokeAllOtherSessions = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    const refreshToken: string | undefined = req.cookies.refreshToken as
+        | string
+        | undefined;
+    if (!refreshToken) {
+        throw new UnauthorizedError(
+            'Missing refresh token.',
+            ErrorCodes.MISSING_REFRESH_TOKEN
+        );
+    }
+
+    await authService.revokeAllOtherSessions(req.user.id, refreshToken);
+
+    res.status(204).end();
+};

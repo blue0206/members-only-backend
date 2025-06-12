@@ -6,6 +6,7 @@ import {
     refreshUserTokens,
     getSessions,
     revokeSession,
+    revokeAllOtherSessions,
 } from './auth.controller.js';
 import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
@@ -31,6 +32,12 @@ authRouter.delete(
     accessTokenVerification,
     csrfVerification,
     revokeSession
+);
+authRouter.delete(
+    '/sessions',
+    accessTokenVerification,
+    csrfVerification,
+    revokeAllOtherSessions
 );
 
 export default authRouter;

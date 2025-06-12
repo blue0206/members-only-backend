@@ -404,6 +404,45 @@ class AuthService {
         logger.info({ userId, sessionId }, 'Session revoked successfully.');
     }
 
+    async revokeAllOtherSessions(
+        userId: number,
+        refreshToken: string
+    ): Promise<void> {
+        logger.info('Revoking all other sessions from database.');
+
+        const decodedRefreshToken: RefreshTokenPayload = jwtErrorHandler(
+            (): RefreshTokenPayload => {
+                const decodedToken = jwt.verify(
+                    refreshToken,
+                    config.REFRESH_TOKEN_SECRET
+                );
+                const parsedToken: RefreshTokenPayload =
+                    RefreshTokenPayloadSchema.parse(decodedToken);
+
+                return parsedToken;
+            }
+        );
+        if (!decodedRefreshToken.jti) {
+            throw new UnauthorizedError(
+                'Invalid refresh token: missing jti claim.',
+                ErrorCodes.INVALID_TOKEN
+            );
+        }
+
+        await prismaErrorHandler(async () => {
+            return await prisma.refreshToken.deleteMany({
+                where: {
+                    userId,
+                    jwtId: {
+                        not: decodedRefreshToken.jti,
+                    },
+                },
+            });
+        });
+
+        logger.info('All other sessions revoked successfully.');
+    }
+
     private generateAccessToken(payload: AccessTokenPayload): string {
         return jwt.sign(payload, config.ACCESS_TOKEN_SECRET, {
             expiresIn: config.ACCESS_TOKEN_EXPIRY as StringValue,
