@@ -389,6 +389,21 @@ class AuthService {
         };
     }
 
+    async revokeSession(userId: number, sessionId: string): Promise<void> {
+        logger.info({ userId, sessionId }, 'Revoking session from database.');
+
+        await prismaErrorHandler(async () => {
+            return await prisma.refreshToken.delete({
+                where: {
+                    userId,
+                    jwtId: sessionId,
+                },
+            });
+        });
+
+        logger.info({ userId, sessionId }, 'Session revoked successfully.');
+    }
+
     private generateAccessToken(payload: AccessTokenPayload): string {
         return jwt.sign(payload, config.ACCESS_TOKEN_SECRET, {
             expiresIn: config.ACCESS_TOKEN_EXPIRY as StringValue,

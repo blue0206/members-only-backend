@@ -3,6 +3,7 @@ import {
     ErrorCodes,
     LoginRequestSchema,
     RegisterRequestSchema,
+    SessionIdParamsSchema,
 } from '@blue0206/members-only-shared-types';
 import {
     mapToLoginResponseDto,
@@ -27,6 +28,7 @@ import type {
     RefreshResponseDto,
     RegisterRequestDto,
     RegisterResponseDto,
+    SessionIdParamsDto,
     UserSessionsResponseDto,
 } from '@blue0206/members-only-shared-types';
 import type {
@@ -325,4 +327,39 @@ export const getSessions = async (req: Request, res: Response): Promise<void> =>
         requestId: req.requestId,
     };
     res.status(200).json(successResponse);
+};
+
+export const revokeSession = async (req: Request, res: Response): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+    if (!req.clientDetails) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Client Details'
+        );
+    }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    // Validate the incoming request to make sure it adheres to the
+    // API contract (SessionIdParamsDto).
+    const parsedParams = SessionIdParamsSchema.safeParse(req.params);
+    if (!parsedParams.success) {
+        throw new ValidationError(
+            'Invalid request parameters.',
+            ErrorCodes.VALIDATION_ERROR,
+            parsedParams.error.flatten()
+        );
+    }
+    const sessionIdParams: SessionIdParamsDto = parsedParams.data;
+
+    await authService.revokeSession(req.user.id, sessionIdParams.sessionId);
+
+    res.status(204).end();
 };
