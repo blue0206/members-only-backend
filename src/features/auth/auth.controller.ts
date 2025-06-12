@@ -241,7 +241,7 @@ export const refreshUserTokens = async (
     if (!refreshToken) {
         throw new UnauthorizedError(
             'Missing refresh token.',
-            ErrorCodes.AUTHENTICATION_REQUIRED
+            ErrorCodes.MISSING_REFRESH_TOKEN
         );
     }
 
