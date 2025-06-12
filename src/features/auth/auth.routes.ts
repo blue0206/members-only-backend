@@ -25,18 +25,11 @@ authRouter.post(
     assignClientDetails,
     refreshUserTokens
 );
-authRouter.get(
-    '/sessions',
-    accessTokenVerification,
-    csrfVerification,
-    assignClientDetails,
-    getSessions
-);
+authRouter.get('/sessions', accessTokenVerification, csrfVerification, getSessions);
 authRouter.delete(
     '/sessions/:sessionId',
     accessTokenVerification,
     csrfVerification,
-    assignClientDetails,
     revokeSession
 );
 
