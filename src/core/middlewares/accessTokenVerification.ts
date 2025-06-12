@@ -50,6 +50,18 @@ export default function accessTokenVerification(
         // Token verified, forward the request.
         next();
     } catch (error: unknown) {
+        // If the error occurs on logout route, we just log the error but pass the
+        // request forward so that the cookies are cleared by controller and the
+        // session data is revoked by service.
+        if (req.url === '/api/v1/auth/logout') {
+            logger.warn(
+                { error, requestId: req.requestId },
+                'Error verifying access token in logout route. Passing request forward for clearing cookies and revoking session.'
+            );
+            next();
+            return;
+        }
+
         // Log error and directly send response for unauthorized errors.
         // This indicates that verification has failed.
         if (error instanceof UnauthorizedError) {
