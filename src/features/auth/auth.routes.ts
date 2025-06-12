@@ -19,7 +19,7 @@ authRouter.post('/register', multerMiddleware, assignClientDetails, registerUser
 authRouter.post('/login', assignClientDetails, loginUser);
 
 // Protected routes.
-authRouter.delete('/logout', accessTokenVerification, csrfVerification, logoutUser);
+authRouter.delete('/logout', accessTokenVerification, logoutUser);
 authRouter.post(
     '/refresh',
     csrfVerification,
