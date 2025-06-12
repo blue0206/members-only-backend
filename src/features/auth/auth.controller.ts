@@ -290,11 +290,6 @@ export const getSessions = async (req: Request, res: Response): Promise<void> =>
             'Internal server configuration error: Missing Request ID'
         );
     }
-    if (!req.clientDetails) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Client Details'
-        );
-    }
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -333,11 +328,6 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
-        );
-    }
-    if (!req.clientDetails) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Client Details'
         );
     }
     if (!req.user) {
