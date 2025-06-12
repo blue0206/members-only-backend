@@ -8,6 +8,7 @@ import {
     mapToLoginResponseDto,
     mapToRefreshResponseDto,
     mapToRegisterResponseDto,
+    mapToUserSessionsResponseDto,
 } from './auth.mapper.js';
 import {
     InternalServerError,
@@ -26,8 +27,10 @@ import type {
     RefreshResponseDto,
     RegisterRequestDto,
     RegisterResponseDto,
+    UserSessionsResponseDto,
 } from '@blue0206/members-only-shared-types';
 import type {
+    GetSessionsServiceReturnType,
     LoginServiceReturnType,
     RefreshServiceReturnType,
     RegisterServiceReturnType,
@@ -276,5 +279,50 @@ export const refreshUserTokens = async (
         requestId: req.requestId,
     };
 
+    res.status(200).json(successResponse);
+};
+
+export const getSessions = async (req: Request, res: Response): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+    if (!req.clientDetails) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Client Details'
+        );
+    }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    const refreshToken: string | undefined = req.cookies.refreshToken as
+        | string
+        | undefined;
+    if (!refreshToken) {
+        throw new UnauthorizedError(
+            'Missing refresh token.',
+            ErrorCodes.MISSING_REFRESH_TOKEN
+        );
+    }
+
+    const sessionData: GetSessionsServiceReturnType = await authService.getSessions(
+        req.user.id,
+        refreshToken
+    );
+
+    const responseData: UserSessionsResponseDto =
+        mapToUserSessionsResponseDto(sessionData);
+
+    const successResponse: ApiResponseSuccess<UserSessionsResponseDto> = {
+        success: true,
+        payload: responseData,
+        statusCode: 200,
+        requestId: req.requestId,
+    };
     res.status(200).json(successResponse);
 };

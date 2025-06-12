@@ -1,6 +1,6 @@
 import { Role } from '@blue0206/members-only-shared-types';
 import { z } from 'zod';
-import type { User } from '../../core/db/prisma-client/client.js';
+import type { User, RefreshToken } from '../../core/db/prisma-client/client.js';
 import type { JwtPayload } from 'jsonwebtoken';
 
 export interface RegisterServiceReturnType extends Omit<User, 'password'> {
@@ -16,6 +16,11 @@ export interface LoginServiceReturnType extends User {
 export interface RefreshServiceReturnType {
     accessToken: string;
     refreshToken: string;
+}
+
+export interface GetSessionsServiceReturnType {
+    sessions: Omit<RefreshToken, 'tokenHash'>[];
+    currentSessionId: string;
 }
 
 // -----JWT Payload schemas and types-----

@@ -5,13 +5,16 @@ import {
     LoginResponseSchema,
     RefreshResponseSchema,
     RegisterResponseSchema,
+    UserSessionsResponseSchema,
 } from '@blue0206/members-only-shared-types';
 import type {
     LoginResponseDto,
     RefreshResponseDto,
     RegisterResponseDto,
+    UserSessionsResponseDto,
 } from '@blue0206/members-only-shared-types';
 import type {
+    GetSessionsServiceReturnType,
     LoginServiceReturnType,
     RefreshServiceReturnType,
     RegisterServiceReturnType,
@@ -69,6 +72,27 @@ export const mapToRefreshResponseDto = (
     const validatedData: RefreshResponseDto = mappedDtoValidator(
         mappedData,
         RefreshResponseSchema
+    );
+    return validatedData;
+};
+
+export const mapToUserSessionsResponseDto = (
+    data: GetSessionsServiceReturnType
+): UserSessionsResponseDto => {
+    const mappedData: UserSessionsResponseDto = data.sessions.map((session) => ({
+        sessionId: session.jwtId,
+        userId: session.userId,
+        userIp: session.ip,
+        userAgent: session.userAgent,
+        userLocation: session.location,
+        lastUsedOn: session.createdAt,
+        expires: session.expiresAt,
+        currentSession: session.jwtId === data.currentSessionId,
+    }));
+
+    const validatedData: UserSessionsResponseDto = mappedDtoValidator(
+        mappedData,
+        UserSessionsResponseSchema
     );
     return validatedData;
 };

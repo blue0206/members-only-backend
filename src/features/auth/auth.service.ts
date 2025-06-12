@@ -20,7 +20,7 @@ import type {
     LoginRequestDto,
     RegisterRequestDto,
 } from '@blue0206/members-only-shared-types';
-import type { User } from '../../core/db/prisma-client/client.js';
+import type { RefreshToken, User } from '../../core/db/prisma-client/client.js';
 import type { StringValue } from 'ms';
 import type {
     LoginServiceReturnType,
@@ -28,6 +28,7 @@ import type {
     AccessTokenPayload,
     RefreshTokenPayload,
     RefreshServiceReturnType,
+    GetSessionsServiceReturnType,
 } from './auth.types.js';
 import type { ClientDetailsType } from '../../core/middlewares/assignClientDetails.js';
 
@@ -340,6 +341,51 @@ class AuthService {
         return {
             accessToken,
             refreshToken: newRefreshToken,
+        };
+    }
+
+    async getSessions(
+        userId: number,
+        refreshToken: string
+    ): Promise<GetSessionsServiceReturnType> {
+        logger.info('Getting user sessions from database.');
+
+        const decodedRefreshToken: RefreshTokenPayload = jwtErrorHandler(
+            (): RefreshTokenPayload => {
+                const decodedToken = jwt.verify(
+                    refreshToken,
+                    config.REFRESH_TOKEN_SECRET
+                );
+                const parsedToken: RefreshTokenPayload =
+                    RefreshTokenPayloadSchema.parse(decodedToken);
+
+                return parsedToken;
+            }
+        );
+        if (!decodedRefreshToken.jti) {
+            throw new UnauthorizedError(
+                'Invalid refresh token: missing jti claim.',
+                ErrorCodes.INVALID_TOKEN
+            );
+        }
+
+        const sessions: Omit<RefreshToken, 'tokenHash'>[] = await prismaErrorHandler(
+            async () => {
+                return await prisma.refreshToken.findMany({
+                    where: {
+                        userId,
+                    },
+                    omit: {
+                        tokenHash: true,
+                    },
+                });
+            }
+        );
+
+        logger.info('User sessions successfully retrieved from database.');
+        return {
+            sessions,
+            currentSessionId: decodedRefreshToken.jti,
         };
     }
 
