@@ -53,7 +53,7 @@ export default function accessTokenVerification(
         // If the error occurs on logout route, we just log the error but pass the
         // request forward so that the cookies are cleared by controller and the
         // session data is revoked by service.
-        if (req.url === '/api/v1/auth/logout') {
+        if (req.url === '/logout') {
             logger.warn(
                 { error, requestId: req.requestId },
                 'Error verifying access token in logout route. Passing request forward for clearing cookies and revoking session.'
@@ -90,6 +90,7 @@ export default function accessTokenVerification(
             };
 
             res.status(401).json(ErrorResponse);
+            return;
         }
         // Forward to error middleware.
         next(error);
