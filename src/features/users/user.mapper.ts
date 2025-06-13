@@ -27,7 +27,7 @@ export const mapToGetUsersResponseDto = (
         middlename: user.middleName,
         lastname: user.lastName,
         role: mapPrismaRoleToEnumRole(user.role),
-        avatar: user.avatar,
+        avatar: user.avatar ? getAvatarUrl(user.avatar) : null,
         lastActive: user.lastActive,
         joinDate: user.createdAt,
         lastUpdate: user.updatedAt,
