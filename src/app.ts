@@ -13,6 +13,7 @@ import { logger } from './core/logger.js';
 import { prisma } from './core/db/prisma.js';
 import cookieParser from 'cookie-parser';
 import { NotFoundError } from './core/errors/customErrors.js';
+import { clearExpiredRefreshTokensTask } from './core/scheduler/index.js';
 import type { Server } from 'http';
 import type { Request, Response } from 'express';
 
@@ -55,6 +56,12 @@ const server: Server = app.listen(PORT, () => {
     logger.info(
         `Server running on port ${config.PORT.toString()} in ${config.NODE_ENV} mode`
     );
+    // Start the scheduled task to clear expired refresh tokens.
+    void clearExpiredRefreshTokensTask.start();
+    logger.info(
+        'Scheduled "Clear_Expired_Refresh_Tokens" task to run every day at 00:00 or 12:00 AM'
+    );
+
     logger.info('Prisma client initialized.');
 });
 
@@ -85,7 +92,19 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
             logger.info('Server has shutdown successfully.');
         }
 
-        // 2. Close the DB connection pool.
+        // 2. Stop node cron jobs. Doesn't throw any errors, but wrapped in
+        // try-catch just in case.
+        try {
+            await clearExpiredRefreshTokensTask.stop();
+            logger.info(
+                'Scheduled task "Clear_Expired_Refresh_Tokens" has been stopped.'
+            );
+        } catch (error) {
+            logger.error({ err: error }, 'Error stopping scheduled task.');
+            process.exitCode = 1;
+        }
+
+        // 3. Close the DB connection pool.
         logger.info('Disconnecting Prisma Client....');
         try {
             await prisma.$disconnect();
@@ -95,7 +114,7 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
             process.exitCode = 1;
         }
 
-        // 3. Exit the process.
+        // 4. Exit the process.
         logger.info('Graceful shutdown complete. Exiting....');
         // We don't set exitCode here. By default it should be 0, else 1 if errors
         // were encountered before.
