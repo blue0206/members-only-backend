@@ -10,7 +10,6 @@ import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
 import { logger } from '../../core/logger.js';
 import {
     InternalServerError,
-    NotFoundError,
     UnauthorizedError,
 } from '../../core/errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
@@ -256,25 +255,20 @@ class AuthService {
             }
         );
 
-        // Remove refresh token entry from DB and catch
-        // and throw proper error for invalid token.
-        try {
-            await prismaErrorHandler(async () => {
-                return await prisma.refreshToken.delete({
-                    where: {
-                        userId: decodedRefreshToken.id,
-                        jwtId: decodedRefreshToken.jti,
-                    },
-                });
+        // Check if refresh token is in DB and hence a valid token.
+        const refreshTokenEntry = await prismaErrorHandler(async () => {
+            return await prisma.refreshToken.findUnique({
+                where: {
+                    userId: decodedRefreshToken.id,
+                    jwtId: decodedRefreshToken.jti,
+                },
             });
-        } catch (error: unknown) {
-            if (error instanceof NotFoundError) {
-                throw new UnauthorizedError(
-                    'The refresh token is invalid.',
-                    ErrorCodes.INVALID_TOKEN
-                );
-            }
-            throw error;
+        });
+        if (!refreshTokenEntry) {
+            throw new UnauthorizedError(
+                'The refresh token is invalid.',
+                ErrorCodes.INVALID_TOKEN
+            );
         }
 
         // Create new refresh token.
@@ -302,6 +296,7 @@ class AuthService {
                                 ip: clientDetails.ip,
                                 location: clientDetails.location,
                                 userAgent: clientDetails.userAgent,
+                                succeedsJwtId: decodedRefreshToken.jti,
                             },
                         });
 

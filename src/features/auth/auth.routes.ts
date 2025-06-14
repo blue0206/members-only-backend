@@ -12,6 +12,7 @@ import accessTokenVerification from '../../core/middlewares/accessTokenVerificat
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
 import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
 import assignClientDetails from '../../core/middlewares/assignClientDetails.js';
+import tokenRotationCleanupMiddleware from '../../core/middlewares/tokenRotationCleanupMiddleware.js';
 
 const authRouter = Router();
 
@@ -22,6 +23,7 @@ authRouter.post('/login', assignClientDetails, loginUser);
 authRouter.delete('/logout', accessTokenVerification, csrfVerification, logoutUser);
 authRouter.post(
     '/refresh',
+    tokenRotationCleanupMiddleware,
     csrfVerification,
     assignClientDetails,
     refreshUserTokens
