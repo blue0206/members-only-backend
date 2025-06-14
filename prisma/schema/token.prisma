@@ -11,6 +11,7 @@ model RefreshToken {
     createdAt     DateTime @default(now()) @db.Timestamptz() // Equivalent to last-used.
 
     @@index([userId, jwtId])
+    @@index([succeedsJwtId])
     @@index([userId])
     @@map("refresh_token")
 }
