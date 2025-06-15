@@ -10,7 +10,6 @@ generator client {
   moduleFormat        = "esm"
   importFileExtension = "js"
   runtime             = "nodejs"
-  previewFeatures     = ["prismaSchemaFolder"]
 }
 
 datasource db {

@@ -14,8 +14,6 @@ echo "Prisma migrations complete."
 echo "Generating Prisma Client (dev)...."
 npx prisma generate --schema ./prisma/schema
 
-# Turn off the type-checking of the Prisma Client to prevent compile issue.
-node ./tools/client-fix.js
 # Copy prisma engine to dist.
 npm run db:prisma-engine-fix
 
