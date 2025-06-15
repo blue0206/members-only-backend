@@ -17,18 +17,26 @@ import {
 } from './user.controller.js';
 import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
 import memberVerification from '../../core/middlewares/memberVerification.js';
+import lastActiveUpdateMiddleware from '../../core/middlewares/lastActiveUpdateMiddleware.js';
 
 const userRouter = Router();
 
 //-----------Protected Routes-----------
 
 // Get all the users.
-userRouter.get('/', accessTokenVerification, adminVerification, getUsers);
+userRouter.get(
+    '/',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    adminVerification,
+    getUsers
+);
 
 // Update user details (except password).
 userRouter.patch(
     '/',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     multerMiddleware,
     editUser
@@ -38,18 +46,26 @@ userRouter.patch(
 userRouter.delete(
     '/:username',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     adminVerification,
     adminDeleteUser
 );
 
 // Allow users to delete their account.
-userRouter.delete('/', accessTokenVerification, csrfVerification, deleteUserAccount);
+userRouter.delete(
+    '/',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    deleteUserAccount
+);
 
 // Reset Password
 userRouter.patch(
     '/reset-password',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     resetUserPassword
 );
@@ -58,6 +74,7 @@ userRouter.patch(
 userRouter.patch(
     '/role',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     memberRoleUpdate
 );
@@ -66,6 +83,7 @@ userRouter.patch(
 userRouter.patch(
     '/role/:username',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     adminVerification,
     setRole
@@ -75,6 +93,7 @@ userRouter.patch(
 userRouter.delete(
     '/avatar',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     deleteUserAvatar
 );
@@ -83,6 +102,7 @@ userRouter.delete(
 userRouter.get(
     '/bookmarks',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     memberVerification,
     userBookmarks
 );
@@ -91,6 +111,7 @@ userRouter.get(
 userRouter.post(
     '/bookmarks/:messageId',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
     addUserBookmark
@@ -100,6 +121,7 @@ userRouter.post(
 userRouter.delete(
     '/bookmarks/:messageId',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
     removeUserBookmark

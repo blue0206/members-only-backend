@@ -13,6 +13,7 @@ import csrfVerification from '../../core/middlewares/csrfVerification.js';
 import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
 import assignClientDetails from '../../core/middlewares/assignClientDetails.js';
 import tokenRotationCleanupMiddleware from '../../core/middlewares/tokenRotationCleanupMiddleware.js';
+import lastActiveUpdateMiddleware from '../../core/middlewares/lastActiveUpdateMiddleware.js';
 
 const authRouter = Router();
 
@@ -20,7 +21,13 @@ authRouter.post('/register', multerMiddleware, assignClientDetails, registerUser
 authRouter.post('/login', assignClientDetails, loginUser);
 
 // Protected routes.
-authRouter.delete('/logout', accessTokenVerification, csrfVerification, logoutUser);
+authRouter.delete(
+    '/logout',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    logoutUser
+);
 authRouter.post(
     '/refresh',
     tokenRotationCleanupMiddleware,
@@ -28,16 +35,24 @@ authRouter.post(
     assignClientDetails,
     refreshUserTokens
 );
-authRouter.get('/sessions', accessTokenVerification, csrfVerification, getSessions);
+authRouter.get(
+    '/sessions',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    getSessions
+);
 authRouter.delete(
     '/sessions/:sessionId',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     revokeSession
 );
 authRouter.delete(
     '/sessions',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     revokeAllOtherSessions
 );

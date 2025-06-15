@@ -11,6 +11,7 @@ import {
 import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
 import memberVerification from '../../core/middlewares/memberVerification.js';
+import lastActiveUpdateMiddleware from '../../core/middlewares/lastActiveUpdateMiddleware.js';
 
 const messageRouter = Router();
 
@@ -22,17 +23,25 @@ messageRouter.get('/public', getMessagesWithoutAuthor);
 messageRouter.get(
     '/',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     memberVerification,
     getMessagesWithAuthor
 );
 
 // Create a new message.
-messageRouter.post('/', accessTokenVerification, csrfVerification, createNewMessage);
+messageRouter.post(
+    '/',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    createNewMessage
+);
 
 // Edit message (Admin/Member)
 messageRouter.patch(
     '/:messageId',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
     editMessage
@@ -42,6 +51,7 @@ messageRouter.patch(
 messageRouter.delete(
     '/:messageId',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     deleteMessage
 );
@@ -50,6 +60,7 @@ messageRouter.delete(
 messageRouter.post(
     '/:messageId/like',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
     likeMessage
@@ -59,6 +70,7 @@ messageRouter.post(
 messageRouter.delete(
     '/:messageId/like',
     accessTokenVerification,
+    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
     unlikeMessage
