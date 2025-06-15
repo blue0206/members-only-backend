@@ -13,7 +13,10 @@ import { logger } from './core/logger.js';
 import { prisma } from './core/db/prisma.js';
 import cookieParser from 'cookie-parser';
 import { NotFoundError } from './core/errors/customErrors.js';
-import { clearExpiredRefreshTokensTask } from './core/scheduler/index.js';
+import {
+    clearExpiredRefreshTokensTask,
+    lastActiveDataFlushTask,
+} from './core/scheduler/index.js';
 import type { Server } from 'http';
 import type { Request, Response } from 'express';
 
@@ -56,13 +59,16 @@ const server: Server = app.listen(PORT, () => {
     logger.info(
         `Server running on port ${config.PORT.toString()} in ${config.NODE_ENV} mode`
     );
+    logger.info('Prisma client initialized.');
+
     // Start the scheduled task to clear expired refresh tokens.
     void clearExpiredRefreshTokensTask.start();
     logger.info(
         'Scheduled "Clear_Expired_Refresh_Tokens" task to run every day at 00:00 or 12:00 AM'
     );
-
-    logger.info('Prisma client initialized.');
+    // Start the scheduled task to flush user activity data into DB.
+    void lastActiveDataFlushTask.start();
+    logger.info(`Scheduled "User_Activity_Batch_Update" task to run every hour.`);
 });
 
 //---------GRACEFUL SHUTDOWN--------
@@ -92,7 +98,37 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
             logger.info('Server has shutdown successfully.');
         }
 
-        // 2. Stop node cron jobs. Doesn't throw any errors, but wrapped in
+        // 2. Flush user activity data into DB so as to not lose the data while shutting down
+        // as it is in memory.
+        try {
+            await lastActiveDataFlushTask.execute();
+            logger.info(
+                'Scheduled task "User_Activity_Batch_Update" has been executed in graceful shutdown.'
+            );
+        } catch (error) {
+            logger.error(
+                { err: error },
+                'Error flushing user activity data into DB in graceful shutdown.'
+            );
+            process.exitCode = 1;
+        }
+
+        // 3. Stop node cron job to flush user activity data. Doesn't throw any errors, but wrapped in
+        // try-catch just in case.
+        try {
+            await lastActiveDataFlushTask.stop();
+            logger.info(
+                'Scheduled task "User_Activity_Batch_Update" has been stopped.'
+            );
+        } catch (error) {
+            logger.error(
+                { err: error },
+                'Error stopping scheduled task to flush user activity data.'
+            );
+            process.exitCode = 1;
+        }
+
+        // 4. Stop node cron job to clear expired tokens. Doesn't throw any errors, but wrapped in
         // try-catch just in case.
         try {
             await clearExpiredRefreshTokensTask.stop();
@@ -100,11 +136,14 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
                 'Scheduled task "Clear_Expired_Refresh_Tokens" has been stopped.'
             );
         } catch (error) {
-            logger.error({ err: error }, 'Error stopping scheduled task.');
+            logger.error(
+                { err: error },
+                'Error stopping scheduled task to clear expired tokens from DB.'
+            );
             process.exitCode = 1;
         }
 
-        // 3. Close the DB connection pool.
+        // 5. Close the DB connection pool.
         logger.info('Disconnecting Prisma Client....');
         try {
             await prisma.$disconnect();
@@ -114,7 +153,7 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
             process.exitCode = 1;
         }
 
-        // 4. Exit the process.
+        // 6. Exit the process.
         logger.info('Graceful shutdown complete. Exiting....');
         // We don't set exitCode here. By default it should be 0, else 1 if errors
         // were encountered before.
