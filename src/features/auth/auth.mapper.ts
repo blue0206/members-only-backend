@@ -66,6 +66,13 @@ export const mapToRefreshResponseDto = (
     data: RefreshServiceReturnType
 ): RefreshResponseDto => {
     const mappedData: RefreshResponseDto = {
+        id: data.id,
+        username: data.username,
+        firstname: data.firstName,
+        middlename: data.middleName,
+        lastname: data.lastName,
+        avatar: data.avatar ? getAvatarUrl(data.avatar) : null,
+        role: mapPrismaRoleToEnumRole(data.role),
         accessToken: data.accessToken,
     };
 

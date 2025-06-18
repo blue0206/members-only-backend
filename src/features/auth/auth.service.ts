@@ -283,9 +283,9 @@ class AuthService {
         );
 
         // Start a transaction: add new refresh token to DB and fetch user role and username.
-        const user: Pick<User, 'username' | 'role'> | null =
-            await prismaErrorHandler(async () => {
-                const userData: Pick<User, 'username' | 'role'> | null =
+        const user: Omit<User, 'password'> | null = await prismaErrorHandler(
+            async () => {
+                const userData: Omit<User, 'password'> | null =
                     await prisma.$transaction(async (tx) => {
                         await tx.refreshToken.create({
                             data: {
@@ -304,15 +304,15 @@ class AuthService {
                             where: {
                                 id: decodedRefreshToken.id,
                             },
-                            select: {
-                                username: true,
-                                role: true,
+                            omit: {
+                                password: true,
                             },
                         });
                     });
                 return userData;
                 // Transaction end.
-            });
+            }
+        );
 
         if (!user) {
             throw new InternalServerError(
@@ -334,6 +334,7 @@ class AuthService {
         );
 
         return {
+            ...user,
             accessToken,
             refreshToken: newRefreshToken,
         };

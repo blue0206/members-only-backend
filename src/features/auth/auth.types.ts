@@ -13,7 +13,7 @@ export interface LoginServiceReturnType extends User {
     refreshToken: string;
 }
 
-export interface RefreshServiceReturnType {
+export interface RefreshServiceReturnType extends Omit<User, 'password'> {
     accessToken: string;
     refreshToken: string;
 }
