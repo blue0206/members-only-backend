@@ -12,12 +12,19 @@ import {
     InternalServerError,
     UnauthorizedError,
 } from '../../core/errors/customErrors.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import {
+    ErrorCodes,
+    EventReason,
+    Role,
+    SseEventNames,
+} from '@blue0206/members-only-shared-types';
 import { RefreshTokenPayloadSchema } from './auth.types.js';
 import { uploadFile } from '../../core/lib/cloudinary.js';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
+    SseEventNamesType,
+    UserEventPayloadDto,
 } from '@blue0206/members-only-shared-types';
 import type { RefreshToken, User } from '../../core/db/prisma-client/client.js';
 import type { StringValue } from 'ms';
@@ -30,6 +37,7 @@ import type {
     GetSessionsServiceReturnType,
 } from './auth.types.js';
 import type { ClientDetailsType } from '../../core/middlewares/assignClientDetails.js';
+import { sseService } from '../sse/sse.service.js';
 
 class AuthService {
     async register(
@@ -122,6 +130,18 @@ class AuthService {
         logger.info(
             { username: user.username, role: user.role },
             ' User registration successful'
+        );
+
+        // Send event to all admins to update their user list.
+        sseService.multicastEventToRoles<SseEventNamesType, UserEventPayloadDto>(
+            [Role.ADMIN],
+            {
+                event: SseEventNames.USER_EVENT,
+                data: {
+                    originId: user.id,
+                    reason: EventReason.USER_CREATED,
+                },
+            }
         );
 
         return {
