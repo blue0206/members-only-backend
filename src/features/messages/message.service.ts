@@ -221,6 +221,16 @@ class MessageService {
         });
 
         logger.info({ messageId, user }, 'Message deleted successfully.');
+
+        // Broadcast event to all connected SSE clients to show real-time updates.
+        sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
+            event: SseEventNames.MESSAGE_EVENT,
+            data: {
+                reason: EventReason.MESSAGE_DELETED,
+                originId: user.id,
+            },
+            id: uuidv4(),
+        });
     }
 
     async likeMessage(messageId: number, userId: number): Promise<void> {
