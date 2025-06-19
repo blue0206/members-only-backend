@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import authRouter from './features/auth/auth.routes.js';
 import userRouter from './features/users/user.route.js';
 import messageRouter from './features/messages/message.route.js';
+import sseRouter from './features/sse/sse.routes.js';
 import { errorHandler } from './core/middlewares/errorHandler.js';
 import { logger } from './core/logger.js';
 import { prisma } from './core/db/prisma.js';
@@ -19,6 +20,7 @@ import {
 } from './core/scheduler/index.js';
 import type { Server } from 'http';
 import type { Request, Response } from 'express';
+import { sseService } from './features/sse/sse.service.js';
 
 const app = express();
 // Cors Middleware
@@ -45,6 +47,7 @@ app.set('trust proxy', 1);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/messages', messageRouter);
+app.use('/api/v1/events', sseRouter); // Server-sent Events
 // Catch-all route.
 app.use((_req: Request, _res: Response) => {
     throw new NotFoundError('This route does not exist.');
@@ -69,6 +72,12 @@ const server: Server = app.listen(PORT, () => {
     // Start the scheduled task to flush user activity data into DB.
     void lastActiveDataFlushTask.start();
     logger.info(`Scheduled "User_Activity_Batch_Update" task to run every hour.`);
+
+    setInterval(() => {
+        sseService.sendHeartbeat();
+    }, 35000);
+    logger.info('Scheduled heartbeat to send to all SSE clients every 35 seconds.');
+    // TODO: Fix Graceful shutdown timed out error by disconnecting all SSE clients.
 });
 
 //---------GRACEFUL SHUTDOWN--------
@@ -162,7 +171,7 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
 
     // Failsafe Timeout
     // This timeout forces exit if server takes too long to shutdown.
-    const shutDownTimeout = 16000;
+    const shutDownTimeout = 32000;
     setTimeout(() => {
         logger.error(
             `Graceful shutdown timed out after ${(shutDownTimeout / 1000).toString()}s. Forcing exit....`
