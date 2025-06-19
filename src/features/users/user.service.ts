@@ -94,6 +94,21 @@ class UserService {
             },
             'User details updated in database successfully.'
         );
+
+        // We need only send this event to the roles who can actually view the
+        // profile details of users, i.e. ADMIN and MEMBER roles.
+        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+            [Role.ADMIN, Role.MEMBER],
+            {
+                event: SseEventNames.MULTI_EVENT,
+                data: {
+                    reason: EventReason.USER_UPDATED,
+                    originId: user.id,
+                },
+                id: uuidv4(),
+            }
+        );
+
         return user;
     }
 
