@@ -155,10 +155,11 @@ class UserService {
         }
     }
 
+    // Endpoint for users to delete their own account.
     async deleteAccount(userId: number): Promise<void> {
         logger.info({ userId }, 'Deleting user from database.');
 
-        await prismaErrorHandler(async () => {
+        const deletedUser = await prismaErrorHandler(async () => {
             return await prisma.user.delete({
                 where: {
                     id: userId,
@@ -167,6 +168,20 @@ class UserService {
         });
 
         logger.info({ userId }, 'User deleted from database successfully.');
+
+        // We only send this to the roles who can actually view the other users,
+        // i.e. ADMIN and MEMBER roles.
+        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+            [Role.ADMIN, Role.MEMBER],
+            {
+                event: SseEventNames.MULTI_EVENT,
+                data: {
+                    reason: EventReason.USER_DELETED,
+                    originId: deletedUser.id,
+                },
+                id: uuidv4(),
+            }
+        );
     }
 
     async resetPassword(
