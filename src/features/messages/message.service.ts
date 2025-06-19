@@ -1,4 +1,9 @@
-import { ErrorCodes, Role } from '@blue0206/members-only-shared-types';
+import {
+    ErrorCodes,
+    EventReason,
+    Role,
+    SseEventNames,
+} from '@blue0206/members-only-shared-types';
 import { prisma } from '../../core/db/prisma.js';
 import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
 import {
@@ -6,6 +11,12 @@ import {
     InternalServerError,
 } from '../../core/errors/customErrors.js';
 import { logger } from '../../core/logger.js';
+import { sseService } from '../sse/sse.service.js';
+import { v4 as uuidv4 } from 'uuid';
+import type {
+    MessageEventPayloadDto,
+    SseEventNamesType,
+} from '@blue0206/members-only-shared-types';
 import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,
@@ -77,6 +88,17 @@ class MessageService {
         }
 
         logger.info({ message, userId }, 'Message created successfully.');
+
+        // Broadcast event to all connected SSE clients to show real-time updates.
+        sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
+            event: SseEventNames.MESSAGE_EVENT,
+            data: {
+                reason: EventReason.MESSAGE_CREATED,
+                originId: createdMessage.author.id,
+            },
+            id: uuidv4(),
+        });
+
         return createdMessage;
     }
 
