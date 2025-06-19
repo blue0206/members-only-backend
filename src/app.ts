@@ -14,13 +14,13 @@ import { logger } from './core/logger.js';
 import { prisma } from './core/db/prisma.js';
 import cookieParser from 'cookie-parser';
 import { NotFoundError } from './core/errors/customErrors.js';
+import { sseService } from './features/sse/sse.service.js';
 import {
     clearExpiredRefreshTokensTask,
     lastActiveDataFlushTask,
 } from './core/scheduler/index.js';
 import type { Server } from 'http';
 import type { Request, Response } from 'express';
-import { sseService } from './features/sse/sse.service.js';
 
 const app = express();
 // Cors Middleware
@@ -73,11 +73,11 @@ const server: Server = app.listen(PORT, () => {
     void lastActiveDataFlushTask.start();
     logger.info(`Scheduled "User_Activity_Batch_Update" task to run every hour.`);
 
+    // Schedule heartbeat to send to all SSE clients every 35 seconds.
     setInterval(() => {
         sseService.sendHeartbeat();
     }, 35000);
     logger.info('Scheduled heartbeat to send to all SSE clients every 35 seconds.');
-    // TODO: Fix Graceful shutdown timed out error by disconnecting all SSE clients.
 });
 
 //---------GRACEFUL SHUTDOWN--------
@@ -95,6 +95,9 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
     }
     shuttingDown = true;
     logger.warn(`Received ${signal}. Gracefully shutting down....`);
+
+    // Disconnect all SSE clients before shutting down.
+    sseService.clearSseClients();
 
     // 1. Stop server.
     server.close(async (err) => {

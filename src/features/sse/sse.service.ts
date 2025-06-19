@@ -30,11 +30,13 @@ class SseService {
     }
 
     /**
-     * Removes a client from the list of connected SSE clients.
+     * Removes a client from the list of connected SSE clients and closes its connection.
      * @param {string} clientId - The id for the client to be removed.
      */
     removeClient(clientId: string): void {
         if (clients.has(clientId)) {
+            const client = clients.get(clientId);
+            if (client) client.res.end();
             clients.delete(clientId);
             logger.info({ clientId }, 'SSE client disconnected and removed.');
         }
@@ -73,6 +75,20 @@ class SseService {
         clients.forEach((client) => {
             this.sendEventToClient(client.id, eventBody);
         });
+    }
+
+    /**
+     * Clears all connected SSE clients.
+     *
+     * This method removes all clients from the internal collection
+     * and ends their connections, effectively disconnecting them.
+     * Will be used during graceful shutdown to ensure that no
+     * SSE connections remain open.
+     */
+    clearSseClients(): void {
+        clients.forEach((client) => client.res.end());
+        clients.clear();
+        logger.info('All SSE clients cleared.');
     }
 
     sendHeartbeat(): void {
