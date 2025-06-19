@@ -43,6 +43,24 @@ class SseService {
     }
 
     /**
+     * Sends an event to a specific SSE client.
+     * @template EventName - The name of the event.
+     * @template Payload - The type of the event payload (data).
+     * @param {number} userId - The id of the user to send the event to.
+     * @param {ServerSentEvent<EventName, Payload>} eventBody - The event body to send.
+     */
+    unicastEvent<EventName extends SseEventNamesType, Payload>(
+        userId: number,
+        eventBody: ServerSentEvent<EventName, Payload>
+    ): void {
+        clients.forEach((client) => {
+            if (client.userId === userId) {
+                this.sendEventToClient(client.id, eventBody);
+            }
+        });
+    }
+
+    /**
      * Sends an event to all connected SSE clients with the specified role.
      * This will typically be used to trigger refetch for GET '/users' endpoint
      * which is admin-only.
