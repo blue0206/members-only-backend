@@ -251,7 +251,7 @@ class UserService {
             );
         }
 
-        await prismaErrorHandler(async () => {
+        const updatedUser = await prismaErrorHandler(async () => {
             return await prisma.user.update({
                 where: {
                     id: userId,
@@ -260,6 +260,7 @@ class UserService {
                     role: 'MEMBER',
                 },
                 select: {
+                    id: true,
                     role: true,
                 },
             });
@@ -268,6 +269,21 @@ class UserService {
         logger.info(
             { userId, role: 'MEMBER' },
             'User role set in database successfully.'
+        );
+
+        // Since this is a role change event, we need only send this to the roles who
+        // can actually view the roles of users, i.e. ADMIN and MEMBER roles.
+        const multiEventPayloadDto: MultiEventPayloadDto = {
+            reason: EventReason.MEMBER_UPDATE,
+            originId: updatedUser.id,
+        };
+        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+            [Role.ADMIN, Role.MEMBER],
+            {
+                event: SseEventNames.MULTI_EVENT,
+                data: multiEventPayloadDto,
+                id: uuidv4(),
+            }
         );
     }
 
@@ -314,6 +330,8 @@ class UserService {
             });
         });
 
+        logger.info({ username, newRole: role }, 'User role updated successfully.');
+
         // Since this is a role change event, we need only send this to the roles who
         // can actually view the roles of users, i.e. ADMIN and MEMBER roles.
         const multiEventPayloadDto: MultiEventPayloadDto = {
@@ -343,8 +361,6 @@ class UserService {
                 }
             );
         }
-
-        logger.info({ username, newRole: role }, 'User role updated successfully.');
     }
 
     async deleteUserAvatar(username: string): Promise<void> {
