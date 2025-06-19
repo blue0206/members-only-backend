@@ -163,6 +163,17 @@ class MessageService {
             });
 
         logger.info({ newMessage, messageId, user }, 'Message edited successfully.');
+
+        // Broadcast event to all connected SSE clients to show real-time updates.
+        sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
+            event: SseEventNames.MESSAGE_EVENT,
+            data: {
+                reason: EventReason.MESSAGE_UPDATED,
+                originId: user.id,
+            },
+            id: uuidv4(),
+        });
+
         return editedMessageDetails;
     }
 
