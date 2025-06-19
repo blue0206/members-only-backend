@@ -110,6 +110,13 @@ export const adminDeleteUser = async (
             'Internal server configuration error: Missing Request ID'
         );
     }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
     const parsedParams = UsernameParamsSchema.safeParse(req.params);
     if (!parsedParams.success) {
         throw new ValidationError(
@@ -120,7 +127,8 @@ export const adminDeleteUser = async (
     }
 
     const requestParam: UsernameParamsDto = parsedParams.data;
-    await userService.deleteUserByUsername(requestParam.username);
+    await userService.deleteUserByUsername(requestParam.username, req.user.id);
+
     res.status(204).end();
 };
 

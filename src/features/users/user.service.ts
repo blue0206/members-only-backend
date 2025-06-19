@@ -112,10 +112,11 @@ class UserService {
         return user;
     }
 
-    async deleteUserByUsername(username: string): Promise<void> {
+    // Endpoint for ADMINs to delete user.
+    async deleteUserByUsername(username: string, adminId: number): Promise<void> {
         logger.info({ username }, 'Deleting user from database.');
 
-        await prismaErrorHandler(async () => {
+        const deletedUser = await prismaErrorHandler(async () => {
             return await prisma.user.delete({
                 where: {
                     username,
@@ -124,6 +125,34 @@ class UserService {
         });
 
         logger.info({ username }, 'User deleted from database successfully.');
+
+        // We only send this to the roles who can actually view the other users,
+        // i.e. ADMIN and MEMBER roles.
+        const multiEventPayloadDto: MultiEventPayloadDto = {
+            reason: EventReason.USER_DELETED_BY_ADMIN,
+            originId: adminId,
+            targetId: deletedUser.id,
+        };
+        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+            [Role.ADMIN, Role.MEMBER],
+            {
+                event: SseEventNames.MULTI_EVENT,
+                data: multiEventPayloadDto,
+                id: uuidv4(),
+            }
+        );
+        // In case the affected user is of USER role, we send the
+        // event to the user as well in order clear their client state.
+        if (deletedUser.role === 'USER') {
+            sseService.unicastEvent<SseEventNamesType, MultiEventPayloadDto>(
+                deletedUser.id,
+                {
+                    event: SseEventNames.MULTI_EVENT,
+                    data: multiEventPayloadDto,
+                    id: uuidv4(),
+                }
+            );
+        }
     }
 
     async deleteAccount(userId: number): Promise<void> {
