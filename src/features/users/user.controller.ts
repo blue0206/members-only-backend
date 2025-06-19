@@ -210,6 +210,12 @@ export const setRole = async (req: Request, res: Response): Promise<void> => {
             'Internal server configuration error: Missing Request ID'
         );
     }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
 
     const parsedParams = UsernameParamsSchema.safeParse(req.params);
     const parsedQuery = SetRoleRequestQuerySchema.safeParse(req.query);
@@ -230,7 +236,12 @@ export const setRole = async (req: Request, res: Response): Promise<void> => {
 
     const usernameDto: UsernameParamsDto = parsedParams.data;
     const roleDto: SetRoleRequestQueryDto = parsedQuery.data;
-    await userService.updateRole(usernameDto.username, roleDto.role);
+    await userService.updateRole(
+        req.user.id,
+        req.user.username,
+        usernameDto.username,
+        roleDto.role
+    );
     res.status(204).end();
 };
 
