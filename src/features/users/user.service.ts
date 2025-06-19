@@ -5,10 +5,17 @@ import {
     InternalServerError,
     UnauthorizedError,
 } from '../../core/errors/customErrors.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import {
+    ErrorCodes,
+    EventReason,
+    SseEventNames,
+    Role,
+} from '@blue0206/members-only-shared-types';
 import bcrypt from 'bcrypt';
 import { config } from '../../core/config/index.js';
 import { deleteFile, uploadFile } from '../../core/lib/cloudinary.js';
+import { sseService } from '../sse/sse.service.js';
+import { v4 as uuidv4 } from 'uuid';
 import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,
@@ -16,8 +23,9 @@ import type {
 } from './user.types.js';
 import type {
     EditUserRequestDto,
+    MultiEventPayloadDto,
     ResetPasswordRequestDto,
-    Role,
+    SseEventNamesType,
 } from '@blue0206/members-only-shared-types';
 import type { Bookmark, User } from '../../core/db/prisma-client/client.js';
 import type { AccessTokenPayload } from '../auth/auth.types.js';
@@ -204,19 +212,78 @@ class UserService {
         );
     }
 
-    async updateRole(username: string, role: Role): Promise<void> {
+    async updateRole(
+        adminId: number,
+        adminUsername: string,
+        username: string,
+        role: Role
+    ): Promise<void> {
         logger.info({ username, newRole: role }, 'Updating user role in database.');
 
-        await prismaErrorHandler(async () => {
-            return await prisma.user.update({
-                where: {
-                    username,
-                },
-                data: {
-                    role,
-                },
+        const userDetails = await prismaErrorHandler(async () => {
+            return await prisma.$transaction(async (tx) => {
+                const details = await tx.user.findUnique({
+                    where: {
+                        username,
+                    },
+                    select: {
+                        id: true,
+                        role: true,
+                    },
+                });
+
+                if (!details) {
+                    throw new InternalServerError(
+                        'User not found in database.',
+                        ErrorCodes.DATABASE_ERROR
+                    );
+                }
+
+                await tx.user.update({
+                    where: {
+                        username,
+                    },
+                    data: {
+                        role,
+                    },
+                });
+
+                return {
+                    id: details.id,
+                    initialRole: details.role,
+                };
             });
         });
+
+        // Since this is a role change event, we need only send this to the roles who
+        // can actually view the roles of users, i.e. ADMIN and MEMBER roles.
+        const multiEventPayloadDto: MultiEventPayloadDto = {
+            reason: EventReason.ROLE_CHANGE,
+            originId: adminId,
+            originUsername: adminUsername,
+            targetId: userDetails.id,
+            targetUserRole: role,
+        };
+        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+            [Role.ADMIN, Role.MEMBER],
+            {
+                event: SseEventNames.MULTI_EVENT,
+                data: multiEventPayloadDto,
+                id: uuidv4(),
+            }
+        );
+        // In case the user whose role is being updated is of USER role, we send the
+        // event to the user as well in order to show UI updates.
+        if (userDetails.initialRole === 'USER') {
+            sseService.unicastEvent<SseEventNamesType, MultiEventPayloadDto>(
+                userDetails.id,
+                {
+                    event: SseEventNames.MULTI_EVENT,
+                    data: multiEventPayloadDto,
+                    id: uuidv4(),
+                }
+            );
+        }
 
         logger.info({ username, newRole: role }, 'User role updated successfully.');
     }
