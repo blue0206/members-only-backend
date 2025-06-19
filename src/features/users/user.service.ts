@@ -364,13 +364,12 @@ class UserService {
     }
 
     async deleteUserAvatar(username: string): Promise<void> {
-        // Log the start of process.
         logger.info(
             { username },
             'Deleting user avatar from database and cloudinary.'
         );
 
-        const avatarPublicId: User['avatar'] = await prismaErrorHandler(async () => {
+        const user = await prismaErrorHandler(async () => {
             return await prisma.$transaction(async (tx) => {
                 const user = await tx.user.findUnique({
                     where: {
@@ -378,6 +377,7 @@ class UserService {
                     },
                     select: {
                         avatar: true,
+                        id: true,
                     },
                 });
 
@@ -397,15 +397,32 @@ class UserService {
                     },
                 });
 
-                return user.avatar;
+                return {
+                    avatarPublicId: user.avatar,
+                    userId: user.id,
+                };
             });
         });
 
-        await deleteFile(avatarPublicId);
+        await deleteFile(user.avatarPublicId);
 
         logger.info(
             { username },
             'User avatar deleted from database and cloudinary successfully.'
+        );
+
+        // We need only send this event to the roles who can actually view the
+        // avatar of users, i.e. ADMIN and MEMBER roles.
+        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+            [Role.ADMIN, Role.MEMBER],
+            {
+                event: SseEventNames.MULTI_EVENT,
+                data: {
+                    reason: EventReason.USER_UPDATED,
+                    originId: user.userId,
+                },
+                id: uuidv4(),
+            }
         );
     }
 
