@@ -50,6 +50,7 @@ export default function tokenRotationCleanupMiddleware(
     const onResFinish = (): void => {
         if (isConcluded) return;
         isConcluded = true;
+        cleanup();
 
         logger.info(
             'Response finished. Removing old, rotated-out refresh token from DB.'
@@ -71,14 +72,13 @@ export default function tokenRotationCleanupMiddleware(
             .catch((error: unknown) => {
                 logger.error({ error }, 'Error deleting rotated-out refresh token.');
             });
-
-        cleanup();
     };
 
     // Called when request is aborted.
     const onReqAborted = (): void => {
         if (isConcluded) return;
         isConcluded = true;
+        cleanup();
 
         logger.info('Request aborted. Removing orphaned refresh tokens from DB.');
 
@@ -97,8 +97,6 @@ export default function tokenRotationCleanupMiddleware(
             .catch((error: unknown) => {
                 logger.error({ error }, 'Error deleting orphaned refresh tokens.');
             });
-
-        cleanup();
     };
 
     // Called when response is completed, or the underlying connection was terminated prematurely.
@@ -106,6 +104,7 @@ export default function tokenRotationCleanupMiddleware(
     const onReqClose = (): void => {
         if (isConcluded) return;
         isConcluded = true;
+        cleanup();
 
         if (!res.writableEnded) {
             // Connection terminated prematurely, possible abort.
@@ -152,7 +151,6 @@ export default function tokenRotationCleanupMiddleware(
                     );
                 });
         }
-        cleanup();
     };
 
     res.on('finish', onResFinish);
