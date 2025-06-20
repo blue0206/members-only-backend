@@ -1,9 +1,10 @@
 model Bookmark {
-    id        Int     @id @default(autoincrement())
+    id        Int      @id @default(autoincrement())
     userId    Int
-    user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     messageId Int
-    message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now()) @db.Timestamptz()
 
     @@unique([userId, messageId])
     @@index([userId])
