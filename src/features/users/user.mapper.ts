@@ -87,7 +87,8 @@ export const mapToGetUserBookmarksResponseDto = (
             bookmarks: bookmark.message.bookmarks.length,
             likes: bookmark.message.likes.length,
             edited: bookmark.message.edited,
-            timestamp: bookmark.message.createdAt,
+            messageTimestamp: bookmark.message.createdAt,
+            timestamp: bookmark.createdAt,
         };
     });
 
