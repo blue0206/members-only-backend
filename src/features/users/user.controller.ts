@@ -8,6 +8,7 @@ import {
     mapToEditUserResponseDto,
     mapToGetUserBookmarksResponseDto,
     mapToGetUsersResponseDto,
+    mapToUploadAvatarResponseDto,
 } from './user.mapper.js';
 import {
     EditUserRequestSchema,
@@ -23,6 +24,7 @@ import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,
     GetUsersServiceReturnType,
+    UploadAvatarServiceReturnType,
 } from './user.types.js';
 import type {
     ApiResponse,
@@ -36,6 +38,7 @@ import type {
     ApiResponseSuccess,
     MessageParamsDto,
     GetUsersResponseDto,
+    UploadAvatarResponseDto,
 } from '@blue0206/members-only-shared-types';
 
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
@@ -271,11 +274,15 @@ export const uploadUserAvatar = async (
         );
     }
 
-    await userService.uploadUserAvatar(req.user, req.file.buffer);
+    const serviceData: UploadAvatarServiceReturnType =
+        await userService.uploadUserAvatar(req.user, req.file.buffer);
 
-    const successResponse: ApiResponse<null> = {
+    const mappedData: UploadAvatarResponseDto =
+        mapToUploadAvatarResponseDto(serviceData);
+
+    const successResponse: ApiResponse<UploadAvatarResponseDto> = {
         success: true,
-        payload: null,
+        payload: mappedData,
         requestId: req.requestId,
         statusCode: 200,
     };

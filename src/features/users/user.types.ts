@@ -4,6 +4,10 @@ export type GetUsersServiceReturnType = Omit<User, 'password'>[];
 
 export type EditUserServiceReturnType = Omit<User, 'password'>;
 
+export interface UploadAvatarServiceReturnType {
+    avatar: string;
+}
+
 export type GetUserBookmarksServiceReturnType = Prisma.BookmarkGetPayload<{
     include: {
         message: {

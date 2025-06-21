@@ -4,17 +4,20 @@ import {
     EditUserResponseSchema,
     GetUserBookmarksResponseSchema,
     GetUsersResponseSchema,
+    UploadAvatarResponseSchema,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import type {
     EditUserResponseDto,
     GetUserBookmarksResponseDto,
     GetUsersResponseDto,
+    UploadAvatarResponseDto,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
 import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,
     GetUsersServiceReturnType,
+    UploadAvatarServiceReturnType,
 } from './user.types.js';
 
 export const mapToGetUsersResponseDto = (
@@ -56,6 +59,20 @@ export const mapToEditUserResponseDto = (
     const validatedData: EditUserResponseDto = mappedDtoValidator(
         mappedData,
         EditUserResponseSchema
+    );
+    return validatedData;
+};
+
+export const mapToUploadAvatarResponseDto = (
+    data: UploadAvatarServiceReturnType
+): UploadAvatarResponseDto => {
+    const mappedData: UploadAvatarResponseDto = {
+        avatar: getAvatarUrl(data.avatar),
+    };
+
+    const validatedData: UploadAvatarResponseDto = mappedDtoValidator(
+        mappedData,
+        UploadAvatarResponseSchema
     );
     return validatedData;
 };

@@ -20,6 +20,7 @@ import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,
     GetUsersServiceReturnType,
+    UploadAvatarServiceReturnType,
 } from './user.types.js';
 import type {
     EditUserRequestDto,
@@ -358,7 +359,7 @@ class UserService {
     async uploadUserAvatar(
         userPayload: AccessTokenPayload,
         avatarImage: Buffer
-    ): Promise<void> {
+    ): Promise<UploadAvatarServiceReturnType> {
         logger.info(
             { username: userPayload.username },
             'Uploading user avatar to database and cloudinary.'
@@ -415,6 +416,10 @@ class UserService {
                 id: uuidv4(),
             }
         );
+
+        return {
+            avatar: avatarPublicId,
+        };
     }
 
     async deleteUserAvatar(username: string): Promise<void> {
