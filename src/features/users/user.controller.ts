@@ -83,11 +83,7 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     const editUserData: EditUserRequestDto = parsedBody.data;
     const userData: EditUserServiceReturnType = await userService.editUser(
         editUserData,
-        req.user,
-        // Narrow the avatar buffer type to Buffer or undefined.
-        req.files && 'newAvatar' in req.files && Array.isArray(req.files.newAvatar)
-            ? req.files.newAvatar[0]?.buffer
-            : undefined
+        req.user
     );
 
     const mappedUserData: EditUserResponseDto = mapToEditUserResponseDto(userData);
@@ -251,6 +247,39 @@ export const setRole = async (req: Request, res: Response): Promise<void> => {
         roleDto.role
     );
     res.status(204).end();
+};
+
+export const uploadUserAvatar = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+    if (!req.file) {
+        throw new InternalServerError(
+            'File not found in request.',
+            ErrorCodes.FILE_UPLOAD_ERROR
+        );
+    }
+
+    await userService.uploadUserAvatar(req.user, req.file.buffer);
+
+    const successResponse: ApiResponse<null> = {
+        success: true,
+        payload: null,
+        requestId: req.requestId,
+        statusCode: 200,
+    };
+    res.status(200).json(successResponse);
 };
 
 export const deleteUserAvatar = async (

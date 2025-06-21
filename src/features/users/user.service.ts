@@ -50,19 +50,12 @@ class UserService {
 
     async editUser(
         updateData: EditUserRequestDto,
-        userPayload: AccessTokenPayload,
-        avatarImage: Buffer | undefined
+        userPayload: AccessTokenPayload
     ): Promise<EditUserServiceReturnType> {
         logger.info(
             { userId: userPayload.id },
             'Updating user details in database.'
         );
-
-        // If avatarImage buffer has been provided, upload it to cloudinary.
-        let avatarPublicId: string | null;
-        if (avatarImage) {
-            avatarPublicId = await uploadFile(avatarImage, userPayload.username);
-        }
 
         const user: EditUserServiceReturnType = await prismaErrorHandler(
             async () => {
@@ -75,7 +68,6 @@ class UserService {
                         firstName: updateData.newFirstname,
                         middleName: updateData.newMiddlename,
                         lastName: updateData.newLastname,
-                        avatar: avatarPublicId,
                     },
                     omit: {
                         password: true,
@@ -361,6 +353,68 @@ class UserService {
                 }
             );
         }
+    }
+
+    async uploadUserAvatar(
+        userPayload: AccessTokenPayload,
+        avatarImage: Buffer
+    ): Promise<void> {
+        logger.info(
+            { username: userPayload.username },
+            'Uploading user avatar to database and cloudinary.'
+        );
+
+        const avatarPublicId = await uploadFile(avatarImage, userPayload.username);
+        const currentAvatar = await prismaErrorHandler(async () => {
+            return await prisma.$transaction(async (tx) => {
+                const userData = await tx.user.findUnique({
+                    where: {
+                        id: userPayload.id,
+                    },
+                    select: {
+                        avatar: true,
+                    },
+                });
+
+                await tx.user.update({
+                    where: {
+                        id: userPayload.id,
+                    },
+                    data: {
+                        avatar: avatarPublicId,
+                    },
+                });
+
+                return userData?.avatar;
+            });
+        });
+
+        if (currentAvatar) {
+            logger.info(
+                { currentAvatar },
+                'Deleting current avatar from cloudinary.'
+            );
+            await deleteFile(currentAvatar);
+        }
+
+        logger.info(
+            { username: userPayload.username },
+            'User avatar uploaded to database and cloudinary successfully.'
+        );
+
+        // We need only send this event to the roles who can actually view the
+        // profile details of users, i.e. ADMIN and MEMBER roles.
+        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+            [Role.ADMIN, Role.MEMBER],
+            {
+                event: SseEventNames.MULTI_EVENT,
+                data: {
+                    reason: EventReason.USER_UPDATED,
+                    originId: userPayload.id,
+                },
+                id: uuidv4(),
+            }
+        );
     }
 
     async deleteUserAvatar(username: string): Promise<void> {

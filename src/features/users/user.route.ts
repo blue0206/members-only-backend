@@ -14,6 +14,7 @@ import {
     userBookmarks,
     addUserBookmark,
     removeUserBookmark,
+    uploadUserAvatar,
 } from './user.controller.js';
 import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
 import memberVerification from '../../core/middlewares/memberVerification.js';
@@ -32,13 +33,12 @@ userRouter.get(
     getUsers
 );
 
-// Update user details (except password).
+// Update user details (except password and avatar).
 userRouter.patch(
     '/',
     accessTokenVerification,
     lastActiveUpdateMiddleware,
     csrfVerification,
-    multerMiddleware,
     editUser
 );
 
@@ -87,6 +87,16 @@ userRouter.patch(
     csrfVerification,
     adminVerification,
     setRole
+);
+
+// Allow registered users to update avatar.
+userRouter.patch(
+    '/avatar',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    multerMiddleware,
+    uploadUserAvatar
 );
 
 // Allow registered users to delete avatar.
