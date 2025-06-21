@@ -65,10 +65,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
 
     const userData: RegisterServiceReturnType = await authService.register(
         registerData,
-        // Narrow the avatar buffer type to Buffer or undefined.
-        req.files && 'avatar' in req.files && Array.isArray(req.files.avatar)
-            ? req.files.avatar[0]?.buffer
-            : undefined,
+        req.file ? req.file.buffer : undefined,
         req.clientDetails
     );
     const responseData: RegisterResponseDto = mapToRegisterResponseDto(userData);

@@ -56,16 +56,7 @@ const upload = multer({
 
 // A wrapper around multer upload middleware
 // to invoke inside our main middleware.
-const uploadHandler = upload.fields([
-    {
-        name: 'avatar',
-        maxCount: 1,
-    },
-    {
-        name: 'newAvatar',
-        maxCount: 1,
-    },
-]);
+const uploadHandler = upload.single('avatar');
 
 // Main middleware; handles file upload and errors.
 export default function multerMiddleware(
