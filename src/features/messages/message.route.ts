@@ -28,6 +28,16 @@ messageRouter.get(
     getMessagesWithAuthor
 );
 
+// Like Message
+messageRouter.post(
+    '/:messageId/like',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    memberVerification,
+    likeMessage
+);
+
 // Create a new message.
 messageRouter.post(
     '/',
@@ -47,25 +57,6 @@ messageRouter.patch(
     editMessage
 );
 
-// Delete message
-messageRouter.delete(
-    '/:messageId',
-    accessTokenVerification,
-    lastActiveUpdateMiddleware,
-    csrfVerification,
-    deleteMessage
-);
-
-// Like Message
-messageRouter.post(
-    '/:messageId/like',
-    accessTokenVerification,
-    lastActiveUpdateMiddleware,
-    csrfVerification,
-    memberVerification,
-    likeMessage
-);
-
 // Unlike Message
 messageRouter.delete(
     '/:messageId/like',
@@ -74,6 +65,15 @@ messageRouter.delete(
     csrfVerification,
     memberVerification,
     unlikeMessage
+);
+
+// Delete message
+messageRouter.delete(
+    '/:messageId',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    deleteMessage
 );
 
 export default messageRouter;

@@ -24,6 +24,15 @@ const userRouter = Router();
 
 //-----------Protected Routes-----------
 
+// Get bookmarked messages of Admin/Member users.
+userRouter.get(
+    '/bookmarks',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    memberVerification,
+    userBookmarks
+);
+
 // Get all the users.
 userRouter.get(
     '/',
@@ -33,32 +42,14 @@ userRouter.get(
     getUsers
 );
 
-// Update user details (except password and avatar).
-userRouter.patch(
-    '/',
+// Add bookmark.
+userRouter.post(
+    '/bookmarks/:messageId',
     accessTokenVerification,
     lastActiveUpdateMiddleware,
     csrfVerification,
-    editUser
-);
-
-// Allow admin to delete other users.
-userRouter.delete(
-    '/:username',
-    accessTokenVerification,
-    lastActiveUpdateMiddleware,
-    csrfVerification,
-    adminVerification,
-    adminDeleteUser
-);
-
-// Allow users to delete their account.
-userRouter.delete(
-    '/',
-    accessTokenVerification,
-    lastActiveUpdateMiddleware,
-    csrfVerification,
-    deleteUserAccount
+    memberVerification,
+    addUserBookmark
 );
 
 // Reset Password
@@ -99,32 +90,13 @@ userRouter.patch(
     uploadUserAvatar
 );
 
-// Allow registered users to delete avatar.
-userRouter.delete(
-    '/avatar',
+// Update user details (except password and avatar).
+userRouter.patch(
+    '/',
     accessTokenVerification,
     lastActiveUpdateMiddleware,
     csrfVerification,
-    deleteUserAvatar
-);
-
-// Get bookmarked messages of Admin/Member users.
-userRouter.get(
-    '/bookmarks',
-    accessTokenVerification,
-    lastActiveUpdateMiddleware,
-    memberVerification,
-    userBookmarks
-);
-
-// Add bookmark.
-userRouter.post(
-    '/bookmarks/:messageId',
-    accessTokenVerification,
-    lastActiveUpdateMiddleware,
-    csrfVerification,
-    memberVerification,
-    addUserBookmark
+    editUser
 );
 
 // Remove bookmark.
@@ -135,6 +107,34 @@ userRouter.delete(
     csrfVerification,
     memberVerification,
     removeUserBookmark
+);
+
+// Allow registered users to delete avatar.
+userRouter.delete(
+    '/avatar',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    deleteUserAvatar
+);
+
+// Allow admin to delete other users.
+userRouter.delete(
+    '/:username',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    adminVerification,
+    adminDeleteUser
+);
+
+// Allow users to delete their account.
+userRouter.delete(
+    '/',
+    accessTokenVerification,
+    lastActiveUpdateMiddleware,
+    csrfVerification,
+    deleteUserAccount
 );
 
 export default userRouter;
