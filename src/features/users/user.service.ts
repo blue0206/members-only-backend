@@ -146,6 +146,14 @@ class UserService {
                 }
             );
         }
+
+        if (deletedUser.avatar) {
+            await deleteFile(deletedUser.avatar);
+            logger.info(
+                { avatar: deletedUser.avatar },
+                "Deleted user's avatar removed from cloudinary."
+            );
+        }
     }
 
     // Endpoint for users to delete their own account.
@@ -175,6 +183,14 @@ class UserService {
                 id: uuidv4(),
             }
         );
+
+        if (deletedUser.avatar) {
+            await deleteFile(deletedUser.avatar);
+            logger.info(
+                { avatar: deletedUser.avatar },
+                "Deleted user's avatar removed from cloudinary."
+            );
+        }
     }
 
     async resetPassword(
@@ -366,29 +382,40 @@ class UserService {
         );
 
         const avatarPublicId = await uploadFile(avatarImage, userPayload.username);
-        const currentAvatar = await prismaErrorHandler(async () => {
-            return await prisma.$transaction(async (tx) => {
-                const userData = await tx.user.findUnique({
-                    where: {
-                        id: userPayload.id,
-                    },
-                    select: {
-                        avatar: true,
-                    },
-                });
+        let currentAvatar: string | null | undefined;
+        try {
+            currentAvatar = await prismaErrorHandler(async () => {
+                return await prisma.$transaction(async (tx) => {
+                    const userData = await tx.user.findUnique({
+                        where: {
+                            id: userPayload.id,
+                        },
+                        select: {
+                            avatar: true,
+                        },
+                    });
 
-                await tx.user.update({
-                    where: {
-                        id: userPayload.id,
-                    },
-                    data: {
-                        avatar: avatarPublicId,
-                    },
-                });
+                    await tx.user.update({
+                        where: {
+                            id: userPayload.id,
+                        },
+                        data: {
+                            avatar: avatarPublicId,
+                        },
+                    });
 
-                return userData?.avatar;
+                    return userData?.avatar;
+                });
             });
-        });
+        } catch (error) {
+            // Revert upload if DB op fails.
+            logger.error(
+                'Error uploading user avatar to database. Reverting upload.'
+            );
+            await deleteFile(avatarPublicId);
+
+            throw error;
+        }
 
         if (currentAvatar) {
             logger.info(
