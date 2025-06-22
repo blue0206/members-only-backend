@@ -31,7 +31,7 @@ export default async function assignClientDetails(
 
 function getUserAgent(userAgentString: string | undefined): string {
     if (!userAgentString) {
-        return 'Unknown Device';
+        return 'Browser: Unknown Browser Device: Unknown Device DeviceType: Unknown Device Type OS: Unknown OS';
     }
 
     const result = UAParser(userAgentString);
