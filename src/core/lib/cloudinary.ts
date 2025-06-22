@@ -3,6 +3,7 @@ import { config } from '../config/index.js';
 import { logger } from '../logger.js';
 import { InternalServerError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { v4 as uuidv4 } from 'uuid';
 import type { UploadApiResponse } from 'cloudinary';
 
 cloudinary.config({
@@ -25,7 +26,7 @@ export const uploadFile = async (
                     {
                         overwrite: true, // Replaces the file if already existing (matching the public_id).
                         resource_type: 'auto',
-                        public_id: `avatar/${username}`, // Allows us to replace avatar in case user changes their avatar.
+                        public_id: `avatar/${username}/${uuidv4()}`,
                         // Fixes deferred promise rejection from Cloudinary SDK which causes app to crash if global
                         // unhandledRejection is setup. This is because SDK uses Q.defer() to defer the promise resolve/rejection.
                         // https://github.com/cloudinary/cloudinary_npm/issues/215
