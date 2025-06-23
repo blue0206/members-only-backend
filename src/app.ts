@@ -19,6 +19,11 @@ import {
     clearExpiredRefreshTokensTask,
     lastActiveDataFlushTask,
 } from './core/scheduler/index.js';
+import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import type {
+    ApiErrorPayload,
+    ApiResponseError,
+} from '@blue0206/members-only-shared-types';
 import type { Server } from 'http';
 import type { Request, Response } from 'express';
 
@@ -48,6 +53,27 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1/events', sseRouter); // Server-sent Events
+// Healthcheck
+app.use('/api/v1/healthcheck', (_req: Request, res: Response) => {
+    prisma.$queryRaw`SELECT 1`
+        .then(() => {
+            logger.info('Healthcheck successful.');
+            res.status(200).end();
+        })
+        .catch((err: unknown) => {
+            logger.error({ err }, 'Healthcheck failed.');
+            const errorPayload: ApiErrorPayload = {
+                statusCode: 500,
+                code: ErrorCodes.INTERNAL_SERVER_ERROR,
+                message: 'Healthcheck failed.',
+            };
+            const apiResponse: ApiResponseError = {
+                success: false,
+                errorPayload,
+            };
+            res.status(500).json(apiResponse);
+        });
+});
 // Catch-all route.
 app.use((_req: Request, _res: Response) => {
     throw new NotFoundError('This route does not exist.');
