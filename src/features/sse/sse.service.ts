@@ -147,7 +147,7 @@ class SseService {
             message += `data: ${JSON.stringify(eventBody.data)}\n\n`;
 
             client.res.write(message);
-            logger.trace(
+            logger.info(
                 { clientId, event: eventBody.event, data: eventBody.data },
                 'SSE event sent to client.'
             );
