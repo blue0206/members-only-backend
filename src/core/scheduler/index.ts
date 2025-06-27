@@ -3,7 +3,7 @@ import clearExpiredTokens from './clearExpiredTokens.js';
 import batchUpdateLastActive from './batchUpdateLastActive.js';
 
 export const clearExpiredRefreshTokensTask = cron.schedule(
-    '0 0 * * *',
+    '0 0/4 * * *',
     clearExpiredTokens,
     {
         name: 'Clear_Expired_Refresh_Tokens',
