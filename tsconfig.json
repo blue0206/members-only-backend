@@ -3,7 +3,9 @@
         // Basic Options 
         "target": "ES2022",
         "module": "NodeNext",
-        "lib": ["ES2022"],
+        "lib": [
+            "ES2022"
+        ],
         // Output
         "outDir": "./dist",
         "rootDir": "./src",
@@ -29,6 +31,8 @@
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "src/**/__tests__",
+        "src/**/__mocks__"
     ]
 }
