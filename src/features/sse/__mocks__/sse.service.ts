@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 export const sseService = {
-    addClient: vi.fn().mockReturnValue('clientId'),
+    addClient: vi.fn(),
 
     removeClient: vi.fn(),
 
