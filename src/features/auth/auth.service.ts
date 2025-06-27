@@ -19,7 +19,7 @@ import {
     SseEventNames,
 } from '@blue0206/members-only-shared-types';
 import { RefreshTokenPayloadSchema } from './auth.types.js';
-import { uploadFile } from '../../core/lib/cloudinary.js';
+import { deleteFile, uploadFile } from '../../core/lib/cloudinary.js';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
@@ -39,7 +39,7 @@ import type {
 import type { ClientDetailsType } from '../../core/middlewares/assignClientDetails.js';
 import { sseService } from '../sse/sse.service.js';
 
-class AuthService {
+export class AuthService {
     async register(
         registerData: RegisterRequestDto,
         avatarImage: Buffer | undefined,
@@ -49,8 +49,9 @@ class AuthService {
 
         // If avatarImage buffer has been provided, upload it to cloudinary and store
         // the public id in it to store in DB.
-        let avatarPublicId: string | null;
+        let avatarPublicId: string | null = null;
         if (avatarImage) {
+            logger.info('User avatar received. Uploading avatar to Cloudinary....');
             avatarPublicId = await uploadFile(avatarImage, registerData.username);
         }
 
@@ -59,12 +60,14 @@ class AuthService {
             config.SALT_ROUNDS
         );
 
+        let user: Omit<RegisterServiceReturnType, 'accessToken'>;
+
         // Start a transaction to create new user, generate refresh token from
         // newly created user's id, and add refresh token entry into DB.
         // The transaction is wrapped in an error handler for prisma DB queries
         // to handle prisma-specific errors.
-        const user: Omit<RegisterServiceReturnType, 'accessToken'> =
-            await prismaErrorHandler(() =>
+        try {
+            user = await prismaErrorHandler(() =>
                 prisma.$transaction(async (tx) => {
                     // Create user and omit password to safely return it
                     // and use its details to generate refresh token.
@@ -118,6 +121,20 @@ class AuthService {
                     // Transaction End.
                 })
             );
+        } catch (error) {
+            // Delete newly uploaded file from cloudinary (if provided)
+            // as registration process failed.
+            if (avatarPublicId) {
+                logger.error(
+                    { error },
+                    'User registration failed. Reverting cloudinary upload....'
+                );
+                await deleteFile(avatarPublicId);
+            } else {
+                logger.error({ error }, 'Error registering user in database.');
+            }
+            throw error;
+        }
 
         const accessTokenPayload: AccessTokenPayload = {
             id: user.id,
