@@ -1,13 +1,5 @@
 import { vi } from 'vitest';
 
-const prismaErrorHandler = vi
-    .fn()
-    .mockImplementation(
-        async <QueryReturnType>(
-            queryFn: () => Promise<QueryReturnType>
-        ): Promise<QueryReturnType> => {
-            return await queryFn();
-        }
-    );
+const prismaErrorHandler = vi.fn();
 
 export default prismaErrorHandler;
