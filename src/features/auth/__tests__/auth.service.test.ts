@@ -220,5 +220,165 @@ describe('AuthService', () => {
                 accessToken: 'mock-access-token',
             } satisfies RegisterServiceReturnType);
         });
+
+        it('should successfully register a new user without an avatar, create tokens, dispatch event, and return user data with tokens', async () => {
+            // 1. Arrange------------------------------------------------------------------------------
+            const registerData: RegisterRequestDto = {
+                username: 'blue0206',
+                password: 'Password@1234',
+                firstname: 'Blue',
+            };
+            const avatarImage = undefined;
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+
+            const mockCreatedUser: Omit<User, 'password'> = {
+                id: 1,
+                username: 'blue0206',
+                firstName: 'Blue',
+                avatar: null,
+                role: 'USER',
+                createdAt: MOCK_DATE,
+                updatedAt: MOCK_DATE,
+                lastActive: MOCK_DATE,
+                middleName: null,
+                lastName: null,
+            };
+
+            const mockTransactionResult: Omit<
+                RegisterServiceReturnType,
+                'accessToken'
+            > = {
+                ...mockCreatedUser,
+                refreshToken: 'mock-refresh-token',
+            };
+
+            vi.mocked(bcrypt.hash)
+                .mockResolvedValueOnce('hashed-pass' as never)
+                .mockResolvedValueOnce('hashed-refresh-token' as never);
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+            prismaMock.$transaction.mockImplementationOnce(async (callback) => {
+                return await callback(prismaMock);
+            });
+            prismaMock.user.create.mockResolvedValueOnce(mockCreatedUser as User);
+            getRefreshTokenExpiryDateMock.mockReturnValueOnce(MOCK_DATE);
+            prismaMock.refreshToken.create.mockResolvedValueOnce({} as RefreshToken);
+
+            mapPrismaRoleToEnumRoleMock.mockReturnValueOnce(mockCreatedUser.role);
+
+            // generateAccessToken and generateRefreshToken are private class methods.
+            const generateAccessTokenMock = vi
+                .spyOn(authService, 'generateAccessToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-access-token' as never);
+            const generateRefreshTokenMock = vi
+                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-refresh-token' as never);
+
+            // 2. Act------------------------------------------------------------------------------
+            const result = await authService.register(
+                registerData,
+                avatarImage,
+                clientDetails
+            );
+
+            // 3. Assert----------------------------------------------------------------------------
+            // Assert that the uploadFile method is not invoked.
+            expect(uploadFileMock).toBeCalledTimes(0);
+
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that the password and refresh token are encrypted.
+            expect(bcrypt.hash).toBeCalledTimes(2);
+            expect(bcrypt.hash).toHaveBeenNthCalledWith(
+                1,
+                registerData.password,
+                config.SALT_ROUNDS
+            );
+            expect(bcrypt.hash).toHaveBeenNthCalledWith(
+                2,
+                'mock-refresh-token',
+                config.SALT_ROUNDS
+            );
+
+            // Assert that a new user is created in DB.
+            expect(prismaMock.user.create).toBeCalledTimes(1);
+            expect(prismaMock.user.create).toBeCalledWith({
+                data: {
+                    username: registerData.username,
+                    password: 'hashed-pass',
+                    firstName: registerData.firstname,
+                    middleName: null,
+                    lastName: null,
+                    avatar: null,
+                },
+                omit: {
+                    password: true,
+                },
+            });
+
+            // Assert that a new refresh token is created in DB.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.create).toHaveBeenCalledWith({
+                data: {
+                    jwtId: 'uuidv4',
+                    userId: mockCreatedUser.id,
+                    tokenHash: 'hashed-refresh-token',
+                    expiresAt: MOCK_DATE,
+                    ip: clientDetails.ip,
+                    userAgent: clientDetails.userAgent,
+                    location: clientDetails.location,
+                },
+            });
+
+            // Assert that the transaction is used.
+            expect(prismaMock.$transaction).toBeCalledTimes(1);
+
+            // Assert that the mapPrismaRoleToEnumRole utility is invoked with correct args.
+            expect(mapPrismaRoleToEnumRoleMock).toBeCalledTimes(1);
+            expect(mapPrismaRoleToEnumRoleMock).toBeCalledWith(mockCreatedUser.role);
+
+            // Assert that new tokens are generated.
+            expect(generateAccessTokenMock).toBeCalledTimes(1);
+            expect(generateAccessTokenMock).toBeCalledWith({
+                id: mockCreatedUser.id,
+                username: mockCreatedUser.username,
+                role: mockCreatedUser.role,
+            });
+            expect(generateRefreshTokenMock).toBeCalledTimes(1);
+            expect(generateRefreshTokenMock).toBeCalledWith(
+                {
+                    id: mockCreatedUser.id,
+                },
+                'uuidv4'
+            );
+
+            // Assert that the the multicast method of sseService is invoked with correct args.
+            expect(sseService.multicastEventToRoles).toBeCalledTimes(1);
+            expect(sseService.multicastEventToRoles).toBeCalledWith([Role.ADMIN], {
+                event: SseEventNames.USER_EVENT,
+                data: {
+                    originId: mockCreatedUser.id,
+                    reason: EventReason.USER_CREATED,
+                },
+            });
+            expect(sseService.multicastEventToRoles).toReturnWith(undefined);
+
+            // Assert that the register method returns user details, refresh token, and access token.
+            expect(result).toStrictEqual({
+                ...mockTransactionResult,
+                accessToken: 'mock-access-token',
+            } satisfies RegisterServiceReturnType);
+        });
     });
 });
