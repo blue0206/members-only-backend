@@ -542,5 +542,147 @@ describe('AuthService', () => {
             // Assert that event is not sent.
             expect(sseService.multicastEventToRoles).toBeCalledTimes(0);
         });
+
+        it('should throw an error and delete the uploaded avatar if refresh token creation fails in the transaction', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const registerData: RegisterRequestDto = {
+                username: 'blue0206',
+                password: 'Password@1234',
+                firstname: 'Blue',
+            };
+            const avatarImage: Buffer = Buffer.from('avatar-image');
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+            const mockCreatedUser: Omit<User, 'password'> = {
+                id: 1,
+                username: 'blue0206',
+                firstName: 'Blue',
+                avatar: 'mock-avatar-public-id',
+                role: 'USER',
+                createdAt: MOCK_DATE,
+                updatedAt: MOCK_DATE,
+                lastActive: MOCK_DATE,
+                middleName: null,
+                lastName: null,
+            };
+            const refreshTokenCreationError = new Error(
+                'Failed to add refresh token entry in database.'
+            );
+
+            uploadFileMock.mockResolvedValueOnce('mock-avatar-public-id');
+
+            vi.mocked(bcrypt.hash)
+                .mockResolvedValueOnce('hashed-pass' as never)
+                .mockResolvedValueOnce('hashed-refresh-token' as never);
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+            prismaMock.$transaction.mockImplementationOnce(async (callback) => {
+                return await callback(prismaMock);
+            });
+            prismaMock.user.create.mockResolvedValueOnce(mockCreatedUser as User);
+            getRefreshTokenExpiryDateMock.mockReturnValueOnce(MOCK_DATE);
+            prismaMock.refreshToken.create.mockRejectedValueOnce(
+                refreshTokenCreationError
+            );
+
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+            const generateRefreshTokenMock = vi
+                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-refresh-token' as never);
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(
+                authService.register(registerData, avatarImage, clientDetails)
+            ).rejects.toThrowError(refreshTokenCreationError);
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that the uploadFile method is invoked with correct args.
+            expect(uploadFileMock).toBeCalledTimes(1);
+            expect(uploadFileMock).toBeCalledWith(
+                avatarImage,
+                registerData.username
+            );
+
+            // Assert that the deleteFile cloudinary method is invoked with correct args.
+            expect(deleteFileMock).toBeCalledTimes(1);
+            expect(deleteFileMock).toBeCalledWith('mock-avatar-public-id');
+
+            // Assert that password and refresh token are encrypted.
+            expect(bcrypt.hash).toBeCalledTimes(2);
+            expect(bcrypt.hash).toHaveBeenNthCalledWith(
+                1,
+                registerData.password,
+                config.SALT_ROUNDS
+            );
+            expect(bcrypt.hash).toHaveBeenNthCalledWith(
+                2,
+                'mock-refresh-token',
+                config.SALT_ROUNDS
+            );
+
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that the prisma transaction is invoked.
+            expect(prismaMock.$transaction).toBeCalledTimes(1);
+
+            // Assert that user is created in DB.
+            expect(prismaMock.user.create).toBeCalledTimes(1);
+            expect(prismaMock.user.create).toBeCalledWith({
+                data: {
+                    username: registerData.username,
+                    password: 'hashed-pass',
+                    firstName: registerData.firstname,
+                    middleName: null,
+                    lastName: null,
+                    avatar: 'mock-avatar-public-id',
+                },
+                omit: {
+                    password: true,
+                },
+            });
+
+            // Assert that getRefreshTokenExpiryDate method is invoked.
+            expect(getRefreshTokenExpiryDateMock).toBeCalledTimes(1);
+
+            // Assert that the prisma.refreshToken.create is called.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.create).toHaveBeenCalledWith({
+                data: {
+                    jwtId: 'uuidv4',
+                    userId: mockCreatedUser.id,
+                    tokenHash: 'hashed-refresh-token',
+                    expiresAt: MOCK_DATE,
+                    ip: clientDetails.ip,
+                    userAgent: clientDetails.userAgent,
+                    location: clientDetails.location,
+                },
+            });
+
+            // Assert that only refresh token is generated.
+            expect(generateAccessTokenMock).toBeCalledTimes(0);
+            expect(generateRefreshTokenMock).toBeCalledTimes(1);
+            expect(generateRefreshTokenMock).toBeCalledWith(
+                {
+                    id: mockCreatedUser.id,
+                },
+                'uuidv4'
+            );
+
+            // Assert that event is not sent.
+            expect(sseService.multicastEventToRoles).toBeCalledTimes(0);
+        });
     });
 });
