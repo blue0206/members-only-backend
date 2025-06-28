@@ -2,11 +2,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma as prismaMock } from '../../../core/db/__mocks__/prisma.js';
 import prismaErrorHandlerMock from '../../../core/utils/__mocks__/prismaErrorHandler.js';
+import jwtErrorHandlerMock from '../../../core/utils/__mocks__/jwtErrorHandler.js';
 import {
     uploadFile as uploadFileMock,
     deleteFile as deleteFileMock,
 } from '../../../core/lib/__mocks__/cloudinary.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import getRefreshTokenExpiryDateMock from '../../../core/utils/__mocks__/tokenExpiryUtil.js';
 import { config } from '../../../core/config/__mocks__/index.js';
 import { mapPrismaRoleToEnumRole as mapPrismaRoleToEnumRoleMock } from '../../../core/utils/__mocks__/roleMapper.js';
@@ -25,7 +27,9 @@ import type {
 import type { ClientDetailsType } from '../../../core/middlewares/assignClientDetails.js';
 import type { RefreshToken, User } from '../../../core/db/prisma-client/client.js';
 import type {
+    AccessTokenPayload,
     LoginServiceReturnType,
+    RefreshTokenPayload,
     RegisterServiceReturnType,
 } from '../auth.types.js';
 import type { AppError } from '../../../core/errors/customErrors.js';
@@ -39,11 +43,17 @@ vi.mock('bcrypt', () => ({
 vi.mock('uuid', () => ({
     v4: vi.fn(() => 'uuidv4'),
 }));
+vi.mock('jsonwebtoken', () => ({
+    default: {
+        verify: vi.fn(),
+    },
+}));
 vi.mock('../../../core/db/prisma.js');
 vi.mock('../../../core/config/index.js');
 vi.mock('../../../core/lib/cloudinary.js');
 vi.mock('../../sse/sse.service.js');
 vi.mock('../../../core/utils/prismaErrorHandler.js');
+vi.mock('../../../core/utils/jwtErrorHandler.js');
 vi.mock('../../../core/utils/roleMapper.js');
 vi.mock('../../../core/utils/tokenExpiryUtil.js');
 
@@ -1211,6 +1221,70 @@ describe('AuthService', () => {
                     userAgent: clientDetails.userAgent,
                 },
             });
+        });
+    });
+
+    describe('logout', () => {
+        let authService: AuthService;
+
+        beforeEach(() => {
+            authService = new AuthService();
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it('should successfully logout the user by verifying and validating refresh token and revoking its entry in the database', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const refreshToken = 'mock-refresh-token';
+
+            jwtErrorHandlerMock.mockImplementationOnce(
+                <TokenType extends AccessTokenPayload | RefreshTokenPayload>(
+                    verifyJwt: () => TokenType
+                ): TokenType => {
+                    return verifyJwt();
+                }
+            );
+
+            vi.mocked(jwt.verify).mockReturnValueOnce({
+                id: 1,
+                jti: 'uuidv4',
+            } as never);
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(authService.logout(refreshToken)).resolves.toBeUndefined();
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that jwtErrorHandler wrapper is invoked.
+            expect(jwtErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that the prisma.refreshToken.delete is invoked with correct args.
+            expect(prismaMock.refreshToken.delete).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.delete).toBeCalledWith({
+                where: {
+                    userId: 1,
+                    jwtId: 'uuidv4',
+                },
+            });
+
+            // Assert that jwt.verify is invoked with correct args.
+            expect(jwt.verify).toBeCalledTimes(1);
+            expect(jwt.verify).toBeCalledWith(
+                refreshToken,
+                config.REFRESH_TOKEN_SECRET
+            );
         });
     });
 });
