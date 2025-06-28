@@ -439,5 +439,108 @@ describe('AuthService', () => {
             // Assert that the deleteFile cloudinary method is not invoked.
             expect(deleteFileMock).toBeCalledTimes(0);
         });
+
+        it('should throw an error and delete the uploaded avatar if user creation fails in the transaction', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const registerData: RegisterRequestDto = {
+                username: 'blue0206',
+                password: 'Password@1234',
+                firstname: 'Blue',
+            };
+            const avatarImage: Buffer = Buffer.from('avatar-image');
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+            const userCreationError = new Error(
+                'Failed to create user in database.'
+            );
+
+            uploadFileMock.mockResolvedValueOnce('mock-avatar-public-id');
+
+            vi.mocked(bcrypt.hash).mockResolvedValueOnce('hashed-pass' as never);
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+            prismaMock.$transaction.mockImplementationOnce(async (callback) => {
+                return await callback(prismaMock);
+            });
+            prismaMock.user.create.mockRejectedValueOnce(userCreationError);
+
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+            const generateRefreshTokenMock = vi.spyOn(
+                authService,
+                'generateRefreshToken' as keyof AuthService
+            );
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(
+                authService.register(registerData, avatarImage, clientDetails)
+            ).rejects.toThrowError(userCreationError);
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that the uploadFile method is invoked with correct args.
+            expect(uploadFileMock).toBeCalledTimes(1);
+            expect(uploadFileMock).toBeCalledWith(
+                avatarImage,
+                registerData.username
+            );
+
+            // Assert that the deleteFile cloudinary method is invoked with correct args.
+            expect(deleteFileMock).toBeCalledTimes(1);
+            expect(deleteFileMock).toBeCalledWith('mock-avatar-public-id');
+
+            // Assert that the password is encrypted but the refresh token is not (as the call should fail right before).
+            expect(bcrypt.hash).toBeCalledTimes(1);
+            expect(bcrypt.hash).toBeCalledWith(
+                registerData.password,
+                config.SALT_ROUNDS
+            );
+            expect(bcrypt.hash).not.toBeCalledWith(
+                'mock-refresh-token',
+                config.SALT_ROUNDS
+            );
+
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that the prisma transaction is invoked.
+            expect(prismaMock.$transaction).toBeCalledTimes(1);
+
+            // Assert that the prisma.user.create is called.
+            expect(prismaMock.user.create).toBeCalledTimes(1);
+            expect(prismaMock.user.create).toBeCalledWith({
+                data: {
+                    username: registerData.username,
+                    password: 'hashed-pass',
+                    firstName: registerData.firstname,
+                    middleName: null,
+                    lastName: null,
+                    avatar: 'mock-avatar-public-id',
+                },
+                omit: {
+                    password: true,
+                },
+            });
+
+            // Assert that the refresh token is not created in DB.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(0);
+
+            // Assert that new tokens are not generated.
+            expect(generateAccessTokenMock).toBeCalledTimes(0);
+            expect(generateRefreshTokenMock).toBeCalledTimes(0);
+
+            // Assert that event is not sent.
+            expect(sseService.multicastEventToRoles).toBeCalledTimes(0);
+        });
     });
 });
