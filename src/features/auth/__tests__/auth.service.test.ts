@@ -1327,5 +1327,45 @@ describe('AuthService', () => {
             // Assert that the prisma.refreshToken.delete is not invoked.
             expect(prismaMock.refreshToken.delete).toBeCalledTimes(0);
         });
+
+        it('should throw error on failed token verification', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const refreshToken = 'mock-refresh-token';
+            const jwtError = new Error('JWT verification failed.');
+
+            jwtErrorHandlerMock.mockImplementationOnce(
+                <TokenType extends AccessTokenPayload | RefreshTokenPayload>(
+                    verifyJwt: () => TokenType
+                ): TokenType => {
+                    return verifyJwt();
+                }
+            );
+
+            vi.mocked(jwt.verify).mockImplementationOnce(() => {
+                throw jwtError;
+            });
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(authService.logout(refreshToken)).rejects.toThrowError(
+                jwtError
+            );
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is not invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(0);
+
+            // Assert that jwtErrorHandler wrapper is invoked.
+            expect(jwtErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that jwt.verify is invoked with correct args.
+            expect(jwt.verify).toBeCalledTimes(1);
+            expect(jwt.verify).toBeCalledWith(
+                refreshToken,
+                config.REFRESH_TOKEN_SECRET
+            );
+
+            // Assert that the prisma.refreshToken.delete is not invoked.
+            expect(prismaMock.refreshToken.delete).toBeCalledTimes(0);
+        });
     });
 });
