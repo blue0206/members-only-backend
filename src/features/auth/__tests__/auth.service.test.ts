@@ -2,7 +2,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma as prismaMock } from '../../../core/db/__mocks__/prisma.js';
 import prismaErrorHandlerMock from '../../../core/utils/__mocks__/prismaErrorHandler.js';
-import { uploadFile as uploadFileMock } from '../../../core/lib/__mocks__/cloudinary.js';
+import {
+    uploadFile as uploadFileMock,
+    deleteFile as deleteFileMock,
+} from '../../../core/lib/__mocks__/cloudinary.js';
 import bcrypt from 'bcrypt';
 import getRefreshTokenExpiryDateMock from '../../../core/utils/__mocks__/tokenExpiryUtil.js';
 import { config } from '../../../core/config/__mocks__/index.js';
@@ -276,7 +279,6 @@ describe('AuthService', () => {
 
             mapPrismaRoleToEnumRoleMock.mockReturnValueOnce(mockCreatedUser.role);
 
-            // generateAccessToken and generateRefreshToken are private class methods.
             const generateAccessTokenMock = vi
                 .spyOn(authService, 'generateAccessToken' as keyof AuthService)
                 .mockReturnValueOnce('mock-access-token' as never);
@@ -379,6 +381,63 @@ describe('AuthService', () => {
                 ...mockTransactionResult,
                 accessToken: 'mock-access-token',
             } satisfies RegisterServiceReturnType);
+        });
+
+        it('should not perform database operations if avatar upload fails', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const registerData: RegisterRequestDto = {
+                username: 'blue0206',
+                password: 'Password@1234',
+                firstname: 'Blue',
+            };
+            const avatarImage: Buffer = Buffer.from('avatar-image');
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+            const uploadError = new Error('Upload to cloudinary failed.');
+
+            uploadFileMock.mockRejectedValueOnce(uploadError);
+
+            // generateAccessToken and generateRefreshToken are private class methods.
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+            const generateRefreshTokenMock = vi.spyOn(
+                authService,
+                'generateRefreshToken' as keyof AuthService
+            );
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(
+                authService.register(registerData, avatarImage, clientDetails)
+            ).rejects.toThrowError(uploadError);
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that the uploadFile method is invoked with correct args.
+            expect(uploadFileMock).toBeCalledTimes(1);
+            expect(uploadFileMock).toBeCalledWith(
+                avatarImage,
+                registerData.username
+            );
+
+            // Assert that prismaErrorHandler wrapper is not invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(0);
+
+            // Assert that encryption is not performed.
+            expect(bcrypt.hash).toBeCalledTimes(0);
+
+            // Assert that event is not sent.
+            expect(sseService.multicastEventToRoles).toBeCalledTimes(0);
+
+            // Assert that new tokens are not generated.
+            expect(generateAccessTokenMock).toBeCalledTimes(0);
+            expect(generateRefreshTokenMock).toBeCalledTimes(0);
+
+            // Assert that the deleteFile cloudinary method is not invoked.
+            expect(deleteFileMock).toBeCalledTimes(0);
         });
     });
 });
