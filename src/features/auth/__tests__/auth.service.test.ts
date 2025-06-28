@@ -170,6 +170,9 @@ describe('AuthService', () => {
                 },
             });
 
+            // Assert that getRefreshTokenExpiryDate method is invoked.
+            expect(getRefreshTokenExpiryDateMock).toBeCalledTimes(1);
+
             // Assert that a new refresh token is created in DB.
             expect(prismaMock.$transaction).toBeCalledTimes(1);
             expect(prismaMock.refreshToken.create).toHaveBeenCalledWith({
@@ -328,6 +331,9 @@ describe('AuthService', () => {
                     password: true,
                 },
             });
+
+            // Assert that getRefreshTokenExpiryDate method is invoked.
+            expect(getRefreshTokenExpiryDateMock).toBeCalledTimes(1);
 
             // Assert that a new refresh token is created in DB.
             expect(prismaMock.refreshToken.create).toBeCalledTimes(1);
