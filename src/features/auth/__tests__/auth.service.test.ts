@@ -1031,5 +1031,65 @@ describe('AuthService', () => {
             // Assert that the refresh token entry is not added in db.
             expect(prismaMock.refreshToken.create).toBeCalledTimes(0);
         });
+
+        it('should throw an error if user lookup database call fails', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const loginData: LoginRequestDto = {
+                username: 'blue0206',
+                password: 'Password@1234',
+            };
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+            const dbError = new Error('User lookup in database failed.');
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+            prismaMock.user.findUnique.mockRejectedValueOnce(dbError);
+
+            const generateAccessTokenMock = vi
+                .spyOn(authService, 'generateAccessToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-access-token' as never);
+            const generateRefreshTokenMock = vi
+                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-refresh-token' as never);
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(
+                authService.login(loginData, clientDetails)
+            ).rejects.toThrowError(dbError);
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that the prisma user.findUnique is invoked with correct args.
+            expect(prismaMock.user.findUnique).toBeCalledTimes(1);
+            expect(prismaMock.user.findUnique).toBeCalledWith({
+                where: {
+                    username: loginData.username,
+                },
+            });
+
+            // Assert that bcrypt.compare is not invoked.
+            expect(bcrypt.compare).toBeCalledTimes(0);
+
+            // Assert that bcrypt.hash is not invoked.
+            expect(bcrypt.hash).toBeCalledTimes(0);
+
+            // Assert that the access and refresh token generator functions are not called.
+            expect(generateAccessTokenMock).toBeCalledTimes(0);
+            expect(generateRefreshTokenMock).toBeCalledTimes(0);
+
+            // Assert that the refresh token entry is not added in db.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(0);
+        });
     });
 });
