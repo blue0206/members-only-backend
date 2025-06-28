@@ -12,10 +12,12 @@ import { config } from '../../../core/config/__mocks__/index.js';
 import { mapPrismaRoleToEnumRole as mapPrismaRoleToEnumRoleMock } from '../../../core/utils/__mocks__/roleMapper.js';
 import { sseService } from '../../sse/sse.service.js';
 import {
+    ErrorCodes,
     EventReason,
     Role,
     SseEventNames,
 } from '@blue0206/members-only-shared-types';
+import { UnauthorizedError } from '../../../core/errors/customErrors.js';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
@@ -26,6 +28,7 @@ import type {
     LoginServiceReturnType,
     RegisterServiceReturnType,
 } from '../auth.types.js';
+import type { AppError } from '../../../core/errors/customErrors.js';
 
 vi.mock('bcrypt', () => ({
     default: {
@@ -878,6 +881,71 @@ describe('AuthService', () => {
                 accessToken: 'mock-access-token',
                 refreshToken: 'mock-refresh-token',
             } satisfies LoginServiceReturnType);
+        });
+
+        it('should throw an Unauthorized Error if user not found in database', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const loginData: LoginRequestDto = {
+                username: 'blue0206',
+                password: 'Password@1234',
+            };
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+            prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+            const generateAccessTokenMock = vi
+                .spyOn(authService, 'generateAccessToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-access-token' as never);
+            const generateRefreshTokenMock = vi
+                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-refresh-token' as never);
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(
+                authService.login(loginData, clientDetails)
+            ).rejects.satisfies((error: AppError) => {
+                expect(error).toBeInstanceOf(UnauthorizedError);
+                expect(error.message).toBe('Invalid username or password.');
+                expect(error.code).toBe(ErrorCodes.UNAUTHORIZED);
+                expect(error.statusCode).toBe(401);
+                return true;
+            });
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that the prisma user.findUnique is invoked with correct args.
+            expect(prismaMock.user.findUnique).toBeCalledTimes(1);
+            expect(prismaMock.user.findUnique).toBeCalledWith({
+                where: {
+                    username: loginData.username,
+                },
+            });
+
+            // Assert that bcrypt.compare is not invoked.
+            expect(bcrypt.compare).toBeCalledTimes(0);
+
+            // Assert that bcrypt.hash is not invoked.
+            expect(bcrypt.hash).toBeCalledTimes(0);
+
+            // Assert that the access and refresh token generator functions are not called.
+            expect(generateAccessTokenMock).toBeCalledTimes(0);
+            expect(generateRefreshTokenMock).toBeCalledTimes(0);
+
+            // Assert that the refresh token entry is not added in db.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(0);
         });
     });
 });
