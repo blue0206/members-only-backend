@@ -20,6 +20,7 @@ import {
     SseEventNames,
 } from '@blue0206/members-only-shared-types';
 import { UnauthorizedError } from '../../../core/errors/customErrors.js';
+import { ZodError } from 'zod';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
@@ -1285,6 +1286,46 @@ describe('AuthService', () => {
                 refreshToken,
                 config.REFRESH_TOKEN_SECRET
             );
+        });
+
+        it('should throw error on validation failure of refresh token payload', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const refreshToken = 'mock-refresh-token';
+
+            jwtErrorHandlerMock.mockImplementationOnce(
+                <TokenType extends AccessTokenPayload | RefreshTokenPayload>(
+                    verifyJwt: () => TokenType
+                ): TokenType => {
+                    return verifyJwt();
+                }
+            );
+
+            vi.mocked(jwt.verify).mockReturnValueOnce({
+                id: '1', // Should be a number.
+                jti: 1, // Should be a string.
+            } as never);
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(authService.logout(refreshToken)).rejects.instanceOf(
+                ZodError
+            );
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is not invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(0);
+
+            // Assert that jwtErrorHandler wrapper is invoked.
+            expect(jwtErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that jwt.verify is invoked with correct args.
+            expect(jwt.verify).toBeCalledTimes(1);
+            expect(jwt.verify).toBeCalledWith(
+                refreshToken,
+                config.REFRESH_TOKEN_SECRET
+            );
+
+            // Assert that the prisma.refreshToken.delete is not invoked.
+            expect(prismaMock.refreshToken.delete).toBeCalledTimes(0);
         });
     });
 });
