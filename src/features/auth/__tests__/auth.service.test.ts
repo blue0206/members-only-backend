@@ -1,0 +1,224 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { prisma as prismaMock } from '../../../core/db/__mocks__/prisma.js';
+import prismaErrorHandlerMock from '../../../core/utils/__mocks__/prismaErrorHandler.js';
+import { uploadFile as uploadFileMock } from '../../../core/lib/__mocks__/cloudinary.js';
+import bcrypt from 'bcrypt';
+import getRefreshTokenExpiryDateMock from '../../../core/utils/__mocks__/tokenExpiryUtil.js';
+import { config } from '../../../core/config/__mocks__/index.js';
+import { mapPrismaRoleToEnumRole as mapPrismaRoleToEnumRoleMock } from '../../../core/utils/__mocks__/roleMapper.js';
+import { sseService } from '../../sse/sse.service.js';
+
+vi.mock('bcrypt', () => ({
+    default: {
+        hash: vi.fn(),
+    },
+}));
+vi.mock('uuid', () => ({
+    v4: vi.fn(() => 'uuidv4'),
+}));
+vi.mock('../../../core/db/prisma.js');
+vi.mock('../../../core/config/index.js');
+vi.mock('../../../core/lib/cloudinary.js');
+vi.mock('../../sse/sse.service.js');
+vi.mock('../../../core/utils/prismaErrorHandler.js');
+vi.mock('../../../core/utils/roleMapper.js');
+vi.mock('../../../core/utils/tokenExpiryUtil.js');
+
+import { AuthService } from '../auth.service.js';
+import {
+    EventReason,
+    Role,
+    SseEventNames,
+    type RegisterRequestDto,
+} from '@blue0206/members-only-shared-types';
+import type { ClientDetailsType } from '../../../core/middlewares/assignClientDetails.js';
+import type { RefreshToken, User } from '../../../core/db/prisma-client/client.js';
+import type { RegisterServiceReturnType } from '../auth.types.js';
+
+const MOCK_DATE = new Date();
+
+describe('AuthService', () => {
+    beforeEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    describe('register', () => {
+        let authService: AuthService;
+
+        beforeEach(() => {
+            authService = new AuthService();
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it('should successfully register a new user with an avatar, create tokens, dispatch event, and return user data with tokens', async () => {
+            // 1. Arrange----------------------------------------------------------------------------
+
+            const registerData: RegisterRequestDto = {
+                username: 'blue0206',
+                password: 'Password@1234',
+                firstname: 'Blue',
+            };
+            const avatarImage: Buffer = Buffer.from('avatar-image');
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+
+            const mockCreatedUser: Omit<User, 'password'> = {
+                id: 1,
+                username: 'blue0206',
+                firstName: 'Blue',
+                avatar: 'mock-avatar-public-id',
+                role: 'USER',
+                createdAt: MOCK_DATE,
+                updatedAt: MOCK_DATE,
+                lastActive: MOCK_DATE,
+                middleName: null,
+                lastName: null,
+            };
+
+            const mockTransactionResult: Omit<
+                RegisterServiceReturnType,
+                'accessToken'
+            > = {
+                ...mockCreatedUser,
+                refreshToken: 'mock-refresh-token',
+            };
+
+            uploadFileMock.mockResolvedValueOnce('mock-avatar-public-id');
+
+            vi.mocked(bcrypt.hash)
+                .mockResolvedValueOnce('hashed-pass' as never)
+                .mockResolvedValueOnce('hashed-refresh-token' as never);
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+            prismaMock.$transaction.mockImplementationOnce(async (callback) => {
+                return await callback(prismaMock);
+            });
+            prismaMock.user.create.mockResolvedValueOnce(mockCreatedUser as User);
+            getRefreshTokenExpiryDateMock.mockReturnValueOnce(MOCK_DATE);
+            prismaMock.refreshToken.create.mockResolvedValueOnce({} as RefreshToken);
+
+            mapPrismaRoleToEnumRoleMock.mockReturnValueOnce(mockCreatedUser.role);
+
+            // generateAccessToken and generateRefreshToken are private class methods.
+            const generateAccessTokenMock = vi
+                .spyOn(authService, 'generateAccessToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-access-token' as never);
+            const generateRefreshTokenMock = vi
+                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-refresh-token' as never);
+
+            // 2. Act------------------------------------------------------------------------------
+            const result = await authService.register(
+                registerData,
+                avatarImage,
+                clientDetails
+            );
+
+            // 3. Assert----------------------------------------------------------------------------
+            // Assert that the uploadFile method is invoked with correct args.
+            expect(uploadFileMock).toBeCalledTimes(1);
+            expect(uploadFileMock).toBeCalledWith(
+                avatarImage,
+                registerData.username
+            );
+
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that the password and refresh token are encrypted.
+            expect(bcrypt.hash).toBeCalledTimes(2);
+            expect(bcrypt.hash).toHaveBeenNthCalledWith(
+                1,
+                registerData.password,
+                config.SALT_ROUNDS
+            );
+            expect(bcrypt.hash).toHaveBeenNthCalledWith(
+                2,
+                'mock-refresh-token',
+                config.SALT_ROUNDS
+            );
+
+            // Assert that a new user is created in DB.
+            expect(prismaMock.user.create).toBeCalledTimes(1);
+            expect(prismaMock.user.create).toBeCalledWith({
+                data: {
+                    username: registerData.username,
+                    password: 'hashed-pass',
+                    firstName: registerData.firstname,
+                    middleName: null,
+                    lastName: null,
+                    avatar: 'mock-avatar-public-id',
+                },
+                omit: {
+                    password: true,
+                },
+            });
+
+            // Assert that a new refresh token is created in DB.
+            expect(prismaMock.$transaction).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.create).toHaveBeenCalledWith({
+                data: {
+                    jwtId: 'uuidv4',
+                    userId: mockCreatedUser.id,
+                    tokenHash: 'hashed-refresh-token',
+                    expiresAt: MOCK_DATE,
+                    ip: clientDetails.ip,
+                    userAgent: clientDetails.userAgent,
+                    location: clientDetails.location,
+                },
+            });
+
+            // Assert that the mapPrismaRoleToEnumRole utility is invoked with correct args.
+            expect(mapPrismaRoleToEnumRoleMock).toBeCalledTimes(1);
+            expect(mapPrismaRoleToEnumRoleMock).toBeCalledWith(mockCreatedUser.role);
+
+            // Assert that new tokens are generated.
+            expect(generateAccessTokenMock).toBeCalledTimes(1);
+            expect(generateAccessTokenMock).toBeCalledWith({
+                id: mockCreatedUser.id,
+                username: mockCreatedUser.username,
+                role: mockCreatedUser.role,
+            });
+            expect(generateRefreshTokenMock).toBeCalledTimes(1);
+            expect(generateRefreshTokenMock).toBeCalledWith(
+                {
+                    id: mockCreatedUser.id,
+                },
+                'uuidv4'
+            );
+
+            // Assert that a new refresh token is created in DB.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(1);
+
+            // Assert that the the multicast method of sseService is invoked with correct args.
+            expect(sseService.multicastEventToRoles).toBeCalledTimes(1);
+            expect(sseService.multicastEventToRoles).toBeCalledWith([Role.ADMIN], {
+                event: SseEventNames.USER_EVENT,
+                data: {
+                    originId: mockCreatedUser.id,
+                    reason: EventReason.USER_CREATED,
+                },
+            });
+            expect(sseService.multicastEventToRoles).toReturnWith(undefined);
+
+            // Assert that the register method returns user details, refresh token, and access token.
+            expect(result).toStrictEqual({
+                ...mockTransactionResult,
+                accessToken: 'mock-access-token',
+            } satisfies RegisterServiceReturnType);
+        });
+    });
+});
