@@ -1367,5 +1367,62 @@ describe('AuthService', () => {
             // Assert that the prisma.refreshToken.delete is not invoked.
             expect(prismaMock.refreshToken.delete).toBeCalledTimes(0);
         });
+
+        it('should throw error on failed database call', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const refreshToken = 'mock-refresh-token';
+            const dbError = new Error('Database call failed.');
+
+            jwtErrorHandlerMock.mockImplementationOnce(
+                <TokenType extends AccessTokenPayload | RefreshTokenPayload>(
+                    verifyJwt: () => TokenType
+                ): TokenType => {
+                    return verifyJwt();
+                }
+            );
+
+            vi.mocked(jwt.verify).mockReturnValueOnce({
+                id: 1,
+                jti: 'uuidv4',
+            } as never);
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+
+            prismaMock.refreshToken.delete.mockRejectedValueOnce(dbError);
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(authService.logout(refreshToken)).rejects.toThrowError(
+                dbError
+            );
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that jwtErrorHandler wrapper is invoked.
+            expect(jwtErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that jwt.verify is invoked with correct args.
+            expect(jwt.verify).toBeCalledTimes(1);
+            expect(jwt.verify).toBeCalledWith(
+                refreshToken,
+                config.REFRESH_TOKEN_SECRET
+            );
+
+            // Assert that the prisma.refreshToken.delete is invoked with correct args.
+            expect(prismaMock.refreshToken.delete).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.delete).toBeCalledWith({
+                where: {
+                    userId: 1,
+                    jwtId: 'uuidv4',
+                },
+            });
+        });
     });
 });
