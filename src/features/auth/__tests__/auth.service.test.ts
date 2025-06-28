@@ -690,5 +690,57 @@ describe('AuthService', () => {
             // Assert that event is not sent.
             expect(sseService.multicastEventToRoles).toBeCalledTimes(0);
         });
+
+        it('should not try to delete an avatar if the transaction fails and no avatar was provided', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const registerData: RegisterRequestDto = {
+                username: 'blue0206',
+                password: 'Password@1234',
+                firstname: 'Blue',
+            };
+            const avatarImage = undefined;
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+            const transactionError = new Error('Transaction failed.');
+
+            vi.mocked(bcrypt.hash).mockResolvedValueOnce('hashed-pass' as never);
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+            prismaMock.$transaction.mockRejectedValueOnce(transactionError);
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(
+                authService.register(registerData, avatarImage, clientDetails)
+            ).rejects.toThrowError(transactionError);
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that uploadFile cloudinary method is not invoked.
+            expect(uploadFileMock).toBeCalledTimes(0);
+
+            // Assert that deleteFile cloudinary method is not invoked.
+            expect(deleteFileMock).toBeCalledTimes(0);
+
+            // Assert that the password is encrypted.
+            expect(bcrypt.hash).toBeCalledTimes(1);
+            expect(bcrypt.hash).toBeCalledWith(
+                registerData.password,
+                config.SALT_ROUNDS
+            );
+
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that the prisma transaction is invoked.
+            expect(prismaMock.$transaction).toBeCalledTimes(1);
+        });
     });
 });
