@@ -904,12 +904,14 @@ describe('AuthService', () => {
             );
             prismaMock.user.findUnique.mockResolvedValueOnce(null);
 
-            const generateAccessTokenMock = vi
-                .spyOn(authService, 'generateAccessToken' as keyof AuthService)
-                .mockReturnValueOnce('mock-access-token' as never);
-            const generateRefreshTokenMock = vi
-                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
-                .mockReturnValueOnce('mock-refresh-token' as never);
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+            const generateRefreshTokenMock = vi.spyOn(
+                authService,
+                'generateRefreshToken' as keyof AuthService
+            );
 
             // 2. Act------------------------------------------------------------------------------
             await expect(
@@ -984,12 +986,14 @@ describe('AuthService', () => {
 
             vi.mocked(bcrypt.compare).mockResolvedValueOnce(false as never);
 
-            const generateAccessTokenMock = vi
-                .spyOn(authService, 'generateAccessToken' as keyof AuthService)
-                .mockReturnValueOnce('mock-access-token' as never);
-            const generateRefreshTokenMock = vi
-                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
-                .mockReturnValueOnce('mock-refresh-token' as never);
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+            const generateRefreshTokenMock = vi.spyOn(
+                authService,
+                'generateRefreshToken' as keyof AuthService
+            );
 
             // 2. Act------------------------------------------------------------------------------
             await expect(
@@ -1054,12 +1058,14 @@ describe('AuthService', () => {
             );
             prismaMock.user.findUnique.mockRejectedValueOnce(dbError);
 
-            const generateAccessTokenMock = vi
-                .spyOn(authService, 'generateAccessToken' as keyof AuthService)
-                .mockReturnValueOnce('mock-access-token' as never);
-            const generateRefreshTokenMock = vi
-                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
-                .mockReturnValueOnce('mock-refresh-token' as never);
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+            const generateRefreshTokenMock = vi.spyOn(
+                authService,
+                'generateRefreshToken' as keyof AuthService
+            );
 
             // 2. Act------------------------------------------------------------------------------
             await expect(
