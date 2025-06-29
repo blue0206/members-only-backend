@@ -2002,6 +2002,98 @@ describe('AuthService', () => {
             });
         });
 
+        it('should throw error if database lookup for current refresh token fails', async () => {
+            // 1. Arrange-------------------------------------------------------------------------
+            const refreshToken = 'mock-refresh-token';
+            const mockRefreshTokenPayload: RefreshTokenPayload = {
+                id: 1,
+                jti: 'uuidv4-current',
+            };
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+            const dbError = new Error(
+                'Database error while looking up current refresh token.'
+            );
+
+            jwtErrorHandlerMock.mockImplementationOnce(
+                <TokenType extends AccessTokenPayload | RefreshTokenPayload>(
+                    verifyJwt: () => TokenType
+                ): TokenType => {
+                    return verifyJwt();
+                }
+            );
+
+            vi.mocked(jwt.verify).mockReturnValueOnce(
+                mockRefreshTokenPayload as never
+            );
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+
+            prismaMock.refreshToken.findUnique.mockRejectedValueOnce(dbError);
+
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+            const generateRefreshTokenMock = vi.spyOn(
+                authService,
+                'generateRefreshToken' as keyof AuthService
+            );
+
+            // 2. Act---------------------------------------------------------------------------
+            await expect(
+                authService.refresh(refreshToken, clientDetails)
+            ).rejects.toThrowError(dbError);
+
+            // 3. Assert--------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that jwtErrorHandler wrapper is invoked.
+            expect(jwtErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that prisma transaction is not invoked.
+            expect(prismaMock.$transaction).toBeCalledTimes(0);
+
+            // Assert that jwt.verify is invoked with correct args.
+            expect(jwt.verify).toBeCalledTimes(1);
+            expect(jwt.verify).toBeCalledWith(
+                refreshToken,
+                config.REFRESH_TOKEN_SECRET
+            );
+
+            // Assert that prisma.refreshToken.findUnique is invoked with correct args.
+            expect(prismaMock.refreshToken.findUnique).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.findUnique).toBeCalledWith({
+                where: {
+                    userId: mockRefreshTokenPayload.id,
+                    jwtId: mockRefreshTokenPayload.jti,
+                },
+            });
+
+            // Assert bcrypt.hash is not invoked.
+            expect(bcrypt.hash).toBeCalledTimes(0);
+
+            // Assert that token generator functions are not invoked.
+            expect(generateAccessTokenMock).toBeCalledTimes(0);
+            expect(generateRefreshTokenMock).toBeCalledTimes(0);
+
+            // Assert that prisma.refreshToken.create is not invoked.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(0);
+
+            // Assert that prisma.user.findUnique is not invoked.
+            expect(prismaMock.user.findUnique).toBeCalledTimes(0);
+        });
+
         it('should throw error if database transaction for creating new refresh token fails', async () => {
             // 1. Arrange-------------------------------------------------------------------------
             const refreshToken = 'mock-refresh-token';
