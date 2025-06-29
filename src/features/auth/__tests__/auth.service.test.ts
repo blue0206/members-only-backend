@@ -30,6 +30,7 @@ import type { RefreshToken, User } from '../../../core/db/prisma-client/client.j
 import type {
     AccessTokenPayload,
     LoginServiceReturnType,
+    RefreshServiceReturnType,
     RefreshTokenPayload,
     RegisterServiceReturnType,
 } from '../auth.types.js';
@@ -1423,6 +1424,202 @@ describe('AuthService', () => {
                     jwtId: 'uuidv4',
                 },
             });
+        });
+    });
+
+    describe('refresh', () => {
+        let authService: AuthService;
+
+        beforeEach(() => {
+            authService = new AuthService();
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it('should successfully return user data with refreshed tokens after verifying and validating the old refresh token', async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
+            const refreshToken = 'mock-refresh-token';
+            const mockRefreshTokenPayload: RefreshTokenPayload = {
+                id: 1,
+                jti: 'uuidv4-current',
+            };
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+            const mockRefreshTokenEntry: RefreshToken = {
+                jwtId: 'uuidv4-current',
+                succeedsJwtId: 'uuidv4-old',
+                createdAt: MOCK_DATE,
+                expiresAt: MOCK_DATE,
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+                tokenHash: 'hashed-refresh-token-old',
+                userId: 1,
+            };
+            const mockUser: Omit<User, 'password'> = {
+                id: 1,
+                username: 'blue0206',
+                firstName: 'Blue',
+                avatar: 'mock-avatar-public-id',
+                role: 'USER',
+                createdAt: MOCK_DATE,
+                updatedAt: MOCK_DATE,
+                lastActive: MOCK_DATE,
+                middleName: null,
+                lastName: null,
+            };
+
+            jwtErrorHandlerMock.mockImplementationOnce(
+                <TokenType extends AccessTokenPayload | RefreshTokenPayload>(
+                    verifyJwt: () => TokenType
+                ): TokenType => {
+                    return verifyJwt();
+                }
+            );
+
+            vi.mocked(jwt.verify).mockReturnValueOnce(
+                mockRefreshTokenPayload as never
+            );
+
+            prismaErrorHandlerMock.mockImplementation(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+
+            prismaMock.refreshToken.findUnique.mockResolvedValueOnce({
+                jwtId: 'uuidv4',
+                succeedsJwtId: null,
+                createdAt: MOCK_DATE,
+                expiresAt: MOCK_DATE,
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+                tokenHash: 'hashed-refresh-token',
+                userId: 1,
+            });
+
+            mapPrismaRoleToEnumRoleMock.mockReturnValueOnce(mockUser.role as Role);
+
+            getRefreshTokenExpiryDateMock.mockReturnValueOnce(MOCK_DATE);
+
+            vi.mocked(bcrypt.hash).mockResolvedValueOnce(
+                'hashed-refresh-token' as never
+            );
+
+            const generateAccessTokenMock = vi
+                .spyOn(authService, 'generateAccessToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-access-token' as never);
+
+            const generateRefreshTokenMock = vi
+                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-refresh-token' as never);
+
+            prismaMock.$transaction.mockImplementationOnce(async (callback) => {
+                return await callback(prismaMock);
+            });
+
+            prismaMock.refreshToken.create.mockResolvedValueOnce({} as RefreshToken);
+
+            prismaMock.user.findUnique.mockResolvedValueOnce(mockUser as User);
+
+            // 2. Act------------------------------------------------------------------------------
+            const result = await authService.refresh(refreshToken, clientDetails);
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(2);
+
+            // Assert that prisma.$transaction is invoked.
+            expect(prismaMock.$transaction).toBeCalledTimes(1);
+
+            // Assert that jwtErrorHandler wrapper is invoked.
+            expect(jwtErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that jwt.verify is invoked with correct args.
+            expect(jwt.verify).toBeCalledTimes(1);
+            expect(jwt.verify).toBeCalledWith(
+                refreshToken,
+                config.REFRESH_TOKEN_SECRET
+            );
+
+            // Assert that the prisma.refreshToken.findUnique is invoked with correct args.
+            expect(prismaMock.refreshToken.findUnique).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.findUnique).toBeCalledWith({
+                where: {
+                    userId: mockUser.id,
+                    jwtId: mockRefreshTokenPayload.jti,
+                },
+            });
+
+            // Assert that bcrypt.hash is invoked with correct args.
+            expect(bcrypt.hash).toBeCalledTimes(1);
+            expect(bcrypt.hash).toBeCalledWith(
+                'mock-refresh-token',
+                config.SALT_ROUNDS
+            );
+
+            // Assert that the token generator functions are called correctly.
+            expect(generateAccessTokenMock).toBeCalledTimes(1);
+            expect(generateAccessTokenMock).toBeCalledWith({
+                id: mockUser.id,
+                username: mockUser.username,
+                role: mockUser.role,
+            });
+            expect(generateRefreshTokenMock).toBeCalledTimes(1);
+            expect(generateRefreshTokenMock).toBeCalledWith(
+                {
+                    id: mockUser.id,
+                },
+                'uuidv4'
+            );
+
+            // Assert that token is created in DB.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.create).toBeCalledWith({
+                data: {
+                    userId: mockUser.id,
+                    jwtId: 'uuidv4',
+                    tokenHash: 'hashed-refresh-token',
+                    expiresAt: MOCK_DATE,
+                    ip: clientDetails.ip,
+                    location: clientDetails.location,
+                    userAgent: clientDetails.userAgent,
+                    succeedsJwtId: mockRefreshTokenEntry.jwtId,
+                },
+            });
+
+            // Assert that the mapPrismaRoleToEnumRole utility is invoked with correct args.
+            expect(mapPrismaRoleToEnumRoleMock).toBeCalledTimes(1);
+            expect(mapPrismaRoleToEnumRoleMock).toBeCalledWith(mockUser.role);
+
+            // Assert that the getRefreshTokenExpiryDate utility is invoked.
+            expect(getRefreshTokenExpiryDateMock).toBeCalledTimes(1);
+
+            // Assert that the prisma user.findUnique is invoked with correct args.
+            expect(prismaMock.user.findUnique).toBeCalledTimes(1);
+            expect(prismaMock.user.findUnique).toBeCalledWith({
+                where: {
+                    id: mockRefreshTokenPayload.id,
+                },
+                omit: {
+                    password: true,
+                },
+            });
+
+            // Assert that user data and new tokens are returned by the method.
+            expect(result).toStrictEqual({
+                ...mockUser,
+                accessToken: 'mock-access-token',
+                refreshToken: 'mock-refresh-token',
+            } satisfies RefreshServiceReturnType);
         });
     });
 });
