@@ -1623,6 +1623,7 @@ describe('AuthService', () => {
         });
 
         it("should throw Unauthorized Error if user's current refresh token is not found in database", async () => {
+            // 1. Arrange--------------------------------------------------------------------------------
             const refreshToken = 'mock-refresh-token';
             const mockRefreshTokenPayload: RefreshTokenPayload = {
                 id: 1,
@@ -1702,6 +1703,78 @@ describe('AuthService', () => {
                     jwtId: mockRefreshTokenPayload.jti,
                 },
             });
+
+            // Assert bcrypt.hash is not invoked.
+            expect(bcrypt.hash).toBeCalledTimes(0);
+
+            // Assert that token generator functions are not called.
+            expect(generateAccessTokenMock).toBeCalledTimes(0);
+            expect(generateRefreshTokenMock).toBeCalledTimes(0);
+
+            // Assert that prisma.refreshToken.create is not invoked.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(0);
+
+            // Assert that prisma.user.findUnique is not invoked.
+            expect(prismaMock.user.findUnique).toBeCalledTimes(0);
+        });
+
+        it('should throw error on validation failure of refresh token payload', async () => {
+            const refreshToken = 'mock-refresh-token';
+            const mockRefreshTokenPayload = {
+                id: '1', // should be number
+                jti: 1, // should be string
+            };
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+
+            jwtErrorHandlerMock.mockImplementationOnce(
+                <TokenType extends AccessTokenPayload | RefreshTokenPayload>(
+                    verifyJwt: () => TokenType
+                ): TokenType => {
+                    return verifyJwt();
+                }
+            );
+
+            vi.mocked(jwt.verify).mockReturnValueOnce(
+                mockRefreshTokenPayload as never
+            );
+
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+            const generateRefreshTokenMock = vi.spyOn(
+                authService,
+                'generateRefreshToken' as keyof AuthService
+            );
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(
+                authService.refresh(refreshToken, clientDetails)
+            ).rejects.instanceOf(ZodError);
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is not invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(0);
+
+            // Assert that prisma.$transaction is not invoked.
+            expect(prismaMock.$transaction).toBeCalledTimes(0);
+
+            // Assert that jwtErrorHandler wrapper is invoked.
+            expect(jwtErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that jwt.verify is invoked with correct args.
+            expect(jwt.verify).toBeCalledTimes(1);
+            expect(jwt.verify).toBeCalledWith(
+                refreshToken,
+                config.REFRESH_TOKEN_SECRET
+            );
+
+            // Assert that prisma.refreshToken.findUnique is not invoked.
+            expect(prismaMock.refreshToken.findUnique).toBeCalledTimes(0);
 
             // Assert bcrypt.hash is not invoked.
             expect(bcrypt.hash).toBeCalledTimes(0);
