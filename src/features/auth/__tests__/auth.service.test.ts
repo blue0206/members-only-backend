@@ -1621,5 +1621,100 @@ describe('AuthService', () => {
                 refreshToken: 'mock-refresh-token',
             } satisfies RefreshServiceReturnType);
         });
+
+        it("should throw Unauthorized Error if user's current refresh token is not found in database", async () => {
+            const refreshToken = 'mock-refresh-token';
+            const mockRefreshTokenPayload: RefreshTokenPayload = {
+                id: 1,
+                jti: 'uuidv4',
+            };
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+
+            jwtErrorHandlerMock.mockImplementationOnce(
+                <TokenType extends AccessTokenPayload | RefreshTokenPayload>(
+                    verifyJwt: () => TokenType
+                ): TokenType => {
+                    return verifyJwt();
+                }
+            );
+
+            vi.mocked(jwt.verify).mockReturnValueOnce(
+                mockRefreshTokenPayload as never
+            );
+
+            prismaErrorHandlerMock.mockImplementationOnce(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+
+            prismaMock.refreshToken.findUnique.mockResolvedValueOnce(null);
+
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+
+            const generateRefreshTokenMock = vi.spyOn(
+                authService,
+                'generateRefreshToken' as keyof AuthService
+            );
+
+            // 2. Act------------------------------------------------------------------------------
+            await expect(
+                authService.refresh(refreshToken, clientDetails)
+            ).rejects.satisfies((error: AppError) => {
+                expect(error).toBeInstanceOf(UnauthorizedError);
+                expect(error.message).toBe('The refresh token is invalid.');
+                expect(error.statusCode).toBe(401);
+                expect(error.code).toBe(ErrorCodes.INVALID_TOKEN);
+                return true;
+            });
+
+            // 3. Assert--------------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that prisma.$transaction is not invoked.
+            expect(prismaMock.$transaction).toBeCalledTimes(0);
+
+            // Assert that jwtErrorHandler wrapper is invoked.
+            expect(jwtErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that jwt.verify is invoked with correct args.
+            expect(jwt.verify).toBeCalledTimes(1);
+            expect(jwt.verify).toBeCalledWith(
+                refreshToken,
+                config.REFRESH_TOKEN_SECRET
+            );
+
+            // Assert that prisma.refreshToken.findUnique is invoked with correct args.
+            expect(prismaMock.refreshToken.findUnique).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.findUnique).toBeCalledWith({
+                where: {
+                    userId: mockRefreshTokenPayload.id,
+                    jwtId: mockRefreshTokenPayload.jti,
+                },
+            });
+
+            // Assert bcrypt.hash is not invoked.
+            expect(bcrypt.hash).toBeCalledTimes(0);
+
+            // Assert that token generator functions are not called.
+            expect(generateAccessTokenMock).toBeCalledTimes(0);
+            expect(generateRefreshTokenMock).toBeCalledTimes(0);
+
+            // Assert that prisma.refreshToken.create is not invoked.
+            expect(prismaMock.refreshToken.create).toBeCalledTimes(0);
+
+            // Assert that prisma.user.findUnique is not invoked.
+            expect(prismaMock.user.findUnique).toBeCalledTimes(0);
+        });
     });
 });
