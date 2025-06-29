@@ -19,7 +19,10 @@ import {
     Role,
     SseEventNames,
 } from '@blue0206/members-only-shared-types';
-import { UnauthorizedError } from '../../../core/errors/customErrors.js';
+import {
+    InternalServerError,
+    UnauthorizedError,
+} from '../../../core/errors/customErrors.js';
 import { ZodError } from 'zod';
 import type {
     LoginRequestDto,
@@ -1858,6 +1861,145 @@ describe('AuthService', () => {
 
             // Assert that prisma.user.findUnique is not invoked.
             expect(prismaMock.user.findUnique).toBeCalledTimes(0);
+        });
+
+        it('should throw Internal Server Error if user not found in DB', async () => {
+            // 1. Arrange-------------------------------------------------------------------------
+            const refreshToken = 'mock-refresh-token';
+            const mockRefreshTokenPayload: RefreshTokenPayload = {
+                id: 1,
+                jti: 'uuidv4-current',
+            };
+            const clientDetails: ClientDetailsType = {
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+            };
+            const mockRefreshTokenEntry: RefreshToken = {
+                jwtId: 'uuidv4-current',
+                succeedsJwtId: 'uuidv4-old',
+                createdAt: MOCK_DATE,
+                expiresAt: MOCK_DATE,
+                ip: '127.0.0.1',
+                userAgent: 'Chrome',
+                location: 'home',
+                tokenHash: 'hashed-refresh-token-old',
+                userId: 1,
+            };
+
+            jwtErrorHandlerMock.mockImplementationOnce(
+                <TokenType extends AccessTokenPayload | RefreshTokenPayload>(
+                    verifyJwt: () => TokenType
+                ): TokenType => {
+                    return verifyJwt();
+                }
+            );
+
+            vi.mocked(jwt.verify).mockReturnValueOnce(
+                mockRefreshTokenPayload as never
+            );
+
+            prismaErrorHandlerMock.mockImplementation(
+                async <QueryReturnType>(
+                    queryFn: () => Promise<QueryReturnType>
+                ): Promise<QueryReturnType> => {
+                    return await queryFn();
+                }
+            );
+
+            prismaMock.refreshToken.findUnique.mockResolvedValueOnce(
+                mockRefreshTokenEntry
+            );
+
+            const generateAccessTokenMock = vi.spyOn(
+                authService,
+                'generateAccessToken' as keyof AuthService
+            );
+
+            getRefreshTokenExpiryDateMock.mockReturnValueOnce(MOCK_DATE);
+
+            const generateRefreshTokenMock = vi
+                .spyOn(authService, 'generateRefreshToken' as keyof AuthService)
+                .mockReturnValueOnce('mock-refresh-token' as never);
+
+            vi.mocked(bcrypt.hash).mockResolvedValueOnce(
+                'hashed-refresh-token' as never
+            );
+
+            prismaMock.$transaction.mockImplementationOnce(async (callback) => {
+                return await callback(prismaMock);
+            });
+
+            prismaMock.refreshToken.create.mockResolvedValueOnce({} as RefreshToken);
+
+            prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+            // 2. Act---------------------------------------------------------------------------
+            await expect(
+                authService.refresh(refreshToken, clientDetails)
+            ).rejects.satisfies((error: AppError) => {
+                expect(error).toBeInstanceOf(InternalServerError);
+                expect(error.statusCode).toBe(500);
+                expect(error.code).toBe(ErrorCodes.DATABASE_ERROR);
+                expect(error.message).toBe('User not found in database.');
+                return true;
+            });
+            // 3. Assert--------------------------------------------------------------------------
+            // Assert that prismaErrorHandler wrapper is invoked.
+            expect(prismaErrorHandlerMock).toBeCalledTimes(2);
+
+            // Assert that jwtErrorHandler wrapper is invoked.
+            expect(jwtErrorHandlerMock).toBeCalledTimes(1);
+
+            // Assert that prisma.$transaction is invoked.
+            expect(prismaMock.$transaction).toBeCalledTimes(1);
+
+            // Assert that jwt.verify is invoked with correct args.
+            expect(jwt.verify).toBeCalledTimes(1);
+            expect(jwt.verify).toBeCalledWith(
+                refreshToken,
+                config.REFRESH_TOKEN_SECRET
+            );
+
+            // Assert that prisma.refreshToken.findUnique is invoked with correct args.
+            expect(prismaMock.refreshToken.findUnique).toBeCalledTimes(1);
+            expect(prismaMock.refreshToken.findUnique).toBeCalledWith({
+                where: {
+                    userId: mockRefreshTokenPayload.id,
+                    jwtId: mockRefreshTokenPayload.jti,
+                },
+            });
+
+            // Assert bcrypt.hash is invoked correctly.
+            expect(bcrypt.hash).toBeCalledTimes(1);
+            expect(bcrypt.hash).toBeCalledWith(
+                'mock-refresh-token',
+                config.SALT_ROUNDS
+            );
+
+            // Assert that getRefreshTokenExpiryDate function is invoked.
+            expect(getRefreshTokenExpiryDateMock).toBeCalledTimes(1);
+
+            // Assert that refresh token generator function is invoked correctly.
+            expect(generateRefreshTokenMock).toBeCalledTimes(1);
+            expect(generateRefreshTokenMock).toBeCalledWith(
+                { id: mockRefreshTokenPayload.id },
+                'uuidv4'
+            );
+
+            // Assert that access token generator functions is not invoked.
+            expect(generateAccessTokenMock).toBeCalledTimes(0);
+
+            // Assert that prisma.user.findUnique is invoked correctly.
+            expect(prismaMock.user.findUnique).toBeCalledTimes(1);
+            expect(prismaMock.user.findUnique).toBeCalledWith({
+                where: {
+                    id: mockRefreshTokenPayload.id,
+                },
+                omit: {
+                    password: true,
+                },
+            });
         });
     });
 });
