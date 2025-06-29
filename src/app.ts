@@ -84,20 +84,22 @@ app.use(errorHandler);
 
 // Server
 const PORT = config.PORT;
-const server: Server = app.listen(PORT, () => {
+const server: Server = app.listen(PORT, async () => {
     logger.info(
         `Server running on port ${config.PORT.toString()} in ${config.NODE_ENV} mode`
     );
     logger.info('Prisma client initialized.');
 
-    // Start the scheduled task to clear expired refresh tokens.
-    void clearExpiredRefreshTokensTask.start();
+    // Start the scheduled task to clear expired refresh tokens and manually execute the task once.
+    await clearExpiredRefreshTokensTask.start();
     logger.info(
         'Scheduled "Clear_Expired_Refresh_Tokens" task to run every day at 00:00 or 12:00 AM'
     );
-    // Start the scheduled task to flush user activity data into DB.
-    void lastActiveDataFlushTask.start();
+    await clearExpiredRefreshTokensTask.execute();
+    // Start the scheduled task to flush user activity data into DB and manually execute the task once.
+    await lastActiveDataFlushTask.start();
     logger.info(`Scheduled "User_Activity_Batch_Update" task to run every hour.`);
+    await lastActiveDataFlushTask.execute();
 
     // Schedule heartbeat to send to all SSE clients every 35 seconds.
     setInterval(() => {
