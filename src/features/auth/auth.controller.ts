@@ -33,6 +33,27 @@ import type {
 } from './auth.types.js';
 import type { StringValue } from 'ms';
 
+const setAuthCookies = (res: Response, refreshToken: string): void => {
+    const commonCookieOptions: CookieOptions = {
+        secure: config.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
+    };
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        path: '/api/v1/auth',
+        ...commonCookieOptions,
+    });
+
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('csrf-token', csrfToken, {
+        // httpOnly is not set because we need JS access
+        // to use double submit protection.
+        path: '/',
+        ...commonCookieOptions,
+    });
+};
+
 export const registerUser = async (
     req: Request<unknown, unknown, RegisterRequestDto>,
     res: Response
@@ -55,24 +76,26 @@ export const registerUser = async (
     );
     const responseData: RegisterResponseDto = mapToRegisterResponseDto(userData);
 
-    const commonCookieOptions: CookieOptions = {
-        secure: config.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
-    };
-    res.cookie('refreshToken', userData.refreshToken, {
-        httpOnly: true,
-        path: '/api/v1/auth',
-        ...commonCookieOptions,
-    });
+    setAuthCookies(res, userData.refreshToken);
 
-    const csrfToken = crypto.randomBytes(32).toString('hex');
-    res.cookie('csrf-token', csrfToken, {
-        // httpOnly is not set because we need JS access
-        // to use double submit protection.
-        path: '/',
-        ...commonCookieOptions,
-    });
+    // const commonCookieOptions: CookieOptions = {
+    //     secure: config.NODE_ENV === 'production',
+    //     sameSite: 'lax',
+    //     maxAge: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
+    // };
+    // res.cookie('refreshToken', userData.refreshToken, {
+    //     httpOnly: true,
+    //     path: '/api/v1/auth',
+    //     ...commonCookieOptions,
+    // });
+
+    // const csrfToken = crypto.randomBytes(32).toString('hex');
+    // res.cookie('csrf-token', csrfToken, {
+    //     // httpOnly is not set because we need JS access
+    //     // to use double submit protection.
+    //     path: '/',
+    //     ...commonCookieOptions,
+    // });
 
     const successResponse: ApiResponseSuccess<RegisterResponseDto> = {
         success: true,
@@ -105,23 +128,7 @@ export const loginUser = async (
     );
     const responseData: LoginResponseDto = mapToLoginResponseDto(userData);
 
-    const commonCookieOptions: CookieOptions = {
-        secure: config.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
-    };
-
-    res.cookie('refreshToken', userData.refreshToken, {
-        httpOnly: true,
-        path: '/api/v1/auth',
-        ...commonCookieOptions,
-    });
-
-    const csrfToken = crypto.randomBytes(32).toString('hex');
-    res.cookie('csrf-token', csrfToken, {
-        path: '/',
-        ...commonCookieOptions,
-    });
+    setAuthCookies(res, userData.refreshToken);
 
     const successResponse: ApiResponseSuccess<LoginResponseDto> = {
         success: true,
@@ -229,23 +236,7 @@ export const refreshUserTokens = async (
     );
     const responseData: RefreshResponseDto = mapToRefreshResponseDto(tokens);
 
-    const commonCookieOptions: CookieOptions = {
-        secure: config.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
-    };
-
-    res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        path: '/api/v1/auth',
-        ...commonCookieOptions,
-    });
-
-    const csrfToken = crypto.randomBytes(32).toString('hex');
-    res.cookie('csrf-token', csrfToken, {
-        path: '/',
-        ...commonCookieOptions,
-    });
+    setAuthCookies(res, tokens.refreshToken);
 
     const successResponse: ApiResponseSuccess<RefreshResponseDto> = {
         success: true,
