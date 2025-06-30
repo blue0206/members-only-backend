@@ -1,10 +1,5 @@
 import { authService } from './auth.service.js';
-import {
-    ErrorCodes,
-    LoginRequestSchema,
-    RegisterRequestSchema,
-    SessionIdParamsSchema,
-} from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import {
     mapToLoginResponseDto,
     mapToRefreshResponseDto,
@@ -14,7 +9,6 @@ import {
 import {
     InternalServerError,
     UnauthorizedError,
-    ValidationError,
 } from '../../core/errors/customErrors.js';
 import { config } from '../../core/config/index.js';
 import ms from 'ms';
@@ -39,7 +33,10 @@ import type {
 } from './auth.types.js';
 import type { StringValue } from 'ms';
 
-export const registerUser = async (req: Request, res: Response): Promise<void> => {
+export const registerUser = async (
+    req: Request<unknown, unknown, RegisterRequestDto>,
+    res: Response
+): Promise<void> => {
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
@@ -51,20 +48,8 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         );
     }
 
-    // Validate the incoming request to make sure it adheres to the
-    // API contract (RegisterRequestDto).
-    const parsedBody = RegisterRequestSchema.safeParse(req.body);
-    if (!parsedBody.success) {
-        throw new ValidationError(
-            'Invalid request body.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedBody.error.flatten()
-        );
-    }
-    const registerData: RegisterRequestDto = parsedBody.data;
-
     const userData: RegisterServiceReturnType = await authService.register(
-        registerData,
+        req.body,
         req.file ? req.file.buffer : undefined,
         req.clientDetails
     );
@@ -99,7 +84,10 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     res.status(201).json(successResponse);
 };
 
-export const loginUser = async (req: Request, res: Response): Promise<void> => {
+export const loginUser = async (
+    req: Request<unknown, unknown, LoginRequestDto>,
+    res: Response
+): Promise<void> => {
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
@@ -111,20 +99,8 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         );
     }
 
-    // Validate the incoming request to make sure it adheres to the
-    // API contract (LoginRequestDto).
-    const parsedBody = LoginRequestSchema.safeParse(req.body);
-    if (!parsedBody.success) {
-        throw new ValidationError(
-            'Invalid request body.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedBody.error.flatten()
-        );
-    }
-    const loginData: LoginRequestDto = parsedBody.data;
-
     const userData: LoginServiceReturnType = await authService.login(
-        loginData,
+        req.body,
         req.clientDetails
     );
     const responseData: LoginResponseDto = mapToLoginResponseDto(userData);
@@ -321,7 +297,10 @@ export const getSessions = async (req: Request, res: Response): Promise<void> =>
     res.status(200).json(successResponse);
 };
 
-export const revokeSession = async (req: Request, res: Response): Promise<void> => {
+export const revokeSession = async (
+    req: Request<SessionIdParamsDto>,
+    res: Response
+): Promise<void> => {
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
@@ -334,19 +313,7 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
         );
     }
 
-    // Validate the incoming request to make sure it adheres to the
-    // API contract (SessionIdParamsDto).
-    const parsedParams = SessionIdParamsSchema.safeParse(req.params);
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request parameters.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-    const sessionIdParams: SessionIdParamsDto = parsedParams.data;
-
-    await authService.revokeSession(req.user.id, sessionIdParams.sessionId);
+    await authService.revokeSession(req.user.id, req.params.sessionId);
 
     res.status(204).end();
 };
