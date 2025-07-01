@@ -11,13 +11,8 @@ import {
     mapToUploadAvatarResponseDto,
 } from './user.mapper.js';
 import {
-    EditUserRequestSchema,
     ErrorCodes,
-    MemberRoleUpdateRequestSchema,
     MessageParamsSchema,
-    ResetPasswordRequestSchema,
-    SetRoleRequestQuerySchema,
-    UsernameParamsSchema,
 } from '@blue0206/members-only-shared-types';
 import type { Request, Response } from 'express';
 import type {
@@ -61,7 +56,10 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json(successResponse);
 };
 
-export const editUser = async (req: Request, res: Response): Promise<void> => {
+export const editUser = async (
+    req: Request<unknown, unknown, EditUserRequestDto>,
+    res: Response
+): Promise<void> => {
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
@@ -74,18 +72,8 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
         );
     }
 
-    const parsedBody = EditUserRequestSchema.safeParse(req.body);
-    if (!parsedBody.success) {
-        throw new ValidationError(
-            'Invalid request body.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedBody.error.flatten()
-        );
-    }
-
-    const editUserData: EditUserRequestDto = parsedBody.data;
     const userData: EditUserServiceReturnType = await userService.editUser(
-        editUserData,
+        req.body,
         req.user
     );
 
@@ -101,7 +89,7 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const adminDeleteUser = async (
-    req: Request,
+    req: Request<UsernameParamsDto>,
     res: Response
 ): Promise<void> => {
     if (!req.requestId) {
@@ -116,17 +104,7 @@ export const adminDeleteUser = async (
         );
     }
 
-    const parsedParams = UsernameParamsSchema.safeParse(req.params);
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request parameters.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-
-    const requestParam: UsernameParamsDto = parsedParams.data;
-    await userService.deleteUserByUsername(requestParam.username, req.user.id);
+    await userService.deleteUserByUsername(req.params.username, req.user.id);
 
     res.status(204).end();
 };
@@ -152,7 +130,7 @@ export const deleteUserAccount = async (
 };
 
 export const resetUserPassword = async (
-    req: Request,
+    req: Request<unknown, unknown, ResetPasswordRequestDto>,
     res: Response
 ): Promise<void> => {
     if (!req.requestId) {
@@ -167,22 +145,33 @@ export const resetUserPassword = async (
         );
     }
 
-    const parsedBody = ResetPasswordRequestSchema.safeParse(req.body);
-    if (!parsedBody.success) {
-        throw new ValidationError(
-            'Invalid request body.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedBody.error.flatten()
-        );
-    }
+    await userService.resetPassword(req.body, req.user.id);
 
-    const resetPasswordData: ResetPasswordRequestDto = parsedBody.data;
-    await userService.resetPassword(resetPasswordData, req.user.id);
     res.status(204).end();
 };
 
 export const memberRoleUpdate = async (
-    req: Request,
+    req: Request<unknown, unknown, MemberRoleUpdateRequestDto>,
+    res: Response
+): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+    await userService.setMemberRole(req.user.id, req.body.secretKey);
+
+    res.status(204).end();
+};
+
+export const setRole = async (
+    req: Request<UsernameParamsDto, unknown, unknown, SetRoleRequestQueryDto>,
     res: Response
 ): Promise<void> => {
     if (!req.requestId) {
@@ -197,58 +186,13 @@ export const memberRoleUpdate = async (
         );
     }
 
-    const parsedBody = MemberRoleUpdateRequestSchema.safeParse(req.body);
-    if (!parsedBody.success) {
-        throw new ValidationError(
-            'Invalid request body.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedBody.error.flatten()
-        );
-    }
-
-    const memberRoleUpdateData: MemberRoleUpdateRequestDto = parsedBody.data;
-    await userService.setMemberRole(req.user.id, memberRoleUpdateData.secretKey);
-    res.status(204).end();
-};
-
-export const setRole = async (req: Request, res: Response): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
-    if (!req.user) {
-        throw new UnauthorizedError(
-            'Authentication details missing.',
-            ErrorCodes.AUTHENTICATION_REQUIRED
-        );
-    }
-
-    const parsedParams = UsernameParamsSchema.safeParse(req.params);
-    const parsedQuery = SetRoleRequestQuerySchema.safeParse(req.query);
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request params.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-    if (!parsedQuery.success) {
-        throw new ValidationError(
-            'Invalid request query.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedQuery.error.flatten()
-        );
-    }
-
-    const usernameDto: UsernameParamsDto = parsedParams.data;
-    const roleDto: SetRoleRequestQueryDto = parsedQuery.data;
     await userService.updateRole(
         req.user.id,
         req.user.username,
-        usernameDto.username,
-        roleDto.role
+        req.params.username,
+        req.query.role
     );
+
     res.status(204).end();
 };
 

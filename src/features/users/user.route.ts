@@ -19,6 +19,14 @@ import {
 import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
 import memberVerification from '../../core/middlewares/memberVerification.js';
 import lastActiveUpdateMiddleware from '../../core/middlewares/lastActiveUpdateMiddleware.js';
+import requestValidator from '../../core/middlewares/requestValidator.js';
+import {
+    EditUserRequestSchema,
+    MemberRoleUpdateRequestSchema,
+    ResetPasswordRequestSchema,
+    SetRoleRequestQuerySchema,
+    UsernameParamsSchema,
+} from '@blue0206/members-only-shared-types';
 
 const userRouter = Router();
 
@@ -56,8 +64,9 @@ userRouter.post(
 userRouter.patch(
     '/reset-password',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: ResetPasswordRequestSchema, type: 'body' }),
     resetUserPassword
 );
 
@@ -65,8 +74,9 @@ userRouter.patch(
 userRouter.patch(
     '/role',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: MemberRoleUpdateRequestSchema, type: 'body' }),
     memberRoleUpdate
 );
 
@@ -74,9 +84,13 @@ userRouter.patch(
 userRouter.patch(
     '/role/:username',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
     adminVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator(
+        { schema: UsernameParamsSchema, type: 'params' },
+        { schema: SetRoleRequestQuerySchema, type: 'query' }
+    ),
     setRole
 );
 
@@ -94,8 +108,9 @@ userRouter.patch(
 userRouter.patch(
     '/',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: EditUserRequestSchema, type: 'body' }),
     editUser
 );
 
@@ -122,9 +137,10 @@ userRouter.delete(
 userRouter.delete(
     '/:username',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
     adminVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: UsernameParamsSchema, type: 'params' }),
     adminDeleteUser
 );
 
