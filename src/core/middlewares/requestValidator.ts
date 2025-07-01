@@ -27,6 +27,8 @@ type RequestValidatorArgsType =
     | [ParamsArg, QueryArg]
     | [BodyArg, ParamsArg, QueryArg];
 
+// Since params/query types for messageId and userId are coerced to number by zod schema,
+// they are handled inside controllers.
 const requestValidator =
     (...args: RequestValidatorArgsType) =>
     async (
@@ -43,13 +45,27 @@ const requestValidator =
                         break;
                     }
                     case 'params': {
+                        if (
+                            req.params &&
+                            typeof req.params === 'object' &&
+                            ('messageId' in req.params || 'userId' in req.params)
+                        ) {
+                            break;
+                        }
                         req.params = await arg.schema.parseAsync(req.params);
                         logger.info('Request params validated.');
                         break;
                     }
                     case 'query': {
-                        logger.info('Request query validated.');
+                        if (
+                            req.query &&
+                            typeof req.query === 'object' &&
+                            ('messageId' in req.query || 'userId' in req.query)
+                        ) {
+                            break;
+                        }
                         req.query = await arg.schema.parseAsync(req.query);
+                        logger.info('Request query validated.');
                         break;
                     }
                 }
