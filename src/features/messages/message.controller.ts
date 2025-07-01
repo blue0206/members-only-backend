@@ -5,9 +5,7 @@ import {
     ValidationError,
 } from '../../core/errors/customErrors.js';
 import {
-    CreateMessageRequestSchema,
     MessageParamsSchema,
-    EditMessageRequestSchema,
     ErrorCodes,
 } from '@blue0206/members-only-shared-types';
 import {
@@ -96,7 +94,40 @@ export const getMessagesWithAuthor = async (
 };
 
 export const createNewMessage = async (
-    req: Request,
+    req: Request<unknown, unknown, CreateMessageRequestDto>,
+    res: Response
+): Promise<void> => {
+    if (!req.requestId) {
+        throw new InternalServerError(
+            'Internal server configuration error: Missing Request ID'
+        );
+    }
+
+    if (!req.user) {
+        throw new UnauthorizedError(
+            'Authentication details missing.',
+            ErrorCodes.AUTHENTICATION_REQUIRED
+        );
+    }
+
+    const createdMessage: CreateMessageServiceReturnType =
+        await messageService.createMessage(req.body.message, req.user.id);
+
+    const mappedCreatedMessage: CreateMessageResponseDto =
+        mapToCreateMessageResponseDto(createdMessage, req.user.id);
+
+    const successResponse: ApiResponse<CreateMessageResponseDto> = {
+        success: true,
+        payload: mappedCreatedMessage,
+        requestId: req.requestId,
+        statusCode: 201,
+    };
+
+    res.status(201).json(successResponse);
+};
+
+export const editMessage = async (
+    req: Request<unknown, unknown, EditMessageRequestDto>,
     res: Response
 ): Promise<void> => {
     if (!req.requestId) {
@@ -113,58 +144,8 @@ export const createNewMessage = async (
     }
 
     // Validate the incoming request to make sure it adheres to the
-    // API contract (CreateMessageRequestDto).
-    const parsedBody = CreateMessageRequestSchema.safeParse(req.body);
-    if (!parsedBody.success) {
-        throw new ValidationError(
-            'Invalid request body.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedBody.error.flatten()
-        );
-    }
-    const newMessageContent: CreateMessageRequestDto = parsedBody.data;
-
-    const createdMessage: CreateMessageServiceReturnType =
-        await messageService.createMessage(newMessageContent.message, req.user.id);
-
-    const mappedCreatedMessage: CreateMessageResponseDto =
-        mapToCreateMessageResponseDto(createdMessage, req.user.id);
-
-    const successResponse: ApiResponse<CreateMessageResponseDto> = {
-        success: true,
-        payload: mappedCreatedMessage,
-        requestId: req.requestId,
-        statusCode: 201,
-    };
-
-    res.status(201).json(successResponse);
-};
-
-export const editMessage = async (req: Request, res: Response): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
-
-    if (!req.user) {
-        throw new UnauthorizedError(
-            'Authentication details missing.',
-            ErrorCodes.AUTHENTICATION_REQUIRED
-        );
-    }
-
-    // Validate the incoming request to make sure it adheres to the
-    // API contract (EditMessageRequestDto and MessageParamsDto).
-    const parsedBody = EditMessageRequestSchema.safeParse(req.body);
+    // API contract (MessageParamsDto).
     const parsedParams = MessageParamsSchema.safeParse(req.params);
-    if (!parsedBody.success) {
-        throw new ValidationError(
-            'Invalid request body.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedBody.error.flatten()
-        );
-    }
     if (!parsedParams.success) {
         throw new ValidationError(
             'Invalid request params.',
@@ -172,12 +153,11 @@ export const editMessage = async (req: Request, res: Response): Promise<void> =>
             parsedParams.error.flatten()
         );
     }
-    const messageEditData: EditMessageRequestDto = parsedBody.data;
     const messageParams: MessageParamsDto = parsedParams.data;
 
     const editedMessage: EditMessageServiceReturnType =
         await messageService.editMessage(
-            messageEditData.newMessage,
+            req.body.newMessage,
             messageParams.messageId,
             req.user
         );

@@ -12,6 +12,11 @@ import accessTokenVerification from '../../core/middlewares/accessTokenVerificat
 import csrfVerification from '../../core/middlewares/csrfVerification.js';
 import memberVerification from '../../core/middlewares/memberVerification.js';
 import lastActiveUpdateMiddleware from '../../core/middlewares/lastActiveUpdateMiddleware.js';
+import requestValidator from '../../core/middlewares/requestValidator.js';
+import {
+    CreateMessageRequestSchema,
+    EditMessageRequestSchema,
+} from '@blue0206/members-only-shared-types';
 
 const messageRouter = Router();
 
@@ -42,8 +47,9 @@ messageRouter.post(
 messageRouter.post(
     '/',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: CreateMessageRequestSchema, type: 'body' }),
     createNewMessage
 );
 
@@ -51,9 +57,10 @@ messageRouter.post(
 messageRouter.patch(
     '/:messageId',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: EditMessageRequestSchema, type: 'body' }),
     editMessage
 );
 
