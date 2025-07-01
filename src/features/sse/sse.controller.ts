@@ -1,12 +1,6 @@
 import jwt from 'jsonwebtoken';
-import {
-    ErrorCodes,
-    EventRequestQuerySchema,
-} from '@blue0206/members-only-shared-types';
-import {
-    UnauthorizedError,
-    ValidationError,
-} from '../../core/errors/customErrors.js';
+import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { UnauthorizedError } from '../../core/errors/customErrors.js';
 import { config } from '../../core/config/index.js';
 import { AccessTokenPayloadSchema } from '../auth/auth.types.js';
 import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
@@ -22,32 +16,22 @@ import { logger } from '../../core/logger.js';
 import { sseService } from './sse.service.js';
 
 export const sseConnectionHandler = (
-    req: Request,
+    req: Request<unknown, unknown, unknown, EventRequestQueryDto>,
     res: Response
 ): Promise<void> | void => {
-    const parsedQuery = EventRequestQuerySchema.safeParse(req.query);
-    if (!parsedQuery.success) {
-        throw new ValidationError(
-            'Invalid request query.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedQuery.error.flatten()
-        );
-    }
-    const queryDto: EventRequestQueryDto = parsedQuery.data;
-
     let userId: number;
     let userRole: Role;
 
     try {
         const accessToken = jwtErrorHandler((): AccessTokenPayload => {
-            if (!queryDto.accessToken) {
+            if (!req.query.accessToken) {
                 throw new UnauthorizedError(
                     'Missing access token.',
                     ErrorCodes.AUTHENTICATION_REQUIRED
                 );
             }
             const decodedToken = jwt.verify(
-                queryDto.accessToken,
+                req.query.accessToken,
                 config.ACCESS_TOKEN_SECRET
             );
 

@@ -16,7 +16,7 @@ class SseService {
 
     /**
      * Registers a new SSE client.
-     * @param {{ userId: number; userRole: Role; res: Response; req: Request }} client
+     * @param {{ userId: number; userRole: Role; res: Response; req: Request<unknown, unknown, unknown, EventRequestQueryDto> }} client
      * @returns {string} The id for the client.
      */
     addClient({ userId, userRole, res, req }: SseClientAddParamsType): string {
