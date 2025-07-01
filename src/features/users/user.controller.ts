@@ -2,7 +2,6 @@ import { userService } from './user.service.js';
 import {
     InternalServerError,
     UnauthorizedError,
-    ValidationError,
 } from '../../core/errors/customErrors.js';
 import {
     mapToEditUserResponseDto,
@@ -10,10 +9,7 @@ import {
     mapToGetUsersResponseDto,
     mapToUploadAvatarResponseDto,
 } from './user.mapper.js';
-import {
-    ErrorCodes,
-    MessageParamsSchema,
-} from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import type { Request, Response } from 'express';
 import type {
     EditUserServiceReturnType,
@@ -283,7 +279,7 @@ export const userBookmarks = async (req: Request, res: Response): Promise<void> 
 };
 
 export const addUserBookmark = async (
-    req: Request,
+    req: Request<unknown>,
     res: Response
 ): Promise<void> => {
     if (!req.requestId) {
@@ -298,17 +294,10 @@ export const addUserBookmark = async (
         );
     }
 
-    const parsedParams = MessageParamsSchema.safeParse(req.params);
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request params.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-    const messageParams: MessageParamsDto = parsedParams.data;
-
-    await userService.addBookmark(req.user.id, messageParams.messageId);
+    await userService.addBookmark(
+        req.user.id,
+        parseInt((req.params as MessageParamsDto).messageId as unknown as string)
+    );
 
     const successResponse: ApiResponse<null> = {
         success: true,
@@ -320,7 +309,7 @@ export const addUserBookmark = async (
 };
 
 export const removeUserBookmark = async (
-    req: Request,
+    req: Request<unknown>,
     res: Response
 ): Promise<void> => {
     if (!req.requestId) {
@@ -335,17 +324,10 @@ export const removeUserBookmark = async (
         );
     }
 
-    const parsedParams = MessageParamsSchema.safeParse(req.params);
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request params.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-    const messageParams: MessageParamsDto = parsedParams.data;
-
-    await userService.removeBookmark(req.user.id, messageParams.messageId);
+    await userService.removeBookmark(
+        req.user.id,
+        parseInt((req.params as MessageParamsDto).messageId as unknown as string)
+    );
 
     res.status(204).end();
 };

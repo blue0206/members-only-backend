@@ -2,12 +2,8 @@ import { messageService } from './message.service.js';
 import {
     InternalServerError,
     UnauthorizedError,
-    ValidationError,
 } from '../../core/errors/customErrors.js';
-import {
-    MessageParamsSchema,
-    ErrorCodes,
-} from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import {
     mapToCreateMessageResponseDto,
     mapToEditMessageResponseDto,
@@ -143,22 +139,12 @@ export const editMessage = async (
         );
     }
 
-    // Validate the incoming request to make sure it adheres to the
-    // API contract (MessageParamsDto).
-    const parsedParams = MessageParamsSchema.safeParse(req.params);
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request params.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-    const messageParams: MessageParamsDto = parsedParams.data;
-
     const editedMessage: EditMessageServiceReturnType =
         await messageService.editMessage(
             req.body.newMessage,
-            messageParams.messageId,
+            parseInt(
+                (req.params as MessageParamsDto).messageId as unknown as string
+            ),
             req.user
         );
 
@@ -177,7 +163,10 @@ export const editMessage = async (
     res.status(200).json(successResponse);
 };
 
-export const deleteMessage = async (req: Request, res: Response): Promise<void> => {
+export const deleteMessage = async (
+    req: Request<unknown>,
+    res: Response
+): Promise<void> => {
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
@@ -191,26 +180,18 @@ export const deleteMessage = async (req: Request, res: Response): Promise<void> 
         );
     }
 
-    // Validate the incoming request to make sure it adheres to the
-    // API contract (MessageParamsDto).
-    const parsedParams = MessageParamsSchema.safeParse(req.params);
-
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request params.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-
-    const deleteData: MessageParamsDto = parsedParams.data;
-
-    await messageService.deleteMessage(deleteData.messageId, req.user);
+    await messageService.deleteMessage(
+        parseInt((req.params as MessageParamsDto).messageId as unknown as string),
+        req.user
+    );
 
     res.status(204).end();
 };
 
-export const likeMessage = async (req: Request, res: Response): Promise<void> => {
+export const likeMessage = async (
+    req: Request<unknown>,
+    res: Response
+): Promise<void> => {
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
@@ -223,19 +204,10 @@ export const likeMessage = async (req: Request, res: Response): Promise<void> =>
         );
     }
 
-    // Validate the incoming request to make sure it adheres to the
-    // API contract (MessageParamsDto).
-    const parsedParams = MessageParamsSchema.safeParse(req.params);
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request params.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-    const messageParams: MessageParamsDto = parsedParams.data;
-
-    await messageService.likeMessage(messageParams.messageId, req.user.id);
+    await messageService.likeMessage(
+        parseInt((req.params as MessageParamsDto).messageId as unknown as string),
+        req.user.id
+    );
 
     const successResponse: ApiResponseSuccess<null> = {
         success: true,
@@ -247,7 +219,10 @@ export const likeMessage = async (req: Request, res: Response): Promise<void> =>
     res.status(201).json(successResponse);
 };
 
-export const unlikeMessage = async (req: Request, res: Response): Promise<void> => {
+export const unlikeMessage = async (
+    req: Request<unknown>,
+    res: Response
+): Promise<void> => {
     if (!req.requestId) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Request ID'
@@ -260,19 +235,10 @@ export const unlikeMessage = async (req: Request, res: Response): Promise<void> 
         );
     }
 
-    // Validate the incoming request to make sure it adheres to the
-    // API contract (MessageParamsDto).
-    const parsedParams = MessageParamsSchema.safeParse(req.params);
-    if (!parsedParams.success) {
-        throw new ValidationError(
-            'Invalid request params.',
-            ErrorCodes.VALIDATION_ERROR,
-            parsedParams.error.flatten()
-        );
-    }
-    const messageParams: MessageParamsDto = parsedParams.data;
-
-    await messageService.unlikeMessage(messageParams.messageId, req.user.id);
+    await messageService.unlikeMessage(
+        parseInt((req.params as MessageParamsDto).messageId as unknown as string),
+        req.user.id
+    );
 
     res.status(204).end();
 };

@@ -1,9 +1,9 @@
 import { ZodError } from 'zod';
-import type { ZodSchema } from 'zod';
-import type { Request, Response, NextFunction } from 'express';
 import { ValidationError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { logger } from '../logger.js';
+import type { Request, Response, NextFunction } from 'express';
+import type { ZodSchema } from 'zod';
 
 interface BodyArg {
     schema: ZodSchema;
@@ -27,8 +27,6 @@ type RequestValidatorArgsType =
     | [ParamsArg, QueryArg]
     | [BodyArg, ParamsArg, QueryArg];
 
-// Since params/query type for messageId is coerced to number by zod schema,
-// it is handled inside controllers.
 const requestValidator =
     (...args: RequestValidatorArgsType) =>
     async (
@@ -45,26 +43,14 @@ const requestValidator =
                         break;
                     }
                     case 'params': {
-                        if (
-                            req.params &&
-                            typeof req.params === 'object' &&
-                            'messageId' in req.params
-                        ) {
-                            break;
-                        }
-                        req.params = await arg.schema.parseAsync(req.params);
+                        await arg.schema.parseAsync(req.params);
+
                         logger.info('Request params validated.');
                         break;
                     }
                     case 'query': {
-                        if (
-                            req.query &&
-                            typeof req.query === 'object' &&
-                            'messageId' in req.query
-                        ) {
-                            break;
-                        }
-                        req.query = await arg.schema.parseAsync(req.query);
+                        await arg.schema.parseAsync(req.query);
+
                         logger.info('Request query validated.');
                         break;
                     }

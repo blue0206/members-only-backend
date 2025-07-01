@@ -23,6 +23,7 @@ import requestValidator from '../../core/middlewares/requestValidator.js';
 import {
     EditUserRequestSchema,
     MemberRoleUpdateRequestSchema,
+    MessageParamsSchema,
     ResetPasswordRequestSchema,
     SetRoleRequestQuerySchema,
     UsernameParamsSchema,
@@ -54,9 +55,10 @@ userRouter.get(
 userRouter.post(
     '/bookmarks/:messageId',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: MessageParamsSchema, type: 'params' }),
     addUserBookmark
 );
 
@@ -118,9 +120,10 @@ userRouter.patch(
 userRouter.delete(
     '/bookmarks/:messageId',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: MessageParamsSchema, type: 'params' }),
     removeUserBookmark
 );
 

@@ -16,6 +16,7 @@ import requestValidator from '../../core/middlewares/requestValidator.js';
 import {
     CreateMessageRequestSchema,
     EditMessageRequestSchema,
+    MessageParamsSchema,
 } from '@blue0206/members-only-shared-types';
 
 const messageRouter = Router();
@@ -37,9 +38,10 @@ messageRouter.get(
 messageRouter.post(
     '/:messageId/like',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: MessageParamsSchema, type: 'params' }),
     likeMessage
 );
 
@@ -60,7 +62,10 @@ messageRouter.patch(
     csrfVerification,
     memberVerification,
     lastActiveUpdateMiddleware,
-    requestValidator({ schema: EditMessageRequestSchema, type: 'body' }),
+    requestValidator(
+        { schema: EditMessageRequestSchema, type: 'body' },
+        { schema: MessageParamsSchema, type: 'params' }
+    ),
     editMessage
 );
 
@@ -68,9 +73,10 @@ messageRouter.patch(
 messageRouter.delete(
     '/:messageId/like',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
     memberVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: MessageParamsSchema, type: 'params' }),
     unlikeMessage
 );
 
@@ -78,8 +84,9 @@ messageRouter.delete(
 messageRouter.delete(
     '/:messageId',
     accessTokenVerification,
-    lastActiveUpdateMiddleware,
     csrfVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator({ schema: MessageParamsSchema, type: 'params' }),
     deleteMessage
 );
 
