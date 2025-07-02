@@ -7,6 +7,7 @@ const level =
 
 const pinoOptions: LoggerOptions = { level };
 
+pinoOptions.transport = undefined;
 if (config.NODE_ENV === 'development') {
     pinoOptions.transport = {
         target: 'pino-pretty',
@@ -17,6 +18,11 @@ if (config.NODE_ENV === 'development') {
         },
     };
 }
+
+pinoOptions.formatters = {
+    level: (label): object => ({ level: label }),
+};
+pinoOptions.timestamp = pino.stdTimeFunctions.isoTime;
 
 export const logger = pino(pinoOptions);
 
