@@ -65,10 +65,16 @@ export default function accessTokenVerification(
         // Log error and directly send response for unauthorized errors.
         // This indicates that verification has failed.
         if (error instanceof UnauthorizedError) {
-            // Log error.
+            // No matter the error code received from jwtErrorHandler,
+            // we only send EXPIRED_TOKEN error code in response for access tokens.
+            // This is to prevent erroneous session expiry on frontend due to errors
+            // other than EXPIRED_TOKEN error (e.g. INVALID_TOKEN error).
+            // This is because as long as the user has legit refresh token, their
+            // session should not be expired.
             req.log.warn(
                 {
-                    errorCode: error.code,
+                    actualErrorCode: error.code,
+                    sentErrorCode: ErrorCodes.EXPIRED_TOKEN,
                     errorMessage: error.message,
                     url: req.url,
                     method: req.method,
@@ -79,7 +85,7 @@ export default function accessTokenVerification(
 
             const ErrorPayload: ApiErrorPayload = {
                 message: error.message,
-                code: error.code,
+                code: ErrorCodes.EXPIRED_TOKEN,
                 statusCode: 401,
             };
             const ErrorResponse: ApiResponseError = {
