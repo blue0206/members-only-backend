@@ -1,11 +1,11 @@
 import { pinoHttp } from 'pino-http';
 import { logger } from '../logger.js';
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
 
 export const loggerMiddleware = pinoHttp({
     logger,
-    customProps: (req: Request, _res: Response) => ({
-        requestId: req.requestId ?? '',
+    customProps: (req: Request) => ({
+        requestId: req.requestId,
     }),
     serializers: {
         // Redact authorization header (access token) and cookie (refresh token) for security reasons.

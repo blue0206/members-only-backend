@@ -1,5 +1,4 @@
 import { config } from '../config/index.js';
-import { logger } from '../logger.js';
 import jwt from 'jsonwebtoken';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { UnauthorizedError } from '../errors/customErrors.js';
@@ -38,14 +37,15 @@ export default function accessTokenVerification(
             return parsedToken;
         });
 
-        logger.debug(
-            {
-                username: req.user.username,
-                role: req.user.role,
-                id: req.user.id,
-            },
-            'Token verification successful.'
-        );
+        // Create a new child logger on existing child logger and attach user details.
+        // This removes the need to pass user details in every logging statement.
+        req.log = req.log.child({
+            userId: req.user.id,
+            username: req.user.username,
+            userRole: req.user.role,
+        });
+
+        req.log.debug('Token verification successful.');
 
         // Token verified, forward the request.
         next();
@@ -54,8 +54,8 @@ export default function accessTokenVerification(
         // request forward so that the cookies are cleared by controller and the
         // session data is revoked by service.
         if (req.url === '/logout') {
-            logger.warn(
-                { error, requestId: req.requestId },
+            req.log.warn(
+                { error },
                 'Error verifying access token in logout route. Passing request forward for clearing cookies and revoking session.'
             );
             next();
@@ -66,11 +66,10 @@ export default function accessTokenVerification(
         // This indicates that verification has failed.
         if (error instanceof UnauthorizedError) {
             // Log error.
-            logger.warn(
+            req.log.warn(
                 {
                     errorCode: error.code,
                     errorMessage: error.message,
-                    requestId: req.requestId,
                     url: req.url,
                     method: req.method,
                     ip: req.ip,

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { config } from './core/config/index.js';
 import express from 'express';
 import cors from 'cors';
-import assignRequestId from './core/middlewares/assignRequestId.js';
+import assignRequestIdAndChildLogger from './core/middlewares/assignRequestId.js';
 import { loggerMiddleware } from './core/middlewares/loggerMiddleware.js';
 import helmet from 'helmet';
 import authRouter from './features/auth/auth.routes.js';
@@ -28,17 +28,18 @@ import type { Server } from 'http';
 import type { Request, Response } from 'express';
 
 const app = express();
+// Assign request id and child logger via middleware.
+app.use(assignRequestIdAndChildLogger);
+// Assign logger middleware for http logging.
+app.use(loggerMiddleware);
 // Cors Middleware
 app.use(
     cors({
         credentials: true,
-        origin: ['http://localhost:5173'],
+        origin: ['http://localhost:5173', 'http://localhost:4173'],
     })
 );
-// Assign request id via middleware.
-app.use(assignRequestId);
-// Assign logger middleware for http logging.
-app.use(loggerMiddleware);
+
 // Setup cookie-parser for parsing cookies.
 app.use(cookieParser());
 
