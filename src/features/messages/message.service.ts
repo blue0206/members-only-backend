@@ -55,7 +55,7 @@ class MessageService {
         userId: number,
         log: Logger
     ): Promise<CreateMessageServiceReturnType> {
-        log.info({ message, userId }, 'Creating message in database.');
+        log.info({ message }, 'Creating message in database.');
 
         const createdMessage: CreateMessageServiceReturnType =
             await prismaErrorHandler(async () => {
@@ -89,7 +89,7 @@ class MessageService {
             );
         }
 
-        log.info({ message, userId }, 'Message created successfully.');
+        log.info({ message }, 'Message created successfully.');
 
         // Broadcast event to all connected SSE clients to show real-time updates.
         sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
@@ -110,7 +110,7 @@ class MessageService {
         user: AccessTokenPayload,
         log: Logger
     ): Promise<EditMessageServiceReturnType> {
-        log.info({ newMessage, messageId, user }, 'Editing message in database.');
+        log.info({ newMessage, messageId }, 'Editing message in database.');
 
         // Conditionally perform a DB call to check if the user is not updating another
         // user's message while not being an admin.
@@ -165,7 +165,7 @@ class MessageService {
                 });
             }, log);
 
-        log.info({ newMessage, messageId, user }, 'Message edited successfully.');
+        log.info({ newMessage, messageId }, 'Message edited successfully.');
 
         // Broadcast event to all connected SSE clients to show real-time updates.
         sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
@@ -185,7 +185,7 @@ class MessageService {
         user: AccessTokenPayload,
         log: Logger
     ): Promise<void> {
-        log.info({ messageId, user }, 'Deleting message from database.');
+        log.info({ messageId }, 'Deleting message from database.');
 
         // Conditionally perform a DB call to check if the user is not deleting another
         // user's message while not being an admin.
@@ -227,7 +227,7 @@ class MessageService {
             });
         }, log);
 
-        log.info({ messageId, user }, 'Message deleted successfully.');
+        log.info({ messageId }, 'Message deleted successfully.');
 
         // Broadcast event to all connected SSE clients to show real-time updates.
         sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
@@ -245,7 +245,7 @@ class MessageService {
         userId: number,
         log: Logger
     ): Promise<void> {
-        log.info({ messageId, userId }, 'Liking message in database.');
+        log.info({ messageId }, 'Liking message in database.');
 
         const like: Like = await prismaErrorHandler(async () => {
             return await prisma.like.create({
@@ -256,7 +256,7 @@ class MessageService {
             });
         }, log);
 
-        log.info({ id: like.id, messageId, userId }, 'Message liked successfully.');
+        log.info({ likeId: like.id, messageId }, 'Message liked successfully.');
     }
 
     async unlikeMessage(
@@ -264,7 +264,7 @@ class MessageService {
         userId: number,
         log: Logger
     ): Promise<void> {
-        log.info({ messageId, userId }, 'Unliking message in database.');
+        log.info({ messageId }, 'Unliking message in database.');
 
         await prismaErrorHandler(async () => {
             await prisma.like.delete({
@@ -277,7 +277,7 @@ class MessageService {
             });
         }, log);
 
-        log.info({ messageId, userId }, 'Message unliked successfully.');
+        log.info({ messageId }, 'Message unliked successfully.');
     }
 }
 
