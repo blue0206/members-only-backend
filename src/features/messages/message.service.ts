@@ -115,32 +115,7 @@ class MessageService {
         // Conditionally perform a DB call to check if the user is not updating another
         // user's message while not being an admin.
         if (user.role === Role.MEMBER) {
-            const messageAuthorDetails: Pick<Message, 'authorId'> | null =
-                await prismaErrorHandler(async () => {
-                    return await prisma.message.findUnique({
-                        where: {
-                            id: messageId,
-                        },
-                        select: {
-                            authorId: true,
-                        },
-                    });
-                }, log);
-
-            if (!messageAuthorDetails) {
-                throw new InternalServerError(
-                    'Message not found in database.',
-                    ErrorCodes.DATABASE_ERROR
-                );
-            }
-
-            // Ensure the member is not editing another user's message.
-            if (messageAuthorDetails.authorId !== user.id) {
-                throw new ForbiddenError(
-                    'You do not have permission to edit this message.',
-                    ErrorCodes.FORBIDDEN
-                );
-            }
+            await this.verifyMessageOwnership(messageId, user, log);
         }
 
         const editedMessageDetails: EditMessageServiceReturnType =
@@ -190,32 +165,7 @@ class MessageService {
         // Conditionally perform a DB call to check if the user is not deleting another
         // user's message while not being an admin.
         if (user.role !== Role.ADMIN) {
-            const messageAuthorDetails: Pick<Message, 'authorId'> | null =
-                await prismaErrorHandler(async () => {
-                    return await prisma.message.findUnique({
-                        where: {
-                            id: messageId,
-                        },
-                        select: {
-                            authorId: true,
-                        },
-                    });
-                }, log);
-
-            if (!messageAuthorDetails) {
-                throw new InternalServerError(
-                    'Message not found in database.',
-                    ErrorCodes.DATABASE_ERROR
-                );
-            }
-
-            // Ensure the user is not deleting another user's message.
-            if (messageAuthorDetails.authorId !== user.id) {
-                throw new ForbiddenError(
-                    'You do not have permission to delete this message.',
-                    ErrorCodes.FORBIDDEN
-                );
-            }
+            await this.verifyMessageOwnership(messageId, user, log);
         }
 
         // Delete message from DB.
@@ -278,6 +228,39 @@ class MessageService {
         }, log);
 
         log.info({ messageId }, 'Message unliked successfully.');
+    }
+
+    private async verifyMessageOwnership(
+        messageId: number,
+        user: AccessTokenPayload,
+        log: Logger
+    ): Promise<void> {
+        const messageAuthorDetails: Pick<Message, 'authorId'> | null =
+            await prismaErrorHandler(async () => {
+                return await prisma.message.findUnique({
+                    where: {
+                        id: messageId,
+                    },
+                    select: {
+                        authorId: true,
+                    },
+                });
+            }, log);
+
+        if (!messageAuthorDetails) {
+            throw new InternalServerError(
+                'Message not found in database.',
+                ErrorCodes.DATABASE_ERROR
+            );
+        }
+
+        // Ensure the user is not performing action on another user's message.
+        if (messageAuthorDetails.authorId !== user.id) {
+            throw new ForbiddenError(
+                'You do not have permission to perform this action.',
+                ErrorCodes.FORBIDDEN
+            );
+        }
     }
 }
 
