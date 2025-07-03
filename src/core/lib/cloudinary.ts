@@ -1,10 +1,10 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { config } from '../config/index.js';
-import { logger } from '../logger.js';
 import { InternalServerError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { v4 as uuidv4 } from 'uuid';
 import type { UploadApiResponse } from 'cloudinary';
+import type { Logger } from 'pino';
 
 cloudinary.config({
     cloud_name: config.CLOUDINARY_CLOUD_NAME,
@@ -15,9 +15,10 @@ cloudinary.config({
 // Upload a buffer file to Cloudinary, returns public_id of uploaded file.
 export const uploadFile = async (
     file: Buffer,
-    username: string
+    username: string,
+    log: Logger
 ): Promise<string> => {
-    logger.info({ username }, 'Uploading file to Cloudinary.');
+    log.info({ username }, 'Uploading file to Cloudinary.');
 
     const uploadPromise: Promise<UploadApiResponse> = new Promise<UploadApiResponse>(
         (resolve, reject) => {
@@ -60,7 +61,7 @@ export const uploadFile = async (
     );
 
     const result: UploadApiResponse = await uploadPromise;
-    logger.info(
+    log.info(
         { avatarId: result, format: result.format, size: result.bytes },
         'File uploaded to Cloudinary successfully.'
     );
@@ -68,11 +69,11 @@ export const uploadFile = async (
     return result.public_id;
 };
 
-export const deleteFile = async (publicId: string): Promise<void> => {
+export const deleteFile = async (publicId: string, log: Logger): Promise<void> => {
     try {
         await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-        logger.error({ error }, 'Error deleting file from Cloudinary.');
+        log.error({ error }, 'Error deleting file from Cloudinary.');
 
         throw new InternalServerError(
             'File deletion from Cloudinary failed.',
