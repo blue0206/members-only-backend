@@ -14,5 +14,5 @@ export default function lastActiveUpdateMiddleware(
     }
 
     userActivityPing.set(req.user.id, Date.now());
-    req.log.trace({ userId: req.user.id }, 'User activity ping recorded.');
+    req.log.trace('User activity ping recorded.');
 }

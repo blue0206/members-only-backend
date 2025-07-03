@@ -18,9 +18,6 @@ export default function memberVerification(
     }
 
     // The user is a Member or Admin, grant access by passing request forward.
-    req.log.debug(
-        { userPayload },
-        'Member or Admin privileges verified successfully.'
-    );
+    req.log.debug('Member or Admin privileges verified successfully.');
     next();
 }

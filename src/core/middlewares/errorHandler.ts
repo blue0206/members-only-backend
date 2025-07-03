@@ -16,7 +16,6 @@ export const errorHandler: ErrorRequestHandler = (
     req.log.error(
         {
             err,
-            requestId: req.requestId,
             url: req.url,
             method: req.method,
             ip: req.ip,

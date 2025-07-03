@@ -18,6 +18,6 @@ export default function adminVerification(
     }
 
     // The user is Admin, grant access by passing request forward.
-    req.log.debug({ userPayload }, 'Admin privileges verified successfully.');
+    req.log.debug('Admin privileges verified successfully.');
     next();
 }
