@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
+import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { UnauthorizedError } from '../../core/errors/customErrors.js';
 import { config } from '../../core/config/index.js';
 import { AccessTokenPayloadSchema } from '../auth/auth.types.js';
-import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
+import { sseService } from './sse.service.js';
 import type { Request, Response } from 'express';
 import type {
     ApiErrorPayload,
@@ -12,8 +13,6 @@ import type {
     Role,
 } from '@blue0206/members-only-shared-types';
 import type { AccessTokenPayload } from '../auth/auth.types.js';
-import { logger } from '../../core/logger.js';
-import { sseService } from './sse.service.js';
 
 export const sseConnectionHandler = (
     req: Request<unknown, unknown, unknown, EventRequestQueryDto>,
@@ -40,12 +39,12 @@ export const sseConnectionHandler = (
             const parsedToken = AccessTokenPayloadSchema.parse(decodedToken);
 
             return parsedToken;
-        });
+        }, req.log);
 
         userId = accessToken.id;
         userRole = accessToken.role;
     } catch (error: unknown) {
-        logger.error(
+        req.log.error(
             { error },
             'Attempt to establish SSE connection without authentication.'
         );

@@ -1,5 +1,5 @@
-import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../../core/logger.js';
+import type { Logger } from 'pino';
 import type { SseClient, SseClientAddParamsType } from './sse.types.js';
 import type {
     Role,
@@ -21,10 +21,10 @@ class SseService {
      */
     addClient({ userId, userRole, res, req }: SseClientAddParamsType): string {
         // Request ID is used inside sseClientCleanup middleware to remove the client.
-        const clientId = req.requestId ?? uuidv4();
+        const clientId = req.requestId;
 
-        clients.set(clientId, { id: clientId, userId, userRole, res });
-        logger.info({ clientId, userId, userRole }, 'SSE client connected.');
+        clients.set(clientId, { id: clientId, userId, userRole, res, log: req.log });
+        req.log.info({ clientId, userId, userRole }, 'SSE client connected.');
 
         return clientId;
     }
@@ -36,9 +36,12 @@ class SseService {
     removeClient(clientId: string): void {
         if (clients.has(clientId)) {
             const client = clients.get(clientId);
+            const log = client?.log;
             if (client) client.res.end();
             clients.delete(clientId);
-            logger.info({ clientId }, 'SSE client disconnected and removed.');
+            log?.info({ clientId }, 'SSE client disconnected and removed.');
+            if (!log)
+                logger.info({ clientId }, 'SSE client disconnected and removed.');
         }
     }
 
@@ -55,7 +58,7 @@ class SseService {
     ): void {
         clients.forEach((client) => {
             if (client.userId === userId) {
-                this.sendEventToClient(client.id, eventBody);
+                this.sendEventToClient(client.id, eventBody, client.log);
             }
         });
     }
@@ -75,7 +78,7 @@ class SseService {
     ): void {
         clients.forEach((client) => {
             if (roles.includes(client.userRole)) {
-                this.sendEventToClient(client.id, eventBody);
+                this.sendEventToClient(client.id, eventBody, client.log);
             }
         });
     }
@@ -91,7 +94,7 @@ class SseService {
         eventBody: ServerSentEvent<EventName, Payload>
     ): void {
         clients.forEach((client) => {
-            this.sendEventToClient(client.id, eventBody);
+            this.sendEventToClient(client.id, eventBody, client.log);
         });
     }
 
@@ -132,11 +135,13 @@ class SseService {
      * @template Payload - The type of the event payload.
      * @param {string} clientId - The unique identifier of the client to send the event to.
      * @param {ServerSentEvent<EventName, Payload>} eventBody - The event object containing the event name, data, and optional ID.
+     * @param {Logger} log
      * @returns {void}
      */
     private sendEventToClient<EventName extends SseEventNamesType, Payload>(
         clientId: string,
-        eventBody: ServerSentEvent<EventName, Payload>
+        eventBody: ServerSentEvent<EventName, Payload>,
+        log: Logger
     ): void {
         const client = clients.get(clientId);
 
@@ -147,13 +152,13 @@ class SseService {
             message += `data: ${JSON.stringify(eventBody.data)}\n\n`;
 
             client.res.write(message);
-            logger.info(
+            log.info(
                 { clientId, event: eventBody.event, data: eventBody.data },
                 'SSE event sent to client.'
             );
         } else if (client?.res.writableEnded) {
             this.removeClient(client.id);
-            logger.warn(
+            log.warn(
                 { clientId, event: eventBody.event },
                 'Could not send SSE to closed client connection. Removing client'
             );
