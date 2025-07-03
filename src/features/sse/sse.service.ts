@@ -24,7 +24,7 @@ class SseService {
         const clientId = req.requestId;
 
         clients.set(clientId, { id: clientId, userId, userRole, res, log: req.log });
-        req.log.info({ clientId, userId, userRole }, 'SSE client connected.');
+        req.log.info({ clientId }, 'SSE client connected.');
 
         return clientId;
     }

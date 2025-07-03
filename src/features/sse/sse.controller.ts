@@ -41,6 +41,12 @@ export const sseConnectionHandler = (
             return parsedToken;
         }, req.log);
 
+        req.log = req.log.child({
+            userId: accessToken.id,
+            username: accessToken.username,
+            userRole: accessToken.role,
+        });
+
         userId = accessToken.id;
         userRole = accessToken.role;
     } catch (error: unknown) {
