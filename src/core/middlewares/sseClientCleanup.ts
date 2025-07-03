@@ -1,6 +1,5 @@
-import type { Request, Response, NextFunction } from 'express';
-import { logger } from '../logger.js';
 import { sseService } from '../../features/sse/sse.service.js';
+import type { Request, Response, NextFunction } from 'express';
 
 export default function sseClientCleanup(
     req: Request,
@@ -21,8 +20,8 @@ export default function sseClientCleanup(
         isConcluded = true;
         cleanup();
 
-        logger.info('Response finished. Disconnecting Client.');
-        sseService.removeClient(req.requestId ?? '');
+        req.log.info('Response finished. Disconnecting Client.');
+        sseService.removeClient(req.requestId);
     };
 
     // Called when request is aborted.
@@ -31,8 +30,8 @@ export default function sseClientCleanup(
         isConcluded = true;
         cleanup();
 
-        logger.info('Request aborted. Removing client.');
-        sseService.removeClient(req.requestId ?? '');
+        req.log.info('Request aborted. Removing client.');
+        sseService.removeClient(req.requestId);
     };
 
     // Called when response is completed, or the underlying connection was terminated prematurely.
@@ -43,14 +42,14 @@ export default function sseClientCleanup(
         cleanup();
 
         if (!res.writableEnded) {
-            logger.info(
+            req.log.info(
                 'Connection CLOSED prematurely. Possible abort. Removing client.'
             );
         } else {
-            logger.info('Response completed. Removing client.');
+            req.log.info('Response completed. Removing client.');
         }
 
-        sseService.removeClient(req.requestId ?? '');
+        sseService.removeClient(req.requestId);
     };
 
     res.on('finish', onResFinish);

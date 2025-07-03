@@ -1,15 +1,15 @@
 import multer, { MulterError } from 'multer';
-import type { Request, Response, NextFunction } from 'express';
 import {
     AvatarSchema,
     ErrorCodes,
     supportedImageFormats,
 } from '@blue0206/members-only-shared-types';
+import { BadRequestError, ValidationError } from '../errors/customErrors.js';
+import type { Request, Response, NextFunction } from 'express';
 import type {
     ApiErrorCode,
     SupportedImageFormatsType,
 } from '@blue0206/members-only-shared-types';
-import { BadRequestError, ValidationError } from '../errors/customErrors.js';
 
 // Setup multer memory storage.
 const storage = multer.memoryStorage();
@@ -64,8 +64,11 @@ export default function multerMiddleware(
     res: Response,
     next: NextFunction
 ): void {
+    req.log.debug('Multer middleware invoked.');
     void uploadHandler(req, res, (err: unknown) => {
         if (err) {
+            req.log.error({ err }, 'Error occurred in multer middleware.');
+
             if (err instanceof MulterError) {
                 switch (err.code) {
                     // Handle file size error separately.
@@ -96,6 +99,7 @@ export default function multerMiddleware(
             next(err);
             return;
         }
+        req.log.debug('Multer file upload successful.');
         next();
     });
 }

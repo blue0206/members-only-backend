@@ -35,7 +35,7 @@ export default function accessTokenVerification(
             const parsedToken = AccessTokenPayloadSchema.parse(decodedToken);
 
             return parsedToken;
-        });
+        }, req.log);
 
         // Create a new child logger on existing child logger and attach user details.
         // This removes the need to pass user details in every logging statement.

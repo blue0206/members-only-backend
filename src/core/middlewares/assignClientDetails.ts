@@ -1,7 +1,7 @@
 import requestIp from 'request-ip';
 import { UAParser } from 'ua-parser-js';
 import type { Request, Response, NextFunction } from 'express';
-import { logger } from '../logger.js';
+import type { Logger } from 'pino';
 
 export interface ClientDetailsType {
     ip: string;
@@ -16,7 +16,7 @@ export default async function assignClientDetails(
 ): Promise<void> {
     const clientIp = requestIp.getClientIp(req);
     const userAgent = getUserAgent(req.headers['user-agent']);
-    const location = await getLocation(clientIp);
+    const location = await getLocation(clientIp, req.log);
 
     req.clientDetails = {
         ip: clientIp ?? '',
@@ -24,7 +24,7 @@ export default async function assignClientDetails(
         location,
     };
 
-    logger.info("Client's ip, user agent, and location assigned.");
+    req.log.info("Client's ip, user agent, and location assigned.");
 
     next();
 }
@@ -45,7 +45,7 @@ interface IpApiResponse {
     city?: string;
 }
 
-async function getLocation(ip: string | null): Promise<string> {
+async function getLocation(ip: string | null, log: Logger): Promise<string> {
     if (!ip) {
         return 'Unknown Location';
     }
@@ -70,7 +70,7 @@ async function getLocation(ip: string | null): Promise<string> {
             return 'Unknown Location';
         }
     } catch (error) {
-        logger.error({ error }, 'Error getting location from ip-api.');
+        log.error({ error }, 'Error getting location from ip-api.');
         return 'Unknown Location';
     }
 }

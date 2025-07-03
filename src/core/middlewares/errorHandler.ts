@@ -1,5 +1,4 @@
 import { config } from '../config/index.js';
-import { logger } from '../logger.js';
 import { AppError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
@@ -14,7 +13,7 @@ export const errorHandler: ErrorRequestHandler = (
     res: Response,
     _next: NextFunction
 ): void => {
-    logger.error(
+    req.log.error(
         {
             err,
             requestId: req.requestId,

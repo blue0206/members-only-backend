@@ -1,4 +1,3 @@
-import { logger } from '../logger.js';
 import { userActivityPing } from '../scheduler/batchUpdateLastActive.js';
 import type { Request, Response, NextFunction } from 'express';
 
@@ -10,10 +9,10 @@ export default function lastActiveUpdateMiddleware(
     next();
 
     if (!req.user) {
-        logger.warn('User not authenticated. Last active time not updated.');
+        req.log.warn('User not authenticated. Last active time not updated.');
         return;
     }
 
     userActivityPing.set(req.user.id, Date.now());
-    logger.trace({ userId: req.user.id }, 'User activity ping recorded.');
+    req.log.trace({ userId: req.user.id }, 'User activity ping recorded.');
 }

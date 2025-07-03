@@ -1,7 +1,6 @@
 import { ForbiddenError } from '../errors/customErrors.js';
 import { ErrorCodes, Role } from '@blue0206/members-only-shared-types';
 import type { Request, Response, NextFunction } from 'express';
-import { logger } from '../logger.js';
 
 export default function adminVerification(
     req: Request,
@@ -19,6 +18,6 @@ export default function adminVerification(
     }
 
     // The user is Admin, grant access by passing request forward.
-    logger.debug({ userPayload }, 'Admin privileges verified successfully.');
+    req.log.debug({ userPayload }, 'Admin privileges verified successfully.');
     next();
 }

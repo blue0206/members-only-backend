@@ -1,14 +1,13 @@
+import jwt from 'jsonwebtoken';
+import jwtErrorHandler from '../utils/jwtErrorHandler.js';
+import prismaErrorHandler from '../utils/prismaErrorHandler.js';
 import { UnauthorizedError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
-import jwt from 'jsonwebtoken';
 import { RefreshTokenPayloadSchema } from '../../features/auth/auth.types.js';
 import { config } from '../config/index.js';
-import jwtErrorHandler from '../utils/jwtErrorHandler.js';
+import { prisma } from '../db/prisma.js';
 import type { RefreshTokenPayload } from '../../features/auth/auth.types.js';
 import type { Request, Response, NextFunction } from 'express';
-import prismaErrorHandler from '../utils/prismaErrorHandler.js';
-import { prisma } from '../db/prisma.js';
-import { logger } from '../logger.js';
 
 export default function tokenRotationCleanupMiddleware(
     req: Request,
@@ -37,7 +36,8 @@ export default function tokenRotationCleanupMiddleware(
                 RefreshTokenPayloadSchema.parse(decodedToken);
 
             return parsedToken;
-        }
+        },
+        req.log
     );
 
     const cleanup = (): void => {
@@ -51,7 +51,7 @@ export default function tokenRotationCleanupMiddleware(
         if (isConcluded) return;
         isConcluded = true;
 
-        logger.info(
+        req.log.info(
             'Response finished. Removing old, rotated-out refresh token from DB.'
         );
 
@@ -64,12 +64,15 @@ export default function tokenRotationCleanupMiddleware(
                     userId: decodedRefreshToken.id,
                 },
             });
-        })
+        }, req.log)
             .then(() => {
-                logger.info('Rotated-out refresh token deleted successfully.');
+                req.log.info('Rotated-out refresh token deleted successfully.');
             })
             .catch((error: unknown) => {
-                logger.error({ error }, 'Error deleting rotated-out refresh token.');
+                req.log.error(
+                    { error },
+                    'Error deleting rotated-out refresh token.'
+                );
             });
 
         cleanup();
@@ -80,7 +83,7 @@ export default function tokenRotationCleanupMiddleware(
         if (isConcluded) return;
         isConcluded = true;
 
-        logger.info('Request aborted. Removing orphaned refresh tokens from DB.');
+        req.log.info('Request aborted. Removing orphaned refresh tokens from DB.');
 
         // On abort, the client does not receive the new token.
         // We delete these new, orphaned tokens from the DB.
@@ -90,12 +93,12 @@ export default function tokenRotationCleanupMiddleware(
                     succeedsJwtId: decodedRefreshToken.jti,
                 },
             });
-        })
+        }, req.log)
             .then(() => {
-                logger.info('Orphaned refresh tokens deleted successfully.');
+                req.log.info('Orphaned refresh tokens deleted successfully.');
             })
             .catch((error: unknown) => {
-                logger.error({ error }, 'Error deleting orphaned refresh tokens.');
+                req.log.error({ error }, 'Error deleting orphaned refresh tokens.');
             });
 
         cleanup();
@@ -109,7 +112,7 @@ export default function tokenRotationCleanupMiddleware(
 
         if (!res.writableEnded) {
             // Connection terminated prematurely, possible abort.
-            logger.info(
+            req.log.info(
                 'Connection CLOSED prematurely. Possible abort. Removing orphaned refresh tokens from DB.'
             );
 
@@ -119,19 +122,19 @@ export default function tokenRotationCleanupMiddleware(
                         succeedsJwtId: decodedRefreshToken.jti,
                     },
                 });
-            })
+            }, req.log)
                 .then(() => {
-                    logger.info('Orphaned refresh tokens deleted successfully.');
+                    req.log.info('Orphaned refresh tokens deleted successfully.');
                 })
                 .catch((error: unknown) => {
-                    logger.error(
+                    req.log.error(
                         { error },
                         'Error deleting orphaned refresh tokens.'
                     );
                 });
         } else {
             // Response was completed, so we treat this as success.
-            logger.info(
+            req.log.info(
                 'Response completed. Treating as success. Removing old, rotated-out refresh token from DB.'
             );
             prismaErrorHandler(() => {
@@ -141,12 +144,12 @@ export default function tokenRotationCleanupMiddleware(
                         userId: decodedRefreshToken.id,
                     },
                 });
-            })
+            }, req.log)
                 .then(() => {
-                    logger.info('Rotated-out refresh token deleted successfully.');
+                    req.log.info('Rotated-out refresh token deleted successfully.');
                 })
                 .catch((error: unknown) => {
-                    logger.error(
+                    req.log.error(
                         { error },
                         'Error deleting rotated-out refresh token.'
                     );

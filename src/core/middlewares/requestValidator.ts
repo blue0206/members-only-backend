@@ -1,7 +1,6 @@
 import { ZodError } from 'zod';
 import { ValidationError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
-import { logger } from '../logger.js';
 import type { Request, Response, NextFunction } from 'express';
 import type { ZodSchema } from 'zod';
 
@@ -39,26 +38,26 @@ const requestValidator =
                 switch (arg.type) {
                     case 'body': {
                         req.body = await arg.schema.parseAsync(req.body);
-                        logger.info('Request body validated.');
+                        req.log.info('Request body validated.');
                         break;
                     }
                     case 'params': {
                         await arg.schema.parseAsync(req.params);
 
-                        logger.info('Request params validated.');
+                        req.log.info('Request params validated.');
                         break;
                     }
                     case 'query': {
                         await arg.schema.parseAsync(req.query);
 
-                        logger.info('Request query validated.');
+                        req.log.info('Request query validated.');
                         break;
                     }
                 }
             }
             next();
         } catch (error) {
-            logger.error({ error }, 'Error validating request.');
+            req.log.error({ error }, 'Error validating request.');
 
             if (error instanceof ZodError) {
                 throw new ValidationError(
