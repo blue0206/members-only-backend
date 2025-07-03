@@ -1,12 +1,12 @@
-import { logger } from '../logger.js';
+import jwt from 'jsonwebtoken';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { InternalServerError, UnauthorizedError } from '../errors/customErrors.js';
-import jwt from 'jsonwebtoken';
 import { ZodError } from 'zod';
 import type {
     AccessTokenPayload,
     RefreshTokenPayload,
 } from '../../features/auth/auth.types.js';
+import type { Logger } from 'pino';
 
 // Direct importing from jwtLib throws error because
 // jsonwebtoken uses CommonJS, hence we destructure it.
@@ -14,7 +14,7 @@ const { JsonWebTokenError } = jwt;
 
 export default function jwtErrorHandler<
     TokenType extends AccessTokenPayload | RefreshTokenPayload,
->(verifyJwt: () => TokenType): TokenType {
+>(verifyJwt: () => TokenType, log: Logger): TokenType {
     try {
         const decodedToken: TokenType = verifyJwt();
         return decodedToken;
@@ -35,10 +35,7 @@ export default function jwtErrorHandler<
         } else if (error instanceof ZodError) {
             // This will be thrown when decoded token parsing
             // against Zod schema fails.
-            logger.error(
-                { error: error.flatten() },
-                'JWT Payload validation failed.'
-            );
+            log.error({ error: error.flatten() }, 'JWT Payload validation failed.');
             throw new InternalServerError('Internal server error processing token.');
         }
 

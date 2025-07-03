@@ -7,18 +7,19 @@ import {
     InternalServerError,
     NotFoundError,
 } from '../errors/customErrors.js';
-import { logger } from '../logger.js';
+import type { Logger } from 'pino';
 
 // This is a wrapper function for all the prisma DB calls in order to
 // handle prisma-specific errors.
 export default async function prismaErrorHandler<QueryReturnType>(
-    queryFn: () => Promise<QueryReturnType>
+    queryFn: () => Promise<QueryReturnType>,
+    log: Logger
 ): Promise<QueryReturnType> {
     try {
         const queryResult: QueryReturnType = await queryFn();
         return queryResult;
     } catch (error) {
-        logger.error({ err: error }, 'Prisma error caught.');
+        log.error({ err: error }, 'Prisma error caught.');
 
         // Handle different instances of Prisma Error.
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
