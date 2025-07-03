@@ -281,7 +281,7 @@ export class AuthService {
             log
         );
 
-        log.info({ userId: decodedRefreshToken.id }, 'Logout successful');
+        log.info('Logout successful');
     }
 
     async refresh(
@@ -444,7 +444,7 @@ export class AuthService {
         sessionId: string,
         log: Logger
     ): Promise<void> {
-        log.info({ userId, sessionId }, 'Revoking session from database.');
+        log.info({ sessionId }, 'Revoking session from database.');
 
         await prismaErrorHandler(async () => {
             return await prisma.refreshToken.delete({
@@ -455,7 +455,7 @@ export class AuthService {
             });
         }, log);
 
-        log.info({ userId, sessionId }, 'Session revoked successfully.');
+        log.info({ sessionId }, 'Session revoked successfully.');
     }
 
     async revokeAllOtherSessions(

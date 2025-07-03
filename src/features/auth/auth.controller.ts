@@ -147,10 +147,7 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
     });
 
     if (!refreshToken) {
-        req.log.warn(
-            { userId: req.user?.id },
-            'Logout request but refresh token was missing from request.'
-        );
+        req.log.warn('Logout request but refresh token was missing from request.');
         res.status(204).json();
         return;
     }
