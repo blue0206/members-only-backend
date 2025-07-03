@@ -16,7 +16,7 @@ export default async function clearExpiredTokens(): Promise<void> {
                     },
                 },
             });
-        });
+        }, logger);
         logger.info('Expired tokens cleared in scheduled job.');
     } catch (error: unknown) {
         logger.error(

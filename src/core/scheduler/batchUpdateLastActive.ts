@@ -32,7 +32,7 @@ export default async function batchUpdateLastActive(): Promise<void> {
     try {
         await prismaErrorHandler(async () => {
             return await prisma.$transaction(updateBatch);
-        });
+        }, logger);
         logger.info(
             `Successfully flushed lastActive data for ${updateBatch.length.toString()} users.`
         );
