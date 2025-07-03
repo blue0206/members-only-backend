@@ -55,7 +55,7 @@ class UserService {
         userPayload: AccessTokenPayload,
         log: Logger
     ): Promise<EditUserServiceReturnType> {
-        log.info({ userId: userPayload.id }, 'Updating user details in database.');
+        log.info('Updating user details in database.');
 
         const user: EditUserServiceReturnType = await prismaErrorHandler(
             async () => {
@@ -79,11 +79,9 @@ class UserService {
 
         log.info(
             {
-                id: user.id,
-                username: user.username,
+                newUsername: user.username,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
-                role: user.role,
             },
             'User details updated in database successfully.'
         );
@@ -111,7 +109,7 @@ class UserService {
         adminId: number,
         log: Logger
     ): Promise<void> {
-        log.info({ username }, 'Deleting user from database.');
+        log.info({ usernameToDelete: username }, 'Deleting user from database.');
 
         const deletedUser = await prismaErrorHandler(async () => {
             return await prisma.user.delete({
@@ -121,7 +119,10 @@ class UserService {
             });
         }, log);
 
-        log.info({ username }, 'User deleted from database successfully.');
+        log.info(
+            { deletedUsername: username },
+            'User deleted from database successfully.'
+        );
 
         // We only send this to the roles who can actually view the other users,
         // i.e. ADMIN and MEMBER roles.
@@ -154,7 +155,7 @@ class UserService {
         if (deletedUser.avatar) {
             await deleteFile(deletedUser.avatar, log);
             log.info(
-                { avatar: deletedUser.avatar },
+                { deletedUserAvatar: deletedUser.avatar },
                 "Deleted user's avatar removed from cloudinary."
             );
         }
@@ -162,7 +163,7 @@ class UserService {
 
     // Endpoint for users to delete their own account.
     async deleteAccount(userId: number, log: Logger): Promise<void> {
-        log.info({ userId }, 'Deleting user from database.');
+        log.info('Deleting user from database.');
 
         const deletedUser = await prismaErrorHandler(async () => {
             return await prisma.user.delete({
@@ -172,7 +173,7 @@ class UserService {
             });
         }, log);
 
-        log.info({ userId }, 'User deleted from database successfully.');
+        log.info('User deleted from database successfully.');
 
         // We only send this to the roles who can actually view the other users,
         // i.e. ADMIN and MEMBER roles.
@@ -202,7 +203,7 @@ class UserService {
         userId: number,
         log: Logger
     ): Promise<void> {
-        log.info({ userId }, 'Resetting user password in database.');
+        log.info('Resetting user password in database.');
 
         const user: Pick<User, 'password'> | null = await prismaErrorHandler(
             async () => {
@@ -253,7 +254,7 @@ class UserService {
             });
         }, log);
 
-        log.info({ userId }, 'User password reset in database successfully.');
+        log.info('User password reset in database successfully.');
     }
 
     async setMemberRole(
@@ -261,7 +262,7 @@ class UserService {
         secretKey: string,
         log: Logger
     ): Promise<void> {
-        log.info({ userId }, 'Setting user role in database.');
+        log.info('Setting user role in database.');
 
         if (secretKey !== config.MEMBER_ROLE_SECRET_KEY) {
             throw new UnauthorizedError(
@@ -286,7 +287,7 @@ class UserService {
         }, log);
 
         log.info(
-            { userId, role: 'MEMBER' },
+            { newRole: updatedUser.role },
             'User role set in database successfully.'
         );
 
@@ -313,7 +314,10 @@ class UserService {
         role: Role,
         log: Logger
     ): Promise<void> {
-        log.info({ username, newRole: role }, 'Updating user role in database.');
+        log.info(
+            { usernameToBeUpdated: username, newRoleToBeUpdated: role },
+            'Updating user role in database.'
+        );
 
         const userDetails = await prismaErrorHandler(async () => {
             return await prisma.$transaction(async (tx) => {
@@ -350,7 +354,10 @@ class UserService {
             });
         }, log);
 
-        log.info({ username, newRole: role }, 'User role updated successfully.');
+        log.info(
+            { updatedUser: username, newRole: role },
+            'User role updated successfully.'
+        );
 
         // Since this is a role change event, we need only send this to the roles who
         // can actually view the roles of users, i.e. ADMIN and MEMBER roles.
@@ -388,10 +395,7 @@ class UserService {
         avatarImage: Buffer,
         log: Logger
     ): Promise<UploadAvatarServiceReturnType> {
-        log.info(
-            { username: userPayload.username },
-            'Uploading user avatar to database and cloudinary.'
-        );
+        log.info('Uploading user avatar to database and cloudinary.');
 
         const avatarPublicId = await uploadFile(
             avatarImage,
@@ -436,10 +440,7 @@ class UserService {
             await deleteFile(currentAvatar, log);
         }
 
-        log.info(
-            { username: userPayload.username },
-            'User avatar uploaded to database and cloudinary successfully.'
-        );
+        log.info('User avatar uploaded to database and cloudinary successfully.');
 
         // We need only send this event to the roles who can actually view the
         // profile details of users, i.e. ADMIN and MEMBER roles.
@@ -461,7 +462,7 @@ class UserService {
     }
 
     async deleteUserAvatar(username: string, log: Logger): Promise<void> {
-        log.info({ username }, 'Deleting user avatar from database and cloudinary.');
+        log.info('Deleting user avatar from database and cloudinary.');
 
         const user = await prismaErrorHandler(async () => {
             return await prisma.$transaction(async (tx) => {
@@ -500,10 +501,7 @@ class UserService {
 
         await deleteFile(user.avatarPublicId, log);
 
-        log.info(
-            { username },
-            'User avatar deleted from database and cloudinary successfully.'
-        );
+        log.info('User avatar deleted from database and cloudinary successfully.');
 
         // We need only send this event to the roles who can actually view the
         // avatar of users, i.e. ADMIN and MEMBER roles.
@@ -524,7 +522,7 @@ class UserService {
         userId: number,
         log: Logger
     ): Promise<GetUserBookmarksServiceReturnType> {
-        log.info({ userId }, 'Getting user bookmarks from database.');
+        log.info('Getting user bookmarks from database.');
 
         const bookmarks: GetUserBookmarksServiceReturnType =
             await prismaErrorHandler(async () => {
@@ -548,7 +546,7 @@ class UserService {
                 });
             }, log);
 
-        log.info({ userId }, 'User bookmarks retrieved from database successfully.');
+        log.info('User bookmarks retrieved from database successfully.');
 
         return bookmarks;
     }
@@ -558,7 +556,7 @@ class UserService {
         messageId: number,
         log: Logger
     ): Promise<void> {
-        log.info({ userId, messageId }, 'Adding bookmark to database.');
+        log.info({ messageId }, 'Adding bookmark to database.');
 
         const bookmark: Bookmark = await prismaErrorHandler(async () => {
             return await prisma.bookmark.create({
@@ -570,7 +568,7 @@ class UserService {
         }, log);
 
         log.info(
-            { id: bookmark.id, userId, messageId },
+            { bookmarkId: bookmark.id, messageId },
             'Bookmark added to database successfully.'
         );
     }
@@ -580,7 +578,7 @@ class UserService {
         messageId: number,
         log: Logger
     ): Promise<void> {
-        log.info({ userId, messageId }, 'Removing bookmark from database.');
+        log.info({ messageId }, 'Removing bookmark from database.');
 
         await prismaErrorHandler(async () => {
             return await prisma.bookmark.delete({
@@ -593,10 +591,7 @@ class UserService {
             });
         }, log);
 
-        log.info(
-            { userId, messageId },
-            'Bookmark removed from database successfully.'
-        );
+        log.info({ messageId }, 'Bookmark removed from database successfully.');
     }
 }
 
