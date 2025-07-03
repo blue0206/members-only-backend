@@ -18,7 +18,7 @@ export const uploadFile = async (
     username: string,
     log: Logger
 ): Promise<string> => {
-    log.info({ username }, 'Uploading file to Cloudinary.');
+    log.info('Uploading file to Cloudinary.');
 
     const uploadPromise: Promise<UploadApiResponse> = new Promise<UploadApiResponse>(
         (resolve, reject) => {
