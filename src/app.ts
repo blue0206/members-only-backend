@@ -55,14 +55,14 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1/events', sseRouter); // Server-sent Events
 // Healthcheck
-app.use('/api/v1/healthcheck', (_req: Request, res: Response) => {
+app.use('/api/v1/healthcheck', (req: Request, res: Response) => {
     prisma.$queryRaw`SELECT 1`
         .then(() => {
-            logger.info('Healthcheck successful.');
+            req.log.info('Healthcheck successful.');
             res.status(200).end();
         })
         .catch((err: unknown) => {
-            logger.error({ err }, 'Healthcheck failed.');
+            req.log.error({ err }, 'Healthcheck failed.');
             const errorPayload: ApiErrorPayload = {
                 statusCode: 500,
                 code: ErrorCodes.INTERNAL_SERVER_ERROR,
@@ -76,7 +76,8 @@ app.use('/api/v1/healthcheck', (_req: Request, res: Response) => {
         });
 });
 // Catch-all route.
-app.use((_req: Request, _res: Response) => {
+app.use((req: Request, _res: Response) => {
+    req.log.warn('Request received for non-existent route.');
     throw new NotFoundError('This route does not exist.');
 });
 
@@ -97,6 +98,7 @@ const server: Server = app.listen(PORT, async () => {
         'Scheduled "Clear_Expired_Refresh_Tokens" task to run every day at 00:00 or 12:00 AM'
     );
     await clearExpiredRefreshTokensTask.execute();
+
     // Start the scheduled task to flush user activity data into DB and manually execute the task once.
     await lastActiveDataFlushTask.start();
     logger.info(`Scheduled "User_Activity_Batch_Update" task to run every hour.`);
