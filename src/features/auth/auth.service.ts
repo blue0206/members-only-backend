@@ -7,7 +7,6 @@ import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
 import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
 import getRefreshTokenExpiryDate from '../../core/utils/tokenExpiryUtil.js';
 import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
-import { logger } from '../../core/logger.js';
 import {
     InternalServerError,
     UnauthorizedError,
@@ -20,6 +19,7 @@ import {
 } from '@blue0206/members-only-shared-types';
 import { RefreshTokenPayloadSchema } from './auth.types.js';
 import { deleteFile, uploadFile } from '../../core/lib/cloudinary.js';
+import { sseService } from '../sse/sse.service.js';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
@@ -37,22 +37,27 @@ import type {
     GetSessionsServiceReturnType,
 } from './auth.types.js';
 import type { ClientDetailsType } from '../../core/middlewares/assignClientDetails.js';
-import { sseService } from '../sse/sse.service.js';
+import type { Logger } from 'pino';
 
 export class AuthService {
     async register(
         registerData: RegisterRequestDto,
         avatarImage: Buffer | undefined,
-        clientDetails: ClientDetailsType
+        clientDetails: ClientDetailsType,
+        log: Logger
     ): Promise<RegisterServiceReturnType> {
-        logger.info({ username: registerData.username }, 'Registration started');
+        log.info({ username: registerData.username }, 'Registration started');
 
         // If avatarImage buffer has been provided, upload it to cloudinary and store
         // the public id in it to store in DB.
         let avatarPublicId: string | null = null;
         if (avatarImage) {
-            logger.info('User avatar received. Uploading avatar to Cloudinary....');
-            avatarPublicId = await uploadFile(avatarImage, registerData.username);
+            log.info('User avatar received. Uploading avatar to Cloudinary....');
+            avatarPublicId = await uploadFile(
+                avatarImage,
+                registerData.username,
+                log
+            );
         }
 
         const hashedPassword = await bcrypt.hash(
@@ -67,71 +72,72 @@ export class AuthService {
         // The transaction is wrapped in an error handler for prisma DB queries
         // to handle prisma-specific errors.
         try {
-            user = await prismaErrorHandler(() =>
-                prisma.$transaction(async (tx) => {
-                    // Create user and omit password to safely return it
-                    // and use its details to generate refresh token.
-                    const createdUser: Omit<User, 'password'> = await tx.user.create(
-                        {
+            user = await prismaErrorHandler(
+                () =>
+                    prisma.$transaction(async (tx) => {
+                        // Create user and omit password to safely return it
+                        // and use its details to generate refresh token.
+                        const createdUser: Omit<User, 'password'> =
+                            await tx.user.create({
+                                data: {
+                                    username: registerData.username,
+                                    password: hashedPassword,
+                                    firstName: registerData.firstname,
+                                    middleName: registerData.middlename ?? null,
+                                    lastName: registerData.lastname ?? null,
+                                    avatar: avatarPublicId,
+                                },
+                                omit: {
+                                    password: true,
+                                },
+                            });
+
+                        const refreshTokenPayload: RefreshTokenPayload = {
+                            id: createdUser.id,
+                        };
+
+                        const jti = uuidv4();
+                        const refreshToken = this.generateRefreshToken(
+                            refreshTokenPayload,
+                            jti
+                        );
+
+                        const hashedRefreshToken = await bcrypt.hash(
+                            refreshToken,
+                            config.SALT_ROUNDS
+                        );
+
+                        await tx.refreshToken.create({
                             data: {
-                                username: registerData.username,
-                                password: hashedPassword,
-                                firstName: registerData.firstname,
-                                middleName: registerData.middlename ?? null,
-                                lastName: registerData.lastname ?? null,
-                                avatar: avatarPublicId,
+                                jwtId: jti,
+                                userId: createdUser.id,
+                                tokenHash: hashedRefreshToken,
+                                expiresAt: getRefreshTokenExpiryDate(),
+                                ip: clientDetails.ip,
+                                userAgent: clientDetails.userAgent,
+                                location: clientDetails.location,
                             },
-                            omit: {
-                                password: true,
-                            },
-                        }
-                    );
+                        });
 
-                    const refreshTokenPayload: RefreshTokenPayload = {
-                        id: createdUser.id,
-                    };
-
-                    const jti = uuidv4();
-                    const refreshToken = this.generateRefreshToken(
-                        refreshTokenPayload,
-                        jti
-                    );
-
-                    const hashedRefreshToken = await bcrypt.hash(
-                        refreshToken,
-                        config.SALT_ROUNDS
-                    );
-
-                    await tx.refreshToken.create({
-                        data: {
-                            jwtId: jti,
-                            userId: createdUser.id,
-                            tokenHash: hashedRefreshToken,
-                            expiresAt: getRefreshTokenExpiryDate(),
-                            ip: clientDetails.ip,
-                            userAgent: clientDetails.userAgent,
-                            location: clientDetails.location,
-                        },
-                    });
-
-                    return {
-                        ...createdUser,
-                        refreshToken,
-                    };
-                    // Transaction End.
-                })
+                        return {
+                            ...createdUser,
+                            refreshToken,
+                        };
+                        // Transaction End.
+                    }),
+                log
             );
         } catch (error) {
             // Delete newly uploaded file from cloudinary (if provided)
             // as registration process failed.
             if (avatarPublicId) {
-                logger.error(
+                log.error(
                     { error },
                     'User registration failed. Reverting cloudinary upload....'
                 );
-                await deleteFile(avatarPublicId);
+                await deleteFile(avatarPublicId, log);
             } else {
-                logger.error({ error }, 'Error registering user in database.');
+                log.error({ error }, 'Error registering user in database.');
             }
             throw error;
         }
@@ -144,7 +150,7 @@ export class AuthService {
 
         const accessToken = this.generateAccessToken(accessTokenPayload);
 
-        logger.info(
+        log.info(
             { username: user.username, role: user.role },
             ' User registration successful'
         );
@@ -169,18 +175,21 @@ export class AuthService {
 
     async login(
         loginData: LoginRequestDto,
-        clientDetails: ClientDetailsType
+        clientDetails: ClientDetailsType,
+        log: Logger
     ): Promise<LoginServiceReturnType> {
-        logger.info({ username: loginData.username }, 'Login started');
+        log.info({ username: loginData.username }, 'Login started');
 
         // Find user in DB and get details for comparing password and
         // returning user details.
-        const user: User | null = await prismaErrorHandler(() =>
-            prisma.user.findUnique({
-                where: {
-                    username: loginData.username,
-                },
-            })
+        const user: User | null = await prismaErrorHandler(
+            () =>
+                prisma.user.findUnique({
+                    where: {
+                        username: loginData.username,
+                    },
+                }),
+            log
         );
 
         if (!user) {
@@ -218,24 +227,23 @@ export class AuthService {
             refreshToken,
             config.SALT_ROUNDS
         );
-        await prismaErrorHandler(() =>
-            prisma.refreshToken.create({
-                data: {
-                    jwtId: jti,
-                    userId: user.id,
-                    tokenHash: hashedRefreshToken,
-                    expiresAt: getRefreshTokenExpiryDate(),
-                    ip: clientDetails.ip,
-                    location: clientDetails.location,
-                    userAgent: clientDetails.userAgent,
-                },
-            })
+        await prismaErrorHandler(
+            () =>
+                prisma.refreshToken.create({
+                    data: {
+                        jwtId: jti,
+                        userId: user.id,
+                        tokenHash: hashedRefreshToken,
+                        expiresAt: getRefreshTokenExpiryDate(),
+                        ip: clientDetails.ip,
+                        location: clientDetails.location,
+                        userAgent: clientDetails.userAgent,
+                    },
+                }),
+            log
         );
 
-        logger.info(
-            { username: user.username, role: user.role },
-            'Login successful'
-        );
+        log.info({ username: user.username, role: user.role }, 'Login successful');
 
         return {
             ...user,
@@ -244,8 +252,8 @@ export class AuthService {
         };
     }
 
-    async logout(refreshToken: string): Promise<void> {
-        logger.info('Logout started');
+    async logout(refreshToken: string, log: Logger): Promise<void> {
+        log.info('Logout started');
 
         const decodedRefreshToken: RefreshTokenPayload = jwtErrorHandler(
             (): RefreshTokenPayload => {
@@ -257,27 +265,31 @@ export class AuthService {
                     RefreshTokenPayloadSchema.parse(decodedToken);
 
                 return parsedToken;
-            }
+            },
+            log
         );
 
         // Delete refresh token from DB based on jti and user id.
-        await prismaErrorHandler(() =>
-            prisma.refreshToken.delete({
-                where: {
-                    userId: decodedRefreshToken.id,
-                    jwtId: decodedRefreshToken.jti,
-                },
-            })
+        await prismaErrorHandler(
+            () =>
+                prisma.refreshToken.delete({
+                    where: {
+                        userId: decodedRefreshToken.id,
+                        jwtId: decodedRefreshToken.jti,
+                    },
+                }),
+            log
         );
 
-        logger.info({ userId: decodedRefreshToken.id }, 'Logout successful');
+        log.info({ userId: decodedRefreshToken.id }, 'Logout successful');
     }
 
     async refresh(
         refreshToken: string,
-        clientDetails: ClientDetailsType
+        clientDetails: ClientDetailsType,
+        log: Logger
     ): Promise<RefreshServiceReturnType> {
-        logger.info('Token refresh process started.');
+        log.info('Token refresh process started.');
 
         const decodedRefreshToken: RefreshTokenPayload = jwtErrorHandler(
             (): RefreshTokenPayload => {
@@ -289,7 +301,8 @@ export class AuthService {
                     RefreshTokenPayloadSchema.parse(decodedToken);
 
                 return parsedToken;
-            }
+            },
+            log
         );
 
         // Check if refresh token is in DB and hence a valid token.
@@ -300,7 +313,7 @@ export class AuthService {
                     jwtId: decodedRefreshToken.jti,
                 },
             });
-        });
+        }, log);
         if (!refreshTokenEntry) {
             throw new UnauthorizedError(
                 'The refresh token is invalid.',
@@ -348,7 +361,8 @@ export class AuthService {
                     });
                 return userData;
                 // Transaction end.
-            }
+            },
+            log
         );
 
         if (!user) {
@@ -365,7 +379,7 @@ export class AuthService {
         };
         const accessToken = this.generateAccessToken(accessTokenPayload);
 
-        logger.info(
+        log.info(
             { username: user.username, role: user.role },
             'Token refresh process successful.'
         );
@@ -379,9 +393,10 @@ export class AuthService {
 
     async getSessions(
         userId: number,
-        refreshToken: string
+        refreshToken: string,
+        log: Logger
     ): Promise<GetSessionsServiceReturnType> {
-        logger.info('Getting user sessions from database.');
+        log.info('Getting user sessions from database.');
 
         const decodedRefreshToken: RefreshTokenPayload = jwtErrorHandler(
             (): RefreshTokenPayload => {
@@ -393,7 +408,8 @@ export class AuthService {
                     RefreshTokenPayloadSchema.parse(decodedToken);
 
                 return parsedToken;
-            }
+            },
+            log
         );
         if (!decodedRefreshToken.jti) {
             throw new UnauthorizedError(
@@ -412,18 +428,23 @@ export class AuthService {
                         tokenHash: true,
                     },
                 });
-            }
+            },
+            log
         );
 
-        logger.info('User sessions successfully retrieved from database.');
+        log.info('User sessions successfully retrieved from database.');
         return {
             sessions,
             currentSessionId: decodedRefreshToken.jti,
         };
     }
 
-    async revokeSession(userId: number, sessionId: string): Promise<void> {
-        logger.info({ userId, sessionId }, 'Revoking session from database.');
+    async revokeSession(
+        userId: number,
+        sessionId: string,
+        log: Logger
+    ): Promise<void> {
+        log.info({ userId, sessionId }, 'Revoking session from database.');
 
         await prismaErrorHandler(async () => {
             return await prisma.refreshToken.delete({
@@ -432,16 +453,17 @@ export class AuthService {
                     jwtId: sessionId,
                 },
             });
-        });
+        }, log);
 
-        logger.info({ userId, sessionId }, 'Session revoked successfully.');
+        log.info({ userId, sessionId }, 'Session revoked successfully.');
     }
 
     async revokeAllOtherSessions(
         userId: number,
-        refreshToken: string
+        refreshToken: string,
+        log: Logger
     ): Promise<void> {
-        logger.info('Revoking all other sessions from database.');
+        log.info('Revoking all other sessions from database.');
 
         const decodedRefreshToken: RefreshTokenPayload = jwtErrorHandler(
             (): RefreshTokenPayload => {
@@ -453,7 +475,8 @@ export class AuthService {
                     RefreshTokenPayloadSchema.parse(decodedToken);
 
                 return parsedToken;
-            }
+            },
+            log
         );
         if (!decodedRefreshToken.jti) {
             throw new UnauthorizedError(
@@ -471,9 +494,9 @@ export class AuthService {
                     },
                 },
             });
-        });
+        }, log);
 
-        logger.info('All other sessions revoked successfully.');
+        log.info('All other sessions revoked successfully.');
     }
 
     private generateAccessToken(payload: AccessTokenPayload): string {

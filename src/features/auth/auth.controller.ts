@@ -13,7 +13,6 @@ import {
 import { config } from '../../core/config/index.js';
 import ms from 'ms';
 import crypto from 'crypto';
-import { logger } from '../../core/logger.js';
 import type { CookieOptions, Request, Response } from 'express';
 import type {
     ApiResponseSuccess,
@@ -58,11 +57,6 @@ export const registerUser = async (
     req: Request<unknown, unknown, RegisterRequestDto>,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
     if (!req.clientDetails) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Client Details'
@@ -72,30 +66,12 @@ export const registerUser = async (
     const userData: RegisterServiceReturnType = await authService.register(
         req.body,
         req.file ? req.file.buffer : undefined,
-        req.clientDetails
+        req.clientDetails,
+        req.log
     );
     const responseData: RegisterResponseDto = mapToRegisterResponseDto(userData);
 
     setAuthCookies(res, userData.refreshToken);
-
-    // const commonCookieOptions: CookieOptions = {
-    //     secure: config.NODE_ENV === 'production',
-    //     sameSite: 'lax',
-    //     maxAge: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
-    // };
-    // res.cookie('refreshToken', userData.refreshToken, {
-    //     httpOnly: true,
-    //     path: '/api/v1/auth',
-    //     ...commonCookieOptions,
-    // });
-
-    // const csrfToken = crypto.randomBytes(32).toString('hex');
-    // res.cookie('csrf-token', csrfToken, {
-    //     // httpOnly is not set because we need JS access
-    //     // to use double submit protection.
-    //     path: '/',
-    //     ...commonCookieOptions,
-    // });
 
     const successResponse: ApiResponseSuccess<RegisterResponseDto> = {
         success: true,
@@ -111,11 +87,6 @@ export const loginUser = async (
     req: Request<unknown, unknown, LoginRequestDto>,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
     if (!req.clientDetails) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Client Details'
@@ -124,7 +95,8 @@ export const loginUser = async (
 
     const userData: LoginServiceReturnType = await authService.login(
         req.body,
-        req.clientDetails
+        req.clientDetails,
+        req.log
     );
     const responseData: LoginResponseDto = mapToLoginResponseDto(userData);
 
@@ -147,10 +119,6 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
     // refresh and CSRF tokens.
     // No matter the cause of error, be it a missing token or invalid token or a db error, it
     // would be best to log the user out.
-
-    if (!req.requestId) {
-        logger.warn('Logout request but request id was missing from request.');
-    }
 
     const refreshToken: string | undefined = req.cookies.refreshToken as
         | string
@@ -179,7 +147,7 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
     });
 
     if (!refreshToken) {
-        logger.warn(
+        req.log.warn(
             { userId: req.user?.id },
             'Logout request but refresh token was missing from request.'
         );
@@ -188,9 +156,9 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     try {
-        await authService.logout(refreshToken);
+        await authService.logout(refreshToken, req.log);
     } catch (error: unknown) {
-        logger.error(
+        req.log.error(
             {
                 error,
                 requestId: req.requestId,
@@ -209,11 +177,6 @@ export const refreshUserTokens = async (
     req: Request,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
     if (!req.clientDetails) {
         throw new InternalServerError(
             'Internal server configuration error: Missing Client Details'
@@ -232,7 +195,8 @@ export const refreshUserTokens = async (
 
     const tokens: RefreshServiceReturnType = await authService.refresh(
         refreshToken,
-        req.clientDetails
+        req.clientDetails,
+        req.log
     );
     const responseData: RefreshResponseDto = mapToRefreshResponseDto(tokens);
 
@@ -249,11 +213,6 @@ export const refreshUserTokens = async (
 };
 
 export const getSessions = async (req: Request, res: Response): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -273,7 +232,8 @@ export const getSessions = async (req: Request, res: Response): Promise<void> =>
 
     const sessionData: GetSessionsServiceReturnType = await authService.getSessions(
         req.user.id,
-        refreshToken
+        refreshToken,
+        req.log
     );
 
     const responseData: UserSessionsResponseDto =
@@ -292,11 +252,6 @@ export const revokeSession = async (
     req: Request<SessionIdParamsDto>,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -304,7 +259,7 @@ export const revokeSession = async (
         );
     }
 
-    await authService.revokeSession(req.user.id, req.params.sessionId);
+    await authService.revokeSession(req.user.id, req.params.sessionId, req.log);
 
     res.status(204).end();
 };
@@ -313,11 +268,6 @@ export const revokeAllOtherSessions = async (
     req: Request,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -335,7 +285,7 @@ export const revokeAllOtherSessions = async (
         );
     }
 
-    await authService.revokeAllOtherSessions(req.user.id, refreshToken);
+    await authService.revokeAllOtherSessions(req.user.id, refreshToken, req.log);
 
     res.status(204).end();
 };
