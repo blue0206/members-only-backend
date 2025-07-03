@@ -1,8 +1,5 @@
 import { messageService } from './message.service.js';
-import {
-    InternalServerError,
-    UnauthorizedError,
-} from '../../core/errors/customErrors.js';
+import { UnauthorizedError } from '../../core/errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import {
     mapToCreateMessageResponseDto,
@@ -32,14 +29,9 @@ export const getMessagesWithoutAuthor = async (
     req: Request,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
-
-    const messages: GetMessagesServiceReturnType =
-        await messageService.getMessages();
+    const messages: GetMessagesServiceReturnType = await messageService.getMessages(
+        req.log
+    );
 
     const mappedMessages: GetMessagesWithoutAuthorResponseDto =
         mapToGetMessagesWithoutAuthorResponseDto(messages);
@@ -58,12 +50,6 @@ export const getMessagesWithAuthor = async (
     req: Request,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
-
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -71,8 +57,9 @@ export const getMessagesWithAuthor = async (
         );
     }
 
-    const messages: GetMessagesServiceReturnType =
-        await messageService.getMessages();
+    const messages: GetMessagesServiceReturnType = await messageService.getMessages(
+        req.log
+    );
 
     const mappedMessages: GetMessagesResponseDto = mapToGetMessagesResponseDto(
         messages,
@@ -93,12 +80,6 @@ export const createNewMessage = async (
     req: Request<unknown, unknown, CreateMessageRequestDto>,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
-
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -107,7 +88,7 @@ export const createNewMessage = async (
     }
 
     const createdMessage: CreateMessageServiceReturnType =
-        await messageService.createMessage(req.body.message, req.user.id);
+        await messageService.createMessage(req.body.message, req.user.id, req.log);
 
     const mappedCreatedMessage: CreateMessageResponseDto =
         mapToCreateMessageResponseDto(createdMessage, req.user.id);
@@ -126,12 +107,6 @@ export const editMessage = async (
     req: Request<unknown, unknown, EditMessageRequestDto>,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
-
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -145,7 +120,8 @@ export const editMessage = async (
             parseInt(
                 (req.params as MessageParamsDto).messageId as unknown as string
             ),
-            req.user
+            req.user,
+            req.log
         );
 
     const mappedMessage: EditMessageResponseDto = mapToEditMessageResponseDto(
@@ -167,12 +143,6 @@ export const deleteMessage = async (
     req: Request<unknown>,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
-
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -182,7 +152,8 @@ export const deleteMessage = async (
 
     await messageService.deleteMessage(
         parseInt((req.params as MessageParamsDto).messageId as unknown as string),
-        req.user
+        req.user,
+        req.log
     );
 
     res.status(204).end();
@@ -192,11 +163,6 @@ export const likeMessage = async (
     req: Request<unknown>,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -206,7 +172,8 @@ export const likeMessage = async (
 
     await messageService.likeMessage(
         parseInt((req.params as MessageParamsDto).messageId as unknown as string),
-        req.user.id
+        req.user.id,
+        req.log
     );
 
     const successResponse: ApiResponseSuccess<null> = {
@@ -223,11 +190,6 @@ export const unlikeMessage = async (
     req: Request<unknown>,
     res: Response
 ): Promise<void> => {
-    if (!req.requestId) {
-        throw new InternalServerError(
-            'Internal server configuration error: Missing Request ID'
-        );
-    }
     if (!req.user) {
         throw new UnauthorizedError(
             'Authentication details missing.',
@@ -237,7 +199,8 @@ export const unlikeMessage = async (
 
     await messageService.unlikeMessage(
         parseInt((req.params as MessageParamsDto).messageId as unknown as string),
-        req.user.id
+        req.user.id,
+        req.log
     );
 
     res.status(204).end();
