@@ -2,10 +2,17 @@
 
 import 'dotenv/config';
 import { PrismaClient } from './prisma-client/client.js';
-import { config } from '../config/index.js';
 import { logger } from '../logger.js';
 import bcrypt from 'bcrypt';
 import type { Role } from '@blue0206/members-only-shared-types';
+
+const config = {
+    NODE_ENV: process.env.NODE_ENV ?? 'development',
+    SEED_ADMIN_PASSWORD: process.env.SEED_ADMIN_PASSWORD ?? 'Password@1234',
+    SALT_ROUNDS: parseInt(process.env.SALT_ROUNDS ?? '10'),
+    SEED_USER_PASSWORD: process.env.SEED_USER_PASSWORD ?? 'Password@1234',
+    SEED_MEMBER_PASSWORD: process.env.SEED_MEMBER_PASSWORD ?? 'Password@1234',
+};
 
 const prisma = new PrismaClient();
 

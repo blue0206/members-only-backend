@@ -8,19 +8,9 @@ const EnvironmentSchema = z.object({
     // server
     PORT: z.coerce.number().int().positive().default(8000),
     // cors
-    CORS_ORIGIN: z.string(),
+    CORS_ORIGIN: z.string().min(1, { message: 'CORS origin is missing.' }),
     // db
     DATABASE_URL: z.string().min(1, { message: 'DATABASE URL is missing.' }),
-    // seed data
-    SEED_ADMIN_PASSWORD: z
-        .string()
-        .min(8, { message: 'Password must be at least 8 characters.' }),
-    SEED_MEMBER_PASSWORD: z
-        .string()
-        .min(8, { message: 'Password must be at least 8 characters.' }),
-    SEED_USER_PASSWORD: z
-        .string()
-        .min(8, { message: 'Password must be at least 8 characters.' }),
     // jsonwebtoken
     ACCESS_TOKEN_SECRET: z
         .string()
