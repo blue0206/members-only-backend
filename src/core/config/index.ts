@@ -28,6 +28,8 @@ const EnvironmentSchema = z.object({
         .min(1, { message: 'Refresh Token expiry is missing.' })
         .refine((value) => value && typeof ms(value as StringValue) === 'number')
         .default('7d'),
+    // cookie domain
+    COOKIE_DOMAIN: z.string().min(1, { message: 'Cookie domain is missing.' }),
     // bcrypt
     SALT_ROUNDS: z.coerce.number().int().positive().default(10),
     // pino logger

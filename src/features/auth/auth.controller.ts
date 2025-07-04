@@ -37,6 +37,7 @@ const setAuthCookies = (res: Response, refreshToken: string): void => {
         secure: config.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: ms(config.REFRESH_TOKEN_EXPIRY as StringValue),
+        domain: config.NODE_ENV === 'production' ? config.COOKIE_DOMAIN : undefined,
     };
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
@@ -133,6 +134,7 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
     const commonCookieOptions: CookieOptions = {
         secure: config.NODE_ENV === 'production',
         sameSite: 'lax',
+        domain: config.NODE_ENV === 'production' ? config.COOKIE_DOMAIN : undefined,
     };
 
     res.clearCookie('refreshToken', {
