@@ -7,6 +7,8 @@ const EnvironmentSchema = z.object({
     NODE_ENV: z.enum(['development', 'production']).default('development'),
     // server
     PORT: z.coerce.number().int().positive().default(8000),
+    // cors
+    CORS_ORIGIN: z.string(),
     // db
     DATABASE_URL: z.string().min(1, { message: 'DATABASE URL is missing.' }),
     // seed data
