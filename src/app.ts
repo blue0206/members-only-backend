@@ -38,6 +38,7 @@ app.use(
         credentials: true,
         origin: config.CORS_ORIGIN.split(','),
         methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
     })
 );
 
