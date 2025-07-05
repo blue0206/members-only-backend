@@ -10,7 +10,7 @@ generator client {
   moduleFormat        = "esm"
   importFileExtension = "js"
   runtime             = "nodejs"
-  binaryTargets       = ["native"]
+  binaryTargets       = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
