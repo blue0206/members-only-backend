@@ -1,0 +1,27 @@
+{
+    "name": "@members-only/database",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "description": "",
+    "prisma": {
+        "schema": "prisma/schema/",
+        "seed": "npm run db:seed"
+    },
+    "scripts": {
+        "db:generate": "prisma generate",
+        "db:seed": "node ./dist/seed.js",
+        "build": "tsc",
+        "migrate:dev": "prisma migrate dev",
+        "migrate:deploy": "prisma migrate deploy"
+    },
+    "dependencies": {
+        "@blue0206/members-only-shared-types": "^11.6.0",
+        "@members-only/core-utils": "workspace:*",
+        "bcrypt": "^5.1.1"
+    },
+    "devDependencies": {
+        "prisma": "^6.9.0"
+    }
+}
