@@ -9,11 +9,10 @@ export default tseslint.config(
     {
         ignores: [
             'node_modules/',
-            'dist/',
+            'packages/*/node_modules/',
+            'packages/*/dist/',
             'eslint.config.js',
-            '.prettierrc.json',
-            'tools/',
-            'src/core/db/prisma-client/',
+            '.prettierrc',
         ],
     },
     // 2. Core ESLint Recommended rules
@@ -24,20 +23,28 @@ export default tseslint.config(
     {
         languageOptions: {
             parserOptions: {
-                project: ['./tsconfig.json', './tsconfig.test.json'],
+                project: [
+                    './tsconfig.json',
+                    './packages/*/tsconfig.json',
+                    './packages/*/tsconfig.test.json',
+                    './tsconfig.test.json',
+                ],
                 tsconfigRootDir: import.meta.dirname,
             },
         },
     },
     // 4. Node.js Environment & Custom Rule Overrides
     {
-        files: ['src/**/*.ts'],
+        files: ['packages/*/src/**/*.ts'],
         languageOptions: {
             globals: {
                 ...globals.node, // Define Node.js globals
             },
             parserOptions: {
-                project: ['./tsconfig.json', './tsconfig.test.json'],
+                project: [
+                    './packages/*/tsconfig.json',
+                    './packages/*/tsconfig.test.json',
+                ],
                 tsconfigRootDir: import.meta.dirname,
             },
         },
