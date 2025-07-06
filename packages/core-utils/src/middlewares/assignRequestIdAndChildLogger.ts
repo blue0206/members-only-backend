@@ -4,7 +4,7 @@ import { logger } from '../logger.js';
 
 // This middleware assigns a uuidv4 to every request and
 // creates a child logger for every request and passes it forward.
-export default function assignRequestIdAndChildLogger(
+export function assignRequestIdAndChildLogger(
     req: Request,
     res: Response,
     next: NextFunction

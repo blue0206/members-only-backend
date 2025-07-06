@@ -9,7 +9,7 @@ import type { Request, Response, NextFunction } from 'express';
 // If any of these are missing or don't match, the request is blocked
 // on the grounds of probable CSRF attack.
 // This middleware is assigned on all state-changing routes.
-export default function csrfVerification(
+export function csrfVerification(
     req: Request,
     _res: Response,
     next: NextFunction

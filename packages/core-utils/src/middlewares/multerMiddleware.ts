@@ -59,7 +59,7 @@ const upload = multer({
 const uploadHandler = upload.single('avatar');
 
 // Main middleware; handles file upload and errors.
-export default function multerMiddleware(
+export function multerMiddleware(
     req: Request,
     res: Response,
     next: NextFunction

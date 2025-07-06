@@ -10,7 +10,10 @@ import type { ZodSchema } from 'zod';
  * @returns {DTO} The validated data.
  * @throws {InternalServerError} If parsing fails.
  */
-const mappedDtoValidator = <DTO>(data: unknown, schema: ZodSchema<DTO>): DTO => {
+export const mappedDtoValidator = <DTO>(
+    data: unknown,
+    schema: ZodSchema<DTO>
+): DTO => {
     const parsedData = schema.safeParse(data);
     if (!parsedData.success) {
         throw new InternalServerError(
@@ -21,5 +24,3 @@ const mappedDtoValidator = <DTO>(data: unknown, schema: ZodSchema<DTO>): DTO => 
     }
     return parsedData.data;
 };
-
-export default mappedDtoValidator;

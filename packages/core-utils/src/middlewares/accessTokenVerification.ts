@@ -2,7 +2,7 @@ import { config } from '../config/index.js';
 import jwt from 'jsonwebtoken';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { UnauthorizedError } from '../errors/customErrors.js';
-import jwtErrorHandler from '../utils/jwtErrorHandler.js';
+import { jwtErrorHandler } from '../utils/jwtErrorHandler.js';
 import { AccessTokenPayloadSchema } from '../auth/auth.types.js';
 import type { AccessTokenPayload } from '../auth/auth.types.js';
 import type {
@@ -11,7 +11,7 @@ import type {
 } from '@blue0206/members-only-shared-types';
 import type { Request, Response, NextFunction } from 'express';
 
-export default function accessTokenVerification(
+export function accessTokenVerification(
     req: Request,
     res: Response,
     next: NextFunction

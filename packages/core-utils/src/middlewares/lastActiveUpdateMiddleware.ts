@@ -1,7 +1,7 @@
 import { userActivityPing } from '../scheduler/batchUpdateLastActive.js';
 import type { Request, Response, NextFunction } from 'express';
 
-export default function lastActiveUpdateMiddleware(
+export function lastActiveUpdateMiddleware(
     req: Request,
     _res: Response,
     next: NextFunction

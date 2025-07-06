@@ -26,7 +26,7 @@ type RequestValidatorArgsType =
     | [ParamsArg, QueryArg]
     | [BodyArg, ParamsArg, QueryArg];
 
-const requestValidator =
+export const requestValidator =
     (...args: RequestValidatorArgsType) =>
     async (
         req: Request<unknown, unknown, unknown, unknown>,
@@ -70,5 +70,3 @@ const requestValidator =
             next(error);
         }
     };
-
-export default requestValidator;

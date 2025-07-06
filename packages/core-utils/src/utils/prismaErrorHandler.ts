@@ -11,7 +11,7 @@ import type { Logger } from 'pino';
 
 // This is a wrapper function for all the prisma DB calls in order to
 // handle prisma-specific errors.
-export default async function prismaErrorHandler<QueryReturnType>(
+export async function prismaErrorHandler<QueryReturnType>(
     queryFn: () => Promise<QueryReturnType>,
     log: Logger
 ): Promise<QueryReturnType> {

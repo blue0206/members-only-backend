@@ -9,7 +9,7 @@ export interface ClientDetailsType {
     location: string;
 }
 
-export default async function assignClientDetails(
+export async function assignClientDetails(
     req: Request,
     _res: Response,
     next: NextFunction
@@ -53,7 +53,7 @@ async function getLocation(ip: string | null, log: Logger): Promise<string> {
 
     try {
         const response = await fetch(url);
-        const data = await response.json();
+        const data: unknown = await response.json();
         if (dataIsIpApiResponseData(data)) {
             if (data.status === 'fail' || (!data.city && !data.country))
                 return 'Unknown Location';

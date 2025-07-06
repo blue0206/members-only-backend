@@ -9,7 +9,7 @@ import type { Logger } from 'pino';
 // jsonwebtoken uses CommonJS, hence we destructure it.
 const { JsonWebTokenError } = jwt;
 
-export default function jwtErrorHandler<
+export function jwtErrorHandler<
     TokenType extends AccessTokenPayload | RefreshTokenPayload,
 >(verifyJwt: () => TokenType, log: Logger): TokenType {
     try {

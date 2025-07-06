@@ -2,7 +2,7 @@ import { ForbiddenError } from '../errors/customErrors.js';
 import { ErrorCodes, Role } from '@blue0206/members-only-shared-types';
 import type { Request, Response, NextFunction } from 'express';
 
-export default function adminVerification(
+export function adminVerification(
     req: Request,
     _res: Response,
     next: NextFunction
