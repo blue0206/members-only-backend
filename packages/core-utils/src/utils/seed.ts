@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import 'dotenv/config';
-import { PrismaClient } from './generated/client.js';
+import { PrismaClient } from '@members-only/database';
 import { logger } from '../logger.js';
 import bcrypt from 'bcrypt';
 import type { Role } from '@blue0206/members-only-shared-types';
