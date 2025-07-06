@@ -8,20 +8,23 @@ import {
     revokeSession,
     revokeAllOtherSessions,
 } from './auth.controller.js';
-import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
-import csrfVerification from '../../core/middlewares/csrfVerification.js';
-import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
-import assignClientDetails from '../../core/middlewares/assignClientDetails.js';
-import tokenRotationCleanupMiddleware from '../../core/middlewares/tokenRotationCleanupMiddleware.js';
-import lastActiveUpdateMiddleware from '../../core/middlewares/lastActiveUpdateMiddleware.js';
-import requestValidator from '../../core/middlewares/requestValidator.js';
+import {
+    accessTokenVerification,
+    csrfVerification,
+    multerMiddleware,
+    assignClientDetails,
+    tokenRotationCleanupMiddleware,
+    lastActiveUpdateMiddleware,
+    requestValidator,
+} from '@members-only/core-utils';
 import {
     LoginRequestSchema,
     RegisterRequestSchema,
     SessionIdParamsSchema,
 } from '@blue0206/members-only-shared-types';
+import type { Router as ExpressRouter } from 'express';
 
-const authRouter = Router();
+const authRouter: ExpressRouter = Router();
 
 authRouter.post(
     '/register',

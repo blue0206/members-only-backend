@@ -1,6 +1,8 @@
-import mappedDtoValidator from '../../core/utils/mappedDtoValidator.js';
-import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
-import { getAvatarUrl } from '../../core/lib/cloudinary.js';
+import {
+    mappedDtoValidator,
+    mapPrismaRoleToEnumRole,
+    getAvatarUrl,
+} from '@members-only/core-utils';
 import {
     LoginResponseSchema,
     RefreshResponseSchema,

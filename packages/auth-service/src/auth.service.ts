@@ -1,43 +1,38 @@
-import { prisma } from '../../core/db/prisma.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
-import { config } from '../../core/config/index.js';
-import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
-import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
-import getRefreshTokenExpiryDate from '../../core/utils/tokenExpiryUtil.js';
-import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
+import { prisma } from '@members-only/database';
 import {
+    config,
+    prismaErrorHandler,
+    jwtErrorHandler,
+    getRefreshTokenExpiryDate,
+    mapPrismaRoleToEnumRole,
     InternalServerError,
     UnauthorizedError,
-} from '../../core/errors/customErrors.js';
-import {
-    ErrorCodes,
-    EventReason,
-    Role,
-    SseEventNames,
-} from '@blue0206/members-only-shared-types';
-import { RefreshTokenPayloadSchema } from './auth.types.js';
-import { deleteFile, uploadFile } from '../../core/lib/cloudinary.js';
-import { sseService } from '../sse/sse.service.js';
+    RefreshTokenPayloadSchema,
+    deleteFile,
+    uploadFile,
+} from '@members-only/core-utils';
+import { v4 as uuidv4 } from 'uuid';
+import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
-    SseEventNamesType,
-    UserEventPayloadDto,
 } from '@blue0206/members-only-shared-types';
-import type { RefreshToken, User } from '../../core/db/prisma-client/client.js';
+import type { RefreshToken, User } from '@members-only/database';
 import type { StringValue } from 'ms';
 import type {
     LoginServiceReturnType,
     RegisterServiceReturnType,
-    AccessTokenPayload,
-    RefreshTokenPayload,
-    RefreshServiceReturnType,
     GetSessionsServiceReturnType,
 } from './auth.types.js';
-import type { ClientDetailsType } from '../../core/middlewares/assignClientDetails.js';
-import type { Logger } from 'pino';
+import type {
+    ClientDetailsType,
+    Logger,
+    RefreshTokenPayload,
+    AccessTokenPayload,
+} from '@members-only/core-utils';
+import type { RefreshServiceReturnType } from './auth.types.js';
 
 export class AuthService {
     async register(
@@ -155,17 +150,18 @@ export class AuthService {
             ' User registration successful'
         );
 
+        // TODO: Handle when SNS is set up.
         // Send event to all admins to update their user list.
-        sseService.multicastEventToRoles<SseEventNamesType, UserEventPayloadDto>(
-            [Role.ADMIN],
-            {
-                event: SseEventNames.USER_EVENT,
-                data: {
-                    originId: user.id,
-                    reason: EventReason.USER_CREATED,
-                },
-            }
-        );
+        // sseService.multicastEventToRoles<SseEventNamesType, UserEventPayloadDto>(
+        //     [Role.ADMIN],
+        //     {
+        //         event: SseEventNames.USER_EVENT,
+        //         data: {
+        //             originId: user.id,
+        //             reason: EventReason.USER_CREATED,
+        //         },
+        //     }
+        // );
 
         return {
             ...user,

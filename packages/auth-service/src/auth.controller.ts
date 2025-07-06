@@ -1,3 +1,8 @@
+import {
+    config,
+    InternalServerError,
+    UnauthorizedError,
+} from '@members-only/core-utils';
 import { authService } from './auth.service.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import {
@@ -6,11 +11,6 @@ import {
     mapToRegisterResponseDto,
     mapToUserSessionsResponseDto,
 } from './auth.mapper.js';
-import {
-    InternalServerError,
-    UnauthorizedError,
-} from '../../core/errors/customErrors.js';
-import { config } from '../../core/config/index.js';
 import ms from 'ms';
 import crypto from 'crypto';
 import type { CookieOptions, Request, Response } from 'express';
