@@ -1,4 +1,4 @@
-import { prisma } from '../db/prisma.js';
+import { prisma } from '@members-only/database';
 import { logger } from '../logger.js';
 import prismaErrorHandler from '../utils/prismaErrorHandler.js';
 

@@ -1,4 +1,4 @@
-import { Prisma } from '../db/prisma-client/client.js';
+import { Prisma } from '@members-only/database';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import {
     AppError,

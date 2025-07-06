@@ -1,5 +1,5 @@
 import { Role } from '@blue0206/members-only-shared-types';
-import type { Role as PrismaRole } from '../db/prisma-client/client.js';
+import type { Role as PrismaRole } from '@members-only/database';
 
 export function mapPrismaRoleToEnumRole(prismaRole: PrismaRole): Role {
     switch (prismaRole) {

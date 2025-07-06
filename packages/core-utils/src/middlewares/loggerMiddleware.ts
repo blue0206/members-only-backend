@@ -1,8 +1,8 @@
 import { pinoHttp } from 'pino-http';
 import { logger } from '../logger.js';
-import type { Request } from 'express';
+import type { Request, RequestHandler } from 'express';
 
-export const loggerMiddleware = pinoHttp({
+export const loggerMiddleware: RequestHandler = pinoHttp({
     logger,
     customProps: (req: Request) => ({
         requestId: req.requestId,

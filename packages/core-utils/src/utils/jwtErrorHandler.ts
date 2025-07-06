@@ -2,10 +2,7 @@ import jwt from 'jsonwebtoken';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { InternalServerError, UnauthorizedError } from '../errors/customErrors.js';
 import { ZodError } from 'zod';
-import type {
-    AccessTokenPayload,
-    RefreshTokenPayload,
-} from '../../features/auth/auth.types.js';
+import type { AccessTokenPayload, RefreshTokenPayload } from '../auth/auth.types.js';
 import type { Logger } from 'pino';
 
 // Direct importing from jwtLib throws error because

@@ -3,10 +3,10 @@ import jwtErrorHandler from '../utils/jwtErrorHandler.js';
 import prismaErrorHandler from '../utils/prismaErrorHandler.js';
 import { UnauthorizedError } from '../errors/customErrors.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
-import { RefreshTokenPayloadSchema } from '../../features/auth/auth.types.js';
+import { RefreshTokenPayloadSchema } from '..//auth/auth.types.js';
 import { config } from '../config/index.js';
-import { prisma } from '../db/prisma.js';
-import type { RefreshTokenPayload } from '../../features/auth/auth.types.js';
+import { prisma } from '@members-only/database';
+import type { RefreshTokenPayload } from '../auth/auth.types.js';
 import type { Request, Response, NextFunction } from 'express';
 
 export default function tokenRotationCleanupMiddleware(
