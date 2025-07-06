@@ -2,11 +2,12 @@
     "name": "@members-only/core-utils",
     "version": "1.0.0",
     "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "description": "Shared core utilities, errors, config, and middleware for the Members Only backend services.",
     "scripts": {
         "build": "tsc",
-        "lint": "eslint . --ext .ts",
-        "test": "vitest"
+        "lint": "eslint . --ext .ts"
     },
     "dependencies": {
         "@blue0206/members-only-shared-types": "^11.6.0",
