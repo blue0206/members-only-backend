@@ -1,7 +1,2 @@
-import { PrismaClient } from './generated/client.js';
-
-export const prisma = new PrismaClient({
-    log: ['error', 'info', 'query', 'warn'],
-});
-
+export { prisma } from './client.js';
 export * from './generated/client.js';

@@ -4,7 +4,7 @@
     "private": true,
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
-    "description": "",
+    "description": "Shared prisma client and types.",
     "prisma": {
         "schema": "prisma/schema/",
         "seed": "npm run db:seed"
@@ -18,10 +18,9 @@
     },
     "dependencies": {
         "@blue0206/members-only-shared-types": "^11.6.0",
-        "@members-only/core-utils": "workspace:*",
-        "bcrypt": "^5.1.1"
+        "@prisma/client": "6.11.1"
     },
     "devDependencies": {
-        "prisma": "^6.9.0"
+        "prisma": "catalog:prisma"
     }
 }
