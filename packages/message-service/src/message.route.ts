@@ -8,18 +8,21 @@ import {
     likeMessage,
     unlikeMessage,
 } from './message.controller.js';
-import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
-import csrfVerification from '../../core/middlewares/csrfVerification.js';
-import memberVerification from '../../core/middlewares/memberVerification.js';
-import lastActiveUpdateMiddleware from '../../core/middlewares/lastActiveUpdateMiddleware.js';
-import requestValidator from '../../core/middlewares/requestValidator.js';
+import {
+    accessTokenVerification,
+    csrfVerification,
+    memberVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator,
+} from '@members-only/core-utils';
 import {
     CreateMessageRequestSchema,
     EditMessageRequestSchema,
     MessageParamsSchema,
 } from '@blue0206/members-only-shared-types';
+import type { Router as ExpressRouter } from 'express';
 
-const messageRouter = Router();
+const messageRouter: ExpressRouter = Router();
 
 // Get all messages (unregistered/user)
 messageRouter.get('/public', getMessagesWithoutAuthor);

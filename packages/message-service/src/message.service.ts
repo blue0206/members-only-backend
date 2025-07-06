@@ -1,30 +1,19 @@
+import { ErrorCodes, Role } from '@blue0206/members-only-shared-types';
+import { prisma } from '@members-only/database';
 import {
-    ErrorCodes,
-    EventReason,
-    Role,
-    SseEventNames,
-} from '@blue0206/members-only-shared-types';
-import { prisma } from '../../core/db/prisma.js';
-import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
-import {
+    prismaErrorHandler,
     ForbiddenError,
     InternalServerError,
-} from '../../core/errors/customErrors.js';
-import { sseService } from '../sse/sse.service.js';
-import { v4 as uuidv4 } from 'uuid';
-import type {
-    MessageEventPayloadDto,
-    SseEventNamesType,
-} from '@blue0206/members-only-shared-types';
+} from '@members-only/core-utils';
 import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,
     GetMessagesServiceReturnType,
 } from './message.types.js';
-import type { AccessTokenPayload } from '../auth/auth.types.js';
-import type { Like, Message } from '../../core/db/prisma-client/client.js';
-import type { Logger } from 'pino';
+import type { AccessTokenPayload, Logger } from '@members-only/core-utils';
+import type { Like, Message } from '@members-only/database';
 
+// TODO: Handle SSE events for real-time updates.
 class MessageService {
     async getMessages(log: Logger): Promise<GetMessagesServiceReturnType> {
         log.info('Getting messages from database.');
@@ -92,14 +81,14 @@ class MessageService {
         log.info({ message }, 'Message created successfully.');
 
         // Broadcast event to all connected SSE clients to show real-time updates.
-        sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
-            event: SseEventNames.MESSAGE_EVENT,
-            data: {
-                reason: EventReason.MESSAGE_CREATED,
-                originId: createdMessage.author.id,
-            },
-            id: uuidv4(),
-        });
+        // sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
+        //     event: SseEventNames.MESSAGE_EVENT,
+        //     data: {
+        //         reason: EventReason.MESSAGE_CREATED,
+        //         originId: createdMessage.author.id,
+        //     },
+        //     id: uuidv4(),
+        // });
 
         return createdMessage;
     }
@@ -143,14 +132,14 @@ class MessageService {
         log.info({ newMessage, messageId }, 'Message edited successfully.');
 
         // Broadcast event to all connected SSE clients to show real-time updates.
-        sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
-            event: SseEventNames.MESSAGE_EVENT,
-            data: {
-                reason: EventReason.MESSAGE_UPDATED,
-                originId: user.id,
-            },
-            id: uuidv4(),
-        });
+        // sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
+        //     event: SseEventNames.MESSAGE_EVENT,
+        //     data: {
+        //         reason: EventReason.MESSAGE_UPDATED,
+        //         originId: user.id,
+        //     },
+        //     id: uuidv4(),
+        // });
 
         return editedMessageDetails;
     }
@@ -180,14 +169,14 @@ class MessageService {
         log.info({ messageId }, 'Message deleted successfully.');
 
         // Broadcast event to all connected SSE clients to show real-time updates.
-        sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
-            event: SseEventNames.MESSAGE_EVENT,
-            data: {
-                reason: EventReason.MESSAGE_DELETED,
-                originId: user.id,
-            },
-            id: uuidv4(),
-        });
+        // sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
+        //     event: SseEventNames.MESSAGE_EVENT,
+        //     data: {
+        //         reason: EventReason.MESSAGE_DELETED,
+        //         originId: user.id,
+        //     },
+        //     id: uuidv4(),
+        // });
     }
 
     async likeMessage(

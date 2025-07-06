@@ -1,4 +1,4 @@
-import type { Prisma } from '../../core/db/prisma-client/client.js';
+import type { Prisma } from '@members-only/database';
 
 export type GetMessagesServiceReturnType = Prisma.MessageGetPayload<{
     include: {
