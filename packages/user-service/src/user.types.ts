@@ -1,4 +1,4 @@
-import type { Prisma, User } from '../../core/db/prisma-client/client.js';
+import type { Prisma, User } from '@members-only/database';
 
 export type GetUsersServiceReturnType = Omit<User, 'password'>[];
 

@@ -1,7 +1,13 @@
 import { Router } from 'express';
-import accessTokenVerification from '../../core/middlewares/accessTokenVerification.js';
-import csrfVerification from '../../core/middlewares/csrfVerification.js';
-import adminVerification from '../../core/middlewares/adminVerification.js';
+import {
+    accessTokenVerification,
+    csrfVerification,
+    adminVerification,
+    multerMiddleware,
+    memberVerification,
+    lastActiveUpdateMiddleware,
+    requestValidator,
+} from '@members-only/core-utils';
 import {
     adminDeleteUser,
     deleteUserAccount,
@@ -16,10 +22,6 @@ import {
     removeUserBookmark,
     uploadUserAvatar,
 } from './user.controller.js';
-import multerMiddleware from '../../core/middlewares/multerMiddleware.js';
-import memberVerification from '../../core/middlewares/memberVerification.js';
-import lastActiveUpdateMiddleware from '../../core/middlewares/lastActiveUpdateMiddleware.js';
-import requestValidator from '../../core/middlewares/requestValidator.js';
 import {
     EditUserRequestSchema,
     MemberRoleUpdateRequestSchema,
@@ -28,8 +30,9 @@ import {
     SetRoleRequestQuerySchema,
     UsernameParamsSchema,
 } from '@blue0206/members-only-shared-types';
+import type { Router as ExpressRouter } from 'express';
 
-const userRouter = Router();
+const userRouter: ExpressRouter = Router();
 
 //-----------Protected Routes-----------
 

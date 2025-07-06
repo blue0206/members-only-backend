@@ -1,12 +1,14 @@
-import mappedDtoValidator from '../../core/utils/mappedDtoValidator.js';
-import { mapPrismaRoleToEnumRole } from '../../core/utils/roleMapper.js';
+import {
+    mappedDtoValidator,
+    mapPrismaRoleToEnumRole,
+    getAvatarUrl,
+} from '@members-only/core-utils';
 import {
     EditUserResponseSchema,
     GetUserBookmarksResponseSchema,
     GetUsersResponseSchema,
     UploadAvatarResponseSchema,
 } from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
-import { getAvatarUrl } from '../../core/lib/cloudinary.js';
 import type {
     EditUserResponseDto,
     GetUserBookmarksResponseDto,

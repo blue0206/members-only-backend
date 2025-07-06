@@ -1,8 +1,5 @@
 import { userService } from './user.service.js';
-import {
-    InternalServerError,
-    UnauthorizedError,
-} from '../../core/errors/customErrors.js';
+import { InternalServerError, UnauthorizedError } from '@members-only/core-utils';
 import {
     mapToEditUserResponseDto,
     mapToGetUserBookmarksResponseDto,

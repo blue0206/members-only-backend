@@ -1,20 +1,15 @@
-import { prisma } from '../../core/db/prisma.js';
-import prismaErrorHandler from '../../core/utils/prismaErrorHandler.js';
+import { prisma } from '@members-only/database';
 import {
+    prismaErrorHandler,
     InternalServerError,
     UnauthorizedError,
-} from '../../core/errors/customErrors.js';
-import {
-    ErrorCodes,
-    EventReason,
-    SseEventNames,
-    Role,
-} from '@blue0206/members-only-shared-types';
+    config,
+    deleteFile,
+    uploadFile,
+} from '@members-only/core-utils';
+import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import bcrypt from 'bcrypt';
-import { config } from '../../core/config/index.js';
-import { deleteFile, uploadFile } from '../../core/lib/cloudinary.js';
-import { sseService } from '../sse/sse.service.js';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,
@@ -23,14 +18,13 @@ import type {
 } from './user.types.js';
 import type {
     EditUserRequestDto,
-    MultiEventPayloadDto,
     ResetPasswordRequestDto,
-    SseEventNamesType,
+    Role,
 } from '@blue0206/members-only-shared-types';
-import type { Bookmark, User } from '../../core/db/prisma-client/client.js';
-import type { AccessTokenPayload } from '../auth/auth.types.js';
-import type { Logger } from 'pino';
+import type { Bookmark, User } from '@members-only/database';
+import type { AccessTokenPayload, Logger } from '@members-only/core-utils';
 
+// TODO: Handle SSE events for real-time updates.
 class UserService {
     async getUsers(log: Logger): Promise<GetUsersServiceReturnType> {
         log.info('Getting all users from database.');
@@ -88,17 +82,17 @@ class UserService {
 
         // We need only send this event to the roles who can actually view the
         // profile details of users, i.e. ADMIN and MEMBER roles.
-        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-            [Role.ADMIN, Role.MEMBER],
-            {
-                event: SseEventNames.MULTI_EVENT,
-                data: {
-                    reason: EventReason.USER_UPDATED,
-                    originId: user.id,
-                },
-                id: uuidv4(),
-            }
-        );
+        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+        //     [Role.ADMIN, Role.MEMBER],
+        //     {
+        //         event: SseEventNames.MULTI_EVENT,
+        //         data: {
+        //             reason: EventReason.USER_UPDATED,
+        //             originId: user.id,
+        //         },
+        //         id: uuidv4(),
+        //     }
+        // );
 
         return user;
     }
@@ -126,31 +120,31 @@ class UserService {
 
         // We only send this to the roles who can actually view the other users,
         // i.e. ADMIN and MEMBER roles.
-        const multiEventPayloadDto: MultiEventPayloadDto = {
-            reason: EventReason.USER_DELETED_BY_ADMIN,
-            originId: adminId,
-            targetId: deletedUser.id,
-        };
-        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-            [Role.ADMIN, Role.MEMBER],
-            {
-                event: SseEventNames.MULTI_EVENT,
-                data: multiEventPayloadDto,
-                id: uuidv4(),
-            }
-        );
+        // const multiEventPayloadDto: MultiEventPayloadDto = {
+        //     reason: EventReason.USER_DELETED_BY_ADMIN,
+        //     originId: adminId,
+        //     targetId: deletedUser.id,
+        // };
+        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+        //     [Role.ADMIN, Role.MEMBER],
+        //     {
+        //         event: SseEventNames.MULTI_EVENT,
+        //         data: multiEventPayloadDto,
+        //         id: uuidv4(),
+        //     }
+        // );
         // In case the affected user is of USER role, we send the
         // event to the user as well in order clear their client state.
-        if (deletedUser.role === 'USER') {
-            sseService.unicastEvent<SseEventNamesType, MultiEventPayloadDto>(
-                deletedUser.id,
-                {
-                    event: SseEventNames.MULTI_EVENT,
-                    data: multiEventPayloadDto,
-                    id: uuidv4(),
-                }
-            );
-        }
+        // if (deletedUser.role === 'USER') {
+        //     sseService.unicastEvent<SseEventNamesType, MultiEventPayloadDto>(
+        //         deletedUser.id,
+        //         {
+        //             event: SseEventNames.MULTI_EVENT,
+        //             data: multiEventPayloadDto,
+        //             id: uuidv4(),
+        //         }
+        //     );
+        // }
 
         if (deletedUser.avatar) {
             await deleteFile(deletedUser.avatar, log);
@@ -177,17 +171,17 @@ class UserService {
 
         // We only send this to the roles who can actually view the other users,
         // i.e. ADMIN and MEMBER roles.
-        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-            [Role.ADMIN, Role.MEMBER],
-            {
-                event: SseEventNames.MULTI_EVENT,
-                data: {
-                    reason: EventReason.USER_DELETED,
-                    originId: deletedUser.id,
-                },
-                id: uuidv4(),
-            }
-        );
+        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+        //     [Role.ADMIN, Role.MEMBER],
+        //     {
+        //         event: SseEventNames.MULTI_EVENT,
+        //         data: {
+        //             reason: EventReason.USER_DELETED,
+        //             originId: deletedUser.id,
+        //         },
+        //         id: uuidv4(),
+        //     }
+        // );
 
         if (deletedUser.avatar) {
             await deleteFile(deletedUser.avatar, log);
@@ -293,18 +287,18 @@ class UserService {
 
         // Since this is a role change event, we need only send this to the roles who
         // can actually view the roles of users, i.e. ADMIN and MEMBER roles.
-        const multiEventPayloadDto: MultiEventPayloadDto = {
-            reason: EventReason.MEMBER_UPDATE,
-            originId: updatedUser.id,
-        };
-        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-            [Role.ADMIN, Role.MEMBER],
-            {
-                event: SseEventNames.MULTI_EVENT,
-                data: multiEventPayloadDto,
-                id: uuidv4(),
-            }
-        );
+        // const multiEventPayloadDto: MultiEventPayloadDto = {
+        //     reason: EventReason.MEMBER_UPDATE,
+        //     originId: updatedUser.id,
+        // };
+        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+        //     [Role.ADMIN, Role.MEMBER],
+        //     {
+        //         event: SseEventNames.MULTI_EVENT,
+        //         data: multiEventPayloadDto,
+        //         id: uuidv4(),
+        //     }
+        // );
     }
 
     async updateRole(
@@ -361,32 +355,32 @@ class UserService {
 
         // Since this is a role change event, we need only send this to the roles who
         // can actually view the roles of users, i.e. ADMIN and MEMBER roles.
-        const multiEventPayloadDto: MultiEventPayloadDto = {
-            reason: EventReason.ROLE_CHANGE,
-            originId: adminId,
-            originUsername: adminUsername,
-            targetId: userDetails.id,
-            targetUserRole: role,
-        };
-        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-            [Role.ADMIN, Role.MEMBER],
-            {
-                event: SseEventNames.MULTI_EVENT,
-                data: multiEventPayloadDto,
-                id: uuidv4(),
-            }
-        );
+        // const multiEventPayloadDto: MultiEventPayloadDto = {
+        //     reason: EventReason.ROLE_CHANGE,
+        //     originId: adminId,
+        //     originUsername: adminUsername,
+        //     targetId: userDetails.id,
+        //     targetUserRole: role,
+        // };
+        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+        //     [Role.ADMIN, Role.MEMBER],
+        //     {
+        //         event: SseEventNames.MULTI_EVENT,
+        //         data: multiEventPayloadDto,
+        //         id: uuidv4(),
+        //     }
+        // );
         // In case the user whose role is being updated is of USER role, we send the
         // event to the user as well in order to show UI updates.
         if (userDetails.initialRole === 'USER') {
-            sseService.unicastEvent<SseEventNamesType, MultiEventPayloadDto>(
-                userDetails.id,
-                {
-                    event: SseEventNames.MULTI_EVENT,
-                    data: multiEventPayloadDto,
-                    id: uuidv4(),
-                }
-            );
+            // sseService.unicastEvent<SseEventNamesType, MultiEventPayloadDto>(
+            //     userDetails.id,
+            //     {
+            //         event: SseEventNames.MULTI_EVENT,
+            //         data: multiEventPayloadDto,
+            //         id: uuidv4(),
+            //     }
+            // );
         }
     }
 
@@ -444,17 +438,17 @@ class UserService {
 
         // We need only send this event to the roles who can actually view the
         // profile details of users, i.e. ADMIN and MEMBER roles.
-        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-            [Role.ADMIN, Role.MEMBER],
-            {
-                event: SseEventNames.MULTI_EVENT,
-                data: {
-                    reason: EventReason.USER_UPDATED,
-                    originId: userPayload.id,
-                },
-                id: uuidv4(),
-            }
-        );
+        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+        //     [Role.ADMIN, Role.MEMBER],
+        //     {
+        //         event: SseEventNames.MULTI_EVENT,
+        //         data: {
+        //             reason: EventReason.USER_UPDATED,
+        //             originId: userPayload.id,
+        //         },
+        //         id: uuidv4(),
+        //     }
+        // );
 
         return {
             avatar: avatarPublicId,
@@ -505,17 +499,17 @@ class UserService {
 
         // We need only send this event to the roles who can actually view the
         // avatar of users, i.e. ADMIN and MEMBER roles.
-        sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-            [Role.ADMIN, Role.MEMBER],
-            {
-                event: SseEventNames.MULTI_EVENT,
-                data: {
-                    reason: EventReason.USER_UPDATED,
-                    originId: user.userId,
-                },
-                id: uuidv4(),
-            }
-        );
+        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
+        //     [Role.ADMIN, Role.MEMBER],
+        //     {
+        //         event: SseEventNames.MULTI_EVENT,
+        //         data: {
+        //             reason: EventReason.USER_UPDATED,
+        //             originId: user.userId,
+        //         },
+        //         id: uuidv4(),
+        //     }
+        // );
     }
 
     async getUserBookmarks(
