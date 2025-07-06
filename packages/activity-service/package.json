@@ -1,0 +1,15 @@
+{
+    "name": "@members-only/activity-service",
+    "version": "1.0.0",
+    "private": true,
+    "description": "The microservice tasked with reading from SQS and flushing user activity pings to database.",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "esbuild src/index.ts --bundle --platform=node --outfile=dist/handler.js",
+        "lint": "eslint . --ext .ts"
+    },
+    "dependencies": {
+        "@codegenie/serverless-express": "^4.16.0",
+        "@members-only/database": "workspace:*"
+    }
+}

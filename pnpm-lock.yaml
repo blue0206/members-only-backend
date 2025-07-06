@@ -17,6 +17,9 @@ importers:
       '@eslint/js':
         specifier: ^9.24.0
         version: 9.30.1
+      '@types/aws-lambda':
+        specifier: ^8.10.150
+        version: 8.10.150
       '@types/bcrypt':
         specifier: ^5.0.2
         version: 5.0.2
@@ -78,9 +81,6 @@ importers:
         specifier: workspace:*
         version: link:../database
     devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.150
-        version: 8.10.150
       esbuild:
         specifier: ^0.25.5
         version: 0.25.5
