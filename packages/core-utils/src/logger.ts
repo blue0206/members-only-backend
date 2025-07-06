@@ -1,6 +1,6 @@
 import { pino } from 'pino';
 import { config } from './config/index.js';
-import type { LoggerOptions } from 'pino';
+import type { LoggerOptions, Logger } from 'pino';
 
 const level =
     config.LOG_LEVEL || config.NODE_ENV === 'development' ? 'debug' : 'info';
@@ -25,5 +25,6 @@ pinoOptions.formatters = {
 pinoOptions.timestamp = pino.stdTimeFunctions.isoTime;
 
 export const logger = pino(pinoOptions);
+export type { Logger };
 
 logger.info(`Logger initialized with level: ${level}`);
