@@ -43,7 +43,10 @@ app.use('/api/v1/users/healthcheck', (_req: Request, res: Response) => {
 });
 // Catch-all route.
 app.use((req: Request, _res: Response) => {
-    req.log.warn('Request received for non-existent route.');
+    req.log.warn(
+        { url: req.url, method: req.method },
+        'Request received for non-existent route.'
+    );
     throw new NotFoundError('This route does not exist.');
 });
 
