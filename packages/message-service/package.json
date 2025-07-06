@@ -1,0 +1,26 @@
+{
+    "name": "@members-only/message-service",
+    "version": "1.0.0",
+    "private": true,
+    "description": "The microservice handling message-related operations.",
+    "main": "dist/lambda.js",
+    "types": "dist/lambda.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "lint": "eslint . --ext .ts"
+    },
+    "dependencies": {
+        "@blue0206/members-only-shared-types": "^11.6.0",
+        "@codegenie/serverless-express": "^4.16.0",
+        "@members-only/core-utils": "workspace:*",
+        "@members-only/database": "workspace:*",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^5.1.0",
+        "helmet": "^8.1.0"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.150"
+    }
+}
