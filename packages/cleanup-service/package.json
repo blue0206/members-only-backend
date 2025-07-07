@@ -1,0 +1,17 @@
+{
+    "name": "@members-only/cleanup-service",
+    "version": "1.0.0",
+    "private": true,
+    "description": "The microservice tasked with clearing expired refresh tokens from database. Runs as a scheduled job with Amazon EventBridge.",
+    "main": "dist/tokenCleanupWorker.js",
+    "type": "module",
+    "scripts": {
+        "build": "esbuild src/index.ts --bundle --platform=node --format=esm --external:@members-only/database --outfile=dist/tokenCleanupWorker.js",
+        "lint": "eslint . --ext .ts"
+    },
+    "dependencies": {
+        "@members-only/database": "workspace:*",
+        "@members-only/core-utils": "workspace:*",
+        "@codegenie/serverless-express": "^4.16.0"
+    }
+}

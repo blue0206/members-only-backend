@@ -129,6 +129,18 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0
 
+  packages/cleanup-service:
+    dependencies:
+      '@codegenie/serverless-express':
+        specifier: ^4.16.0
+        version: 4.16.0
+      '@members-only/core-utils':
+        specifier: workspace:*
+        version: link:../core-utils
+      '@members-only/database':
+        specifier: workspace:*
+        version: link:../database
+
   packages/core-utils:
     dependencies:
       '@aws-sdk/client-sqs':
