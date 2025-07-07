@@ -40,6 +40,11 @@ const EnvironmentSchema = z.object({
     CLOUDINARY_API_SECRET: z.string(),
     // member role access secret key
     MEMBER_ROLE_SECRET_KEY: z.string(),
+    // AWS
+    AWS_REGION: z.string().min(1, { message: 'AWS region is missing.' }),
+    SQS_USER_ACTIVITY_QUEUE_URL: z
+        .string()
+        .min(1, { message: 'SQS activity queue URL is missing.' }),
 });
 
 const parsedEnv = EnvironmentSchema.safeParse(process.env);
