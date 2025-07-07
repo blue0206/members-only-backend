@@ -8,13 +8,11 @@ import {
     likeMessage,
     unlikeMessage,
 } from './message.controller.js';
-import {
-    accessTokenVerification,
-    csrfVerification,
-    memberVerification,
-    lastActiveUpdateMiddleware,
-    requestValidator,
-} from '@members-only/core-utils';
+import { accessTokenVerification } from '@members-only/core-utils/middlewares/accessTokenVerification';
+import { csrfVerification } from '@members-only/core-utils/middlewares/csrfVerification';
+import { memberVerification } from '@members-only/core-utils/middlewares/memberVerification';
+import { lastActiveUpdateMiddleware } from '@members-only/core-utils/middlewares/lastActiveUpdateMiddleware';
+import { requestValidator } from '@members-only/core-utils/middlewares/requestValidator';
 import {
     CreateMessageRequestSchema,
     EditMessageRequestSchema,

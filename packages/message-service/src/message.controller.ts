@@ -1,5 +1,5 @@
 import { messageService } from './message.service.js';
-import { UnauthorizedError } from '@members-only/core-utils';
+import { UnauthorizedError } from '@members-only/core-utils/errors';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import {
     mapToCreateMessageResponseDto,

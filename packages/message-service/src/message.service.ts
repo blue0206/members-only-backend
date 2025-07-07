@@ -1,16 +1,17 @@
 import { ErrorCodes, Role } from '@blue0206/members-only-shared-types';
 import { prisma } from '@members-only/database';
+import { prismaErrorHandler } from '@members-only/core-utils/utils/prismaErrorHandler';
 import {
-    prismaErrorHandler,
     ForbiddenError,
     InternalServerError,
-} from '@members-only/core-utils';
+} from '@members-only/core-utils/errors';
 import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,
     GetMessagesServiceReturnType,
 } from './message.types.js';
-import type { AccessTokenPayload, Logger } from '@members-only/core-utils';
+import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
+import type { Logger } from '@members-only/core-utils/logger';
 import type { Like, Message } from '@members-only/database';
 
 // TODO: Handle SSE events for real-time updates.
