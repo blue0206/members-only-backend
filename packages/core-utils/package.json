@@ -2,9 +2,50 @@
     "name": "@members-only/core-utils",
     "version": "1.0.0",
     "private": true,
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
     "description": "Shared core utilities, errors, config, and middleware for the Members Only backend services.",
+    "sideEffects": false,
+    "exports": {
+        "./env": {
+            "import": "./dist/config/index.js",
+            "module-sync": "./dist/config/index.js",
+            "types": "./dist/config/index.d.ts"
+        },
+        "./errors": {
+            "import": "./dist/errors/customErrors.js",
+            "module-sync": "./dist/errors/customErrors.js",
+            "types": "./dist/errors/customErrors.d.ts"
+        },
+        "./cloudinary": {
+            "import": "./dist/lib/cloudinary.js",
+            "module-sync": "./dist/lib/cloudinary.js",
+            "types": "./dist/lib/cloudinary.d.ts"
+        },
+        "./middlewares/*": {
+            "import": "./dist/middlewares/*.js",
+            "module-sync": "./dist/middlewares/*.js",
+            "types": "./dist/middlewares/*.d.ts"
+        },
+        "./utils/*": {
+            "import": "./dist/utils/*.js",
+            "module-sync": "./dist/utils/*.js",
+            "types": "./dist/utils/*.d.ts"
+        },
+        "./authTypes": {
+            "import": "./dist/types/auth.types.js",
+            "module-sync": "./dist/types/auth.types.js",
+            "types": "./dist/types/auth.types.d.ts"
+        },
+        "./activityTypes": {
+            "import": "./dist/types/activity.types.js",
+            "module-sync": "./dist/types/activity.types.js",
+            "types": "./dist/types/activity.types.d.ts"
+        },
+        "./logger": {
+            "import": "./dist/logger.js",
+            "module-sync": "./dist/logger.js",
+            "types": "./dist/logger.d.ts"
+        }
+    },
     "scripts": {
         "build": "tsc",
         "lint": "eslint . --ext .ts"

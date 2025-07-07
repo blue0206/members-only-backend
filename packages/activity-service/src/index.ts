@@ -1,6 +1,9 @@
-import { logger, UserActivityPayloadSchema } from '@members-only/core-utils';
+// Using explicit path to minimize bundle size and avoid unnecessary dependencies.
+// The bundle size reduced to ~299kb from ~2MB by following this approach 💀
+import { UserActivityPayloadSchema } from '@members-only/core-utils/activityTypes';
+import { logger } from '@members-only/core-utils/logger';
 import { prisma } from '@members-only/database';
-import type { UserActivityPayload } from '@members-only/core-utils';
+import type { UserActivityPayload } from '@members-only/core-utils/activityTypes';
 import type { SQSEvent } from 'aws-lambda';
 
 export const handler = async (event: SQSEvent): Promise<void> => {
