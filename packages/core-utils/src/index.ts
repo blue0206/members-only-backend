@@ -16,5 +16,8 @@ export * from './middlewares';
 // Export utils.
 export * from './utils';
 
-// Export auth types.
+// Export auth schema and types.
 export * from './types/auth.types.js';
+
+// Export activity schema and types.
+export * from './types/activity.types.js';
