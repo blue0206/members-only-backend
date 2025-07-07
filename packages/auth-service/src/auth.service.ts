@@ -1,20 +1,19 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@members-only/database';
-import {
-    config,
-    prismaErrorHandler,
-    jwtErrorHandler,
-    getRefreshTokenExpiryDate,
-    mapPrismaRoleToEnumRole,
-    InternalServerError,
-    UnauthorizedError,
-    RefreshTokenPayloadSchema,
-    deleteFile,
-    uploadFile,
-} from '@members-only/core-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { config } from '@members-only/core-utils/env';
+import { prismaErrorHandler } from '@members-only/core-utils/utils/prismaErrorHandler';
+import { jwtErrorHandler } from '@members-only/core-utils/utils/jwtErrorHandler';
+import { deleteFile, uploadFile } from '@members-only/core-utils/cloudinary';
+import { mapPrismaRoleToEnumRole } from '@members-only/core-utils/utils/roleMapper';
+import { getRefreshTokenExpiryDate } from '@members-only/core-utils/utils/tokenExpiryUtil';
+import { RefreshTokenPayloadSchema } from '@members-only/core-utils/authTypes';
+import {
+    InternalServerError,
+    UnauthorizedError,
+} from '@members-only/core-utils/errors';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
@@ -26,12 +25,12 @@ import type {
     RegisterServiceReturnType,
     GetSessionsServiceReturnType,
 } from './auth.types.js';
+import type { ClientDetailsType } from '@members-only/core-utils/middlewares/assignClientDetails';
 import type {
-    ClientDetailsType,
-    Logger,
     RefreshTokenPayload,
     AccessTokenPayload,
-} from '@members-only/core-utils';
+} from '@members-only/core-utils/authTypes';
+import type { Logger } from '@members-only/core-utils/logger';
 import type { RefreshServiceReturnType } from './auth.types.js';
 
 export class AuthService {

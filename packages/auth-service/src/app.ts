@@ -1,16 +1,14 @@
 import 'dotenv/config';
-import { config } from '@members-only/core-utils';
+import { config } from '@members-only/core-utils/env';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import authRouter from './auth.routes.js';
 import cookieParser from 'cookie-parser';
-import {
-    assignRequestIdAndChildLogger,
-    loggerMiddleware,
-    errorHandler,
-    NotFoundError,
-} from '@members-only/core-utils';
+import { assignRequestIdAndChildLogger } from '@members-only/core-utils/middlewares/assignRequestIdAndChildLogger';
+import { loggerMiddleware } from '@members-only/core-utils/middlewares/loggerMiddleware';
+import { errorHandler } from '@members-only/core-utils/middlewares/errorHandler';
+import { NotFoundError } from '@members-only/core-utils/errors';
 import type { Request, Response, Application } from 'express';
 
 const app: Application = express();

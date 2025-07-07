@@ -1,4 +1,4 @@
-import { logger } from '@members-only/core-utils';
+import { logger } from '@members-only/core-utils/logger';
 import serverlessExpress from '@codegenie/serverless-express';
 import app from './app.js';
 import type { APIGatewayProxyHandlerV2 } from 'aws-lambda';

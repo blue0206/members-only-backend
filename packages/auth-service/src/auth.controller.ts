@@ -1,8 +1,8 @@
+import { config } from '@members-only/core-utils/env';
 import {
-    config,
     InternalServerError,
     UnauthorizedError,
-} from '@members-only/core-utils';
+} from '@members-only/core-utils/errors';
 import { authService } from './auth.service.js';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import {
