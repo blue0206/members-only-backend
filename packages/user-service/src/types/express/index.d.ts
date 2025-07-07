@@ -1,8 +1,6 @@
-import type {
-    AccessTokenPayload,
-    ClientDetailsType,
-    Logger,
-} from '@members-only/core-utils';
+import type { ClientDetailsType } from '@members-only/core-utils/middlewares/assignClientDetails';
+import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
+import type { Logger } from '@members-only/core-utils/logger';
 
 declare global {
     namespace Express {

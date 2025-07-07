@@ -1,8 +1,6 @@
-import {
-    mappedDtoValidator,
-    mapPrismaRoleToEnumRole,
-    getAvatarUrl,
-} from '@members-only/core-utils';
+import { mappedDtoValidator } from '@members-only/core-utils/utils/mappedDtoValidator';
+import { mapPrismaRoleToEnumRole } from '@members-only/core-utils/utils/roleMapper';
+import { getAvatarUrl } from '@members-only/core-utils/cloudinary';
 import {
     EditUserResponseSchema,
     GetUserBookmarksResponseSchema,

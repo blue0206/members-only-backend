@@ -1,13 +1,11 @@
 import { Router } from 'express';
-import {
-    accessTokenVerification,
-    csrfVerification,
-    adminVerification,
-    multerMiddleware,
-    memberVerification,
-    lastActiveUpdateMiddleware,
-    requestValidator,
-} from '@members-only/core-utils';
+import { accessTokenVerification } from '@members-only/core-utils/middlewares/accessTokenVerification';
+import { csrfVerification } from '@members-only/core-utils/middlewares/csrfVerification';
+import { adminVerification } from '@members-only/core-utils/middlewares/adminVerification';
+import { multerMiddleware } from '@members-only/core-utils/middlewares/multerMiddleware';
+import { memberVerification } from '@members-only/core-utils/middlewares/memberVerification';
+import { lastActiveUpdateMiddleware } from '@members-only/core-utils/middlewares/lastActiveUpdateMiddleware';
+import { requestValidator } from '@members-only/core-utils/middlewares/requestValidator';
 import {
     adminDeleteUser,
     deleteUserAccount,

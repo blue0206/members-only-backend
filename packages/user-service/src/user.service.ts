@@ -1,12 +1,11 @@
 import { prisma } from '@members-only/database';
+import { config } from '@members-only/core-utils/env';
+import { prismaErrorHandler } from '@members-only/core-utils/utils/prismaErrorHandler';
+import { deleteFile, uploadFile } from '@members-only/core-utils/cloudinary';
 import {
-    prismaErrorHandler,
     InternalServerError,
     UnauthorizedError,
-    config,
-    deleteFile,
-    uploadFile,
-} from '@members-only/core-utils';
+} from '@members-only/core-utils/errors';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import bcrypt from 'bcrypt';
 // import { v4 as uuidv4 } from 'uuid';
@@ -22,7 +21,8 @@ import type {
     Role,
 } from '@blue0206/members-only-shared-types';
 import type { Bookmark, User } from '@members-only/database';
-import type { AccessTokenPayload, Logger } from '@members-only/core-utils';
+import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
+import type { Logger } from '@members-only/core-utils/logger';
 
 // TODO: Handle SSE events for real-time updates.
 class UserService {

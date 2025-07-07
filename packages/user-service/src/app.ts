@@ -1,13 +1,11 @@
 import 'dotenv/config';
-import { config } from '@members-only/core-utils';
+import { config } from '@members-only/core-utils/env';
 import express from 'express';
 import cors from 'cors';
-import {
-    assignRequestIdAndChildLogger,
-    loggerMiddleware,
-    errorHandler,
-    NotFoundError,
-} from '@members-only/core-utils';
+import { assignRequestIdAndChildLogger } from '@members-only/core-utils/middlewares/assignRequestIdAndChildLogger';
+import { loggerMiddleware } from '@members-only/core-utils/middlewares/loggerMiddleware';
+import { errorHandler } from '@members-only/core-utils/middlewares/errorHandler';
+import { NotFoundError } from '@members-only/core-utils/errors';
 import helmet from 'helmet';
 import userRouter from './user.route.js';
 import cookieParser from 'cookie-parser';
