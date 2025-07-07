@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import { InternalServerError, UnauthorizedError } from '../errors/customErrors.js';
 import { ZodError } from 'zod';
 import type {

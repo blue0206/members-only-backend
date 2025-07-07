@@ -1,6 +1,6 @@
 import type { JwtPayload } from 'jsonwebtoken';
 import { z } from 'zod';
-import { Role } from '@blue0206/members-only-shared-types';
+import { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 
 // Access Token payload schema.
 export const AccessTokenPayloadSchema = z

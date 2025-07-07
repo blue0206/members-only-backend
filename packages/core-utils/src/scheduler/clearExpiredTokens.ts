@@ -1,6 +1,6 @@
 import { prisma } from '@members-only/database';
 import { logger } from '../logger.js';
-import prismaErrorHandler from '../utils/prismaErrorHandler.js';
+import { prismaErrorHandler } from '../utils/prismaErrorHandler.js';
 
 export default async function clearExpiredTokens(): Promise<void> {
     const now = new Date();

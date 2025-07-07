@@ -9,7 +9,7 @@ import {
     mapToGetUsersResponseDto,
     mapToUploadAvatarResponseDto,
 } from './user.mapper.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import type { Request, Response } from 'express';
 import type {
     EditUserServiceReturnType,
@@ -19,18 +19,20 @@ import type {
 } from './user.types.js';
 import type {
     ApiResponse,
+    ApiResponseSuccess,
+} from '@blue0206/members-only-shared-types/api/base';
+import type { MessageParamsDto } from '@blue0206/members-only-shared-types/dtos/message.dto';
+import type {
     EditUserRequestDto,
     EditUserResponseDto,
     ResetPasswordRequestDto,
     MemberRoleUpdateRequestDto,
     SetRoleRequestQueryDto,
-    UsernameParamsDto,
     GetUserBookmarksResponseDto,
-    ApiResponseSuccess,
-    MessageParamsDto,
+    UsernameParamsDto,
     GetUsersResponseDto,
     UploadAvatarResponseDto,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/user.dto';
 
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
     const users: GetUsersServiceReturnType = await userService.getUsers(req.log);
@@ -248,7 +250,7 @@ export const addUserBookmark = async (
 
     await userService.addBookmark(
         req.user.id,
-        parseInt((req.params as MessageParamsDto).messageId as unknown as string),
+        +(req.params as MessageParamsDto).messageId,
         req.log
     );
 
@@ -274,7 +276,7 @@ export const removeUserBookmark = async (
 
     await userService.removeBookmark(
         req.user.id,
-        parseInt((req.params as MessageParamsDto).messageId as unknown as string),
+        +(req.params as MessageParamsDto).messageId,
         req.log
     );
 

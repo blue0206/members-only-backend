@@ -1,5 +1,5 @@
 import { InternalServerError } from '../errors/customErrors.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import type { ZodSchema } from 'zod';
 
 /**

@@ -1,6 +1,6 @@
 import { messageService } from './message.service.js';
 import { UnauthorizedError } from '@members-only/core-utils/errors';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import {
     mapToCreateMessageResponseDto,
     mapToEditMessageResponseDto,
@@ -10,6 +10,9 @@ import {
 import type { Request, Response } from 'express';
 import type {
     ApiResponse,
+    ApiResponseSuccess,
+} from '@blue0206/members-only-shared-types/api/base';
+import type {
     GetMessagesResponseDto,
     GetMessagesWithoutAuthorResponseDto,
     CreateMessageRequestDto,
@@ -17,8 +20,7 @@ import type {
     EditMessageRequestDto,
     EditMessageResponseDto,
     MessageParamsDto,
-    ApiResponseSuccess,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/message.dto';
 import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,

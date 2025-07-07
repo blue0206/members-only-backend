@@ -4,12 +4,12 @@ import {
     UnauthorizedError,
 } from '@members-only/core-utils/errors';
 import { authService } from './auth.service.js';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import {
-    ErrorCodes,
     LoginResponseSchema,
     RefreshResponseSchema,
     RegisterResponseSchema,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/auth.dto';
 import {
     mapToAuthResponseDto,
     mapToUserSessionsResponseDto,
@@ -17,8 +17,8 @@ import {
 import ms from 'ms';
 import crypto from 'crypto';
 import type { CookieOptions, Request, Response } from 'express';
+import type { ApiResponseSuccess } from '@blue0206/members-only-shared-types/api/base';
 import type {
-    ApiResponseSuccess,
     LoginRequestDto,
     LoginResponseDto,
     RefreshResponseDto,
@@ -26,7 +26,7 @@ import type {
     RegisterResponseDto,
     SessionIdParamsDto,
     UserSessionsResponseDto,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/auth.dto';
 import type {
     GetSessionsServiceReturnType,
     LoginServiceReturnType,

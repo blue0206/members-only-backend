@@ -1,15 +1,13 @@
 import multer, { MulterError } from 'multer';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import {
     AvatarSchema,
-    ErrorCodes,
     supportedImageFormats,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/file.dto';
 import { BadRequestError, ValidationError } from '../errors/customErrors.js';
 import type { Request, Response, NextFunction } from 'express';
-import type {
-    ApiErrorCode,
-    SupportedImageFormatsType,
-} from '@blue0206/members-only-shared-types';
+import type { SupportedImageFormatsType } from '@blue0206/members-only-shared-types/dtos/file.dto';
+import type { ApiErrorCode } from '@blue0206/members-only-shared-types/api/error-codes';
 
 // Setup multer memory storage.
 const storage = multer.memoryStorage();

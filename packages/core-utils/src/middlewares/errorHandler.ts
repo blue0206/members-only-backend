@@ -1,11 +1,11 @@
 import { config } from '../config/index.js';
 import { AppError } from '../errors/customErrors.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import type {
     ApiErrorPayload,
     ApiResponseError,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/api/base';
 
 export const errorHandler: ErrorRequestHandler = (
     err: Error,

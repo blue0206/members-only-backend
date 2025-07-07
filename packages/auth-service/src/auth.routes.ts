@@ -12,7 +12,7 @@ import {
     LoginRequestSchema,
     RegisterRequestSchema,
     SessionIdParamsSchema,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/auth.dto';
 import { accessTokenVerification } from '@members-only/core-utils/middlewares/accessTokenVerification';
 import { csrfVerification } from '@members-only/core-utils/middlewares/csrfVerification';
 import { multerMiddleware } from '@members-only/core-utils/middlewares/multerMiddleware';

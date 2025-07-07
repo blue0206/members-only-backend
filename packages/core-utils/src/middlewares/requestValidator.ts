@@ -1,6 +1,6 @@
 import { ZodError } from 'zod';
 import { ValidationError } from '../errors/customErrors.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import type { Request, Response, NextFunction } from 'express';
 import type { ZodSchema } from 'zod';
 

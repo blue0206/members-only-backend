@@ -1,4 +1,4 @@
-import { userActivityPing } from '../scheduler/batchUpdateLastActive.js';
+// import { userActivityPing } from '../scheduler/batchUpdateLastActive.js';
 import type { Request, Response, NextFunction } from 'express';
 
 export function lastActiveUpdateMiddleware(
@@ -13,6 +13,6 @@ export function lastActiveUpdateMiddleware(
         return;
     }
 
-    userActivityPing.set(req.user.id, Date.now());
+    // userActivityPing.set(req.user.id, Date.now());
     req.log.trace('User activity ping recorded.');
 }

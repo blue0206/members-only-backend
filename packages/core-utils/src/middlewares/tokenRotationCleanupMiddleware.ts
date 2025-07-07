@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { jwtErrorHandler } from '../utils/jwtErrorHandler.js';
 import { prismaErrorHandler } from '../utils/prismaErrorHandler.js';
 import { UnauthorizedError } from '../errors/customErrors.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import { RefreshTokenPayloadSchema } from '../types/auth.types.js';
 import { config } from '../config/index.js';
 import { prisma } from '@members-only/database';

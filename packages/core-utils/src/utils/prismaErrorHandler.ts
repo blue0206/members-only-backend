@@ -1,5 +1,5 @@
 import { Prisma } from '@members-only/database';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import {
     AppError,
     BadRequestError,

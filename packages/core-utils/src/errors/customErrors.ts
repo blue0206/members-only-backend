@@ -1,5 +1,5 @@
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
-import type { ApiErrorCode } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
+import type { ApiErrorCode } from '@blue0206/members-only-shared-types/api/error-codes';
 
 // Base App Error class.
 export class AppError extends Error {

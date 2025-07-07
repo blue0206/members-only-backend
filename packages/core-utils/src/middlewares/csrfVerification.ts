@@ -1,5 +1,5 @@
 import { ForbiddenError } from '../errors/customErrors.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import type { Request, Response, NextFunction } from 'express';
 
 // This middleware is used to verify CSRF tokens, a method

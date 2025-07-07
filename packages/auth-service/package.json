@@ -10,7 +10,7 @@
         "lint": "eslint . --ext .ts"
     },
     "dependencies": {
-        "@blue0206/members-only-shared-types": "^11.6.0",
+        "@blue0206/members-only-shared-types": "^13.0.0",
         "@codegenie/serverless-express": "^4.16.0",
         "@members-only/core-utils": "workspace:*",
         "@members-only/database": "workspace:*",

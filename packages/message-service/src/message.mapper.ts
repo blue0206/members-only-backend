@@ -6,13 +6,13 @@ import {
     EditMessageResponseSchema,
     GetMessagesResponseSchema,
     GetMessagesWithoutAuthorResponseSchema,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/message.dto';
 import type {
     CreateMessageResponseDto,
     EditMessageResponseDto,
     GetMessagesResponseDto,
     GetMessagesWithoutAuthorResponseDto,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/message.dto';
 import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,

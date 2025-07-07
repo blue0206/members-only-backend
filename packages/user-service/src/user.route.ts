@@ -20,14 +20,14 @@ import {
     removeUserBookmark,
     uploadUserAvatar,
 } from './user.controller.js';
+import { MessageParamsSchema } from '@blue0206/members-only-shared-types/dtos/message.dto';
 import {
     EditUserRequestSchema,
     MemberRoleUpdateRequestSchema,
-    MessageParamsSchema,
     ResetPasswordRequestSchema,
     SetRoleRequestQuerySchema,
     UsernameParamsSchema,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/user.dto';
 import type { Router as ExpressRouter } from 'express';
 
 const userRouter: ExpressRouter = Router();

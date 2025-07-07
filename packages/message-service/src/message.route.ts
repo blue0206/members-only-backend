@@ -17,7 +17,7 @@ import {
     CreateMessageRequestSchema,
     EditMessageRequestSchema,
     MessageParamsSchema,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/message.dto';
 import type { Router as ExpressRouter } from 'express';
 
 const messageRouter: ExpressRouter = Router();

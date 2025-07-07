@@ -6,13 +6,13 @@ import {
     GetUserBookmarksResponseSchema,
     GetUsersResponseSchema,
     UploadAvatarResponseSchema,
-} from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
+} from '@blue0206/members-only-shared-types/dtos/user.dto';
 import type {
     EditUserResponseDto,
     GetUserBookmarksResponseDto,
     GetUsersResponseDto,
     UploadAvatarResponseDto,
-} from '@blue0206/members-only-shared-types/dist/dtos/user.dto.js';
+} from '@blue0206/members-only-shared-types/dtos/user.dto';
 import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,

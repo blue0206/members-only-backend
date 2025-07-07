@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@members-only/database';
 import { v4 as uuidv4 } from 'uuid';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import { config } from '@members-only/core-utils/env';
 import { prismaErrorHandler } from '@members-only/core-utils/utils/prismaErrorHandler';
 import { jwtErrorHandler } from '@members-only/core-utils/utils/jwtErrorHandler';
@@ -17,7 +17,7 @@ import {
 import type {
     LoginRequestDto,
     RegisterRequestDto,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/auth.dto';
 import type { RefreshToken, User } from '@members-only/database';
 import type { StringValue } from 'ms';
 import type {

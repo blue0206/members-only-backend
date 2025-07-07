@@ -1,5 +1,6 @@
 import { ForbiddenError } from '../errors/customErrors.js';
-import { ErrorCodes, Role } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
+import { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 import type { Request, Response, NextFunction } from 'express';
 
 export function adminVerification(

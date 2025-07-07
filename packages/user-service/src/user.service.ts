@@ -6,7 +6,7 @@ import {
     InternalServerError,
     UnauthorizedError,
 } from '@members-only/core-utils/errors';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import bcrypt from 'bcrypt';
 // import { v4 as uuidv4 } from 'uuid';
 import type {
@@ -18,8 +18,8 @@ import type {
 import type {
     EditUserRequestDto,
     ResetPasswordRequestDto,
-    Role,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/user.dto';
+import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 import type { Bookmark, User } from '@members-only/database';
 import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
 import type { Logger } from '@members-only/core-utils/logger';

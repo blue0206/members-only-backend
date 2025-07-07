@@ -1,6 +1,6 @@
 import { config } from '../config/index.js';
 import jwt from 'jsonwebtoken';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import { UnauthorizedError } from '../errors/customErrors.js';
 import { jwtErrorHandler } from '../utils/jwtErrorHandler.js';
 import { AccessTokenPayloadSchema } from '../types/auth.types.js';
@@ -8,7 +8,7 @@ import type { AccessTokenPayload } from '../types/auth.types.js';
 import type {
     ApiErrorPayload,
     ApiResponseError,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/api/base';
 import type { Request, Response, NextFunction } from 'express';
 
 export function accessTokenVerification(

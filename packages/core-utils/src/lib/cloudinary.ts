@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { config } from '../config/index.js';
 import { InternalServerError } from '../errors/customErrors.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import { v4 as uuidv4 } from 'uuid';
 import type { UploadApiResponse } from 'cloudinary';
 import type { Logger } from 'pino';

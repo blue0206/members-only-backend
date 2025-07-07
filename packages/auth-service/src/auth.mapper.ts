@@ -1,7 +1,7 @@
 import { mappedDtoValidator } from '@members-only/core-utils/utils/mappedDtoValidator';
 import { getAvatarUrl } from '@members-only/core-utils/cloudinary';
 import { mapPrismaRoleToEnumRole } from '@members-only/core-utils/utils/roleMapper';
-import { UserSessionsResponseSchema } from '@blue0206/members-only-shared-types';
+import { UserSessionsResponseSchema } from '@blue0206/members-only-shared-types/dtos/auth.dto';
 import type {
     LoginResponseDto,
     RefreshResponseDto,
@@ -10,7 +10,7 @@ import type {
     RegisterResponseSchema,
     LoginResponseSchema,
     RefreshResponseSchema,
-} from '@blue0206/members-only-shared-types';
+} from '@blue0206/members-only-shared-types/dtos/auth.dto';
 import type {
     GetSessionsServiceReturnType,
     LoginServiceReturnType,
