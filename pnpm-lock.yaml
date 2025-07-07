@@ -77,13 +77,12 @@ importers:
       '@codegenie/serverless-express':
         specifier: ^4.16.0
         version: 4.16.0
+      '@members-only/core-utils':
+        specifier: workspace:*
+        version: link:../core-utils
       '@members-only/database':
         specifier: workspace:*
         version: link:../database
-    devDependencies:
-      esbuild:
-        specifier: ^0.25.5
-        version: 0.25.5
 
   packages/auth-service:
     dependencies:
@@ -129,10 +128,6 @@ importers:
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.150
-        version: 8.10.150
 
   packages/core-utils:
     dependencies:
@@ -225,10 +220,6 @@ importers:
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.150
-        version: 8.10.150
 
   packages/service-monolith:
     dependencies:
@@ -392,10 +383,6 @@ importers:
       multer:
         specifier: 2.0.1
         version: 2.0.1
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.150
-        version: 8.10.150
 
 packages:
 
