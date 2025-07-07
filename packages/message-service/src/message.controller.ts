@@ -4,8 +4,8 @@ import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import {
     mapToCreateMessageResponseDto,
     mapToEditMessageResponseDto,
-    mapToGetMessagesResponseDto,
-    mapToGetMessagesWithoutAuthorResponseDto,
+    mapToMessagesWithAuthorResponseDto,
+    mapToMessagesWithoutAuthorResponseDto,
 } from './message.mapper.js';
 import type { Request, Response } from 'express';
 import type {
@@ -34,7 +34,7 @@ export const getMessagesWithoutAuthor = async (
     );
 
     const mappedMessages: GetMessagesWithoutAuthorResponseDto =
-        mapToGetMessagesWithoutAuthorResponseDto(messages);
+        mapToMessagesWithoutAuthorResponseDto(messages);
 
     const successResponse: ApiResponse<GetMessagesWithoutAuthorResponseDto> = {
         success: true,
@@ -61,10 +61,8 @@ export const getMessagesWithAuthor = async (
         req.log
     );
 
-    const mappedMessages: GetMessagesResponseDto = mapToGetMessagesResponseDto(
-        messages,
-        req.user.id
-    );
+    const mappedMessages: GetMessagesResponseDto =
+        mapToMessagesWithAuthorResponseDto(messages, req.user.id);
 
     const successResponse: ApiResponse<GetMessagesResponseDto> = {
         success: true,
