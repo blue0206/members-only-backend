@@ -64,16 +64,18 @@ export const mapToAuthResponseDto = <
 export const mapToUserSessionsResponseDto = (
     data: GetSessionsServiceReturnType
 ): UserSessionsResponseDto => {
-    const mappedData: UserSessionsResponseDto = data.sessions.map((session) => ({
-        sessionId: session.jwtId,
-        userId: session.userId,
-        userIp: session.ip,
-        userAgent: session.userAgent,
-        userLocation: session.location,
-        lastUsedOn: session.createdAt,
-        expires: session.expiresAt,
-        currentSession: session.jwtId === data.currentSessionId,
-    }));
+    const mappedData: UserSessionsResponseDto = data.sessions.map(
+        (session): UserSessionsResponseDto[number] => ({
+            sessionId: session.jwtId,
+            userId: session.userId,
+            userIp: session.ip,
+            userAgent: session.userAgent,
+            userLocation: session.location,
+            lastUsedOn: session.createdAt,
+            expires: session.expiresAt,
+            currentSession: session.jwtId === data.currentSessionId,
+        })
+    );
 
     const validatedData: UserSessionsResponseDto = mappedDtoValidator(
         mappedData,
