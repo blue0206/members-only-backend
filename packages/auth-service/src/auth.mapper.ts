@@ -1,17 +1,15 @@
 import { mappedDtoValidator } from '@members-only/core-utils/utils/mappedDtoValidator';
 import { getAvatarUrl } from '@members-only/core-utils/cloudinary';
 import { mapPrismaRoleToEnumRole } from '@members-only/core-utils/utils/roleMapper';
-import {
-    LoginResponseSchema,
-    RefreshResponseSchema,
-    RegisterResponseSchema,
-    UserSessionsResponseSchema,
-} from '@blue0206/members-only-shared-types';
+import { UserSessionsResponseSchema } from '@blue0206/members-only-shared-types';
 import type {
     LoginResponseDto,
     RefreshResponseDto,
     RegisterResponseDto,
     UserSessionsResponseDto,
+    RegisterResponseSchema,
+    LoginResponseSchema,
+    RefreshResponseSchema,
 } from '@blue0206/members-only-shared-types';
 import type {
     GetSessionsServiceReturnType,
@@ -20,10 +18,34 @@ import type {
     RegisterServiceReturnType,
 } from './auth.types.js';
 
-export const mapToRegisterResponseDto = (
-    userData: RegisterServiceReturnType
-): RegisterResponseDto => {
-    const mappedData: RegisterResponseDto = {
+// This is a union type for all authentication response DTOs with the SAME structure.
+type AuthResponseDto = RegisterResponseDto | LoginResponseDto | RefreshResponseDto;
+// This is a union type of zod schema for all authentication service response DTOs
+// (again, with the SAME structure).
+type AuthSchemaType =
+    | typeof RegisterResponseSchema
+    | typeof LoginResponseSchema
+    | typeof RefreshResponseSchema;
+// This is a generic type for the return type of the authentication service methods.
+// Note that the return types of the service methods have different structures,
+// so we need to use a generic type to map them correctly.
+type AuthServiceReturnType<
+    ServiceType extends
+        | RegisterServiceReturnType
+        | LoginServiceReturnType
+        | RefreshServiceReturnType,
+> = ServiceType;
+
+export const mapToAuthResponseDto = <
+    ServiceType extends
+        | RegisterServiceReturnType
+        | LoginServiceReturnType
+        | RefreshServiceReturnType,
+>(
+    userData: AuthServiceReturnType<ServiceType>,
+    schema: AuthSchemaType
+): AuthResponseDto => {
+    const mappedData: AuthResponseDto = {
         id: userData.id,
         username: userData.username,
         firstname: userData.firstName,
@@ -34,52 +56,8 @@ export const mapToRegisterResponseDto = (
         accessToken: userData.accessToken,
     };
 
-    const validatedData: RegisterResponseDto = mappedDtoValidator(
-        mappedData,
-        RegisterResponseSchema
-    );
-    return validatedData;
-};
+    const validatedData: AuthResponseDto = mappedDtoValidator(mappedData, schema);
 
-export const mapToLoginResponseDto = (
-    userData: LoginServiceReturnType
-): LoginResponseDto => {
-    const mappedData: LoginResponseDto = {
-        id: userData.id,
-        username: userData.username,
-        firstname: userData.firstName,
-        middlename: userData.middleName,
-        lastname: userData.lastName,
-        avatar: userData.avatar ? getAvatarUrl(userData.avatar) : null,
-        role: mapPrismaRoleToEnumRole(userData.role),
-        accessToken: userData.accessToken,
-    };
-
-    const validatedData: LoginResponseDto = mappedDtoValidator(
-        mappedData,
-        LoginResponseSchema
-    );
-    return validatedData;
-};
-
-export const mapToRefreshResponseDto = (
-    data: RefreshServiceReturnType
-): RefreshResponseDto => {
-    const mappedData: RefreshResponseDto = {
-        id: data.id,
-        username: data.username,
-        firstname: data.firstName,
-        middlename: data.middleName,
-        lastname: data.lastName,
-        avatar: data.avatar ? getAvatarUrl(data.avatar) : null,
-        role: mapPrismaRoleToEnumRole(data.role),
-        accessToken: data.accessToken,
-    };
-
-    const validatedData: RefreshResponseDto = mappedDtoValidator(
-        mappedData,
-        RefreshResponseSchema
-    );
     return validatedData;
 };
 

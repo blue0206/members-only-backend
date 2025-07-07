@@ -4,11 +4,14 @@ import {
     UnauthorizedError,
 } from '@members-only/core-utils/errors';
 import { authService } from './auth.service.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import {
-    mapToLoginResponseDto,
-    mapToRefreshResponseDto,
-    mapToRegisterResponseDto,
+    ErrorCodes,
+    LoginResponseSchema,
+    RefreshResponseSchema,
+    RegisterResponseSchema,
+} from '@blue0206/members-only-shared-types';
+import {
+    mapToAuthResponseDto,
     mapToUserSessionsResponseDto,
 } from './auth.mapper.js';
 import ms from 'ms';
@@ -70,7 +73,10 @@ export const registerUser = async (
         req.clientDetails,
         req.log
     );
-    const responseData: RegisterResponseDto = mapToRegisterResponseDto(userData);
+    const responseData: RegisterResponseDto = mapToAuthResponseDto(
+        userData,
+        RegisterResponseSchema
+    );
 
     setAuthCookies(res, userData.refreshToken);
 
@@ -99,7 +105,10 @@ export const loginUser = async (
         req.clientDetails,
         req.log
     );
-    const responseData: LoginResponseDto = mapToLoginResponseDto(userData);
+    const responseData: LoginResponseDto = mapToAuthResponseDto(
+        userData,
+        LoginResponseSchema
+    );
 
     setAuthCookies(res, userData.refreshToken);
 
@@ -197,7 +206,10 @@ export const refreshUserTokens = async (
         req.clientDetails,
         req.log
     );
-    const responseData: RefreshResponseDto = mapToRefreshResponseDto(tokens);
+    const responseData: RefreshResponseDto = mapToAuthResponseDto(
+        tokens,
+        RefreshResponseSchema
+    );
 
     setAuthCookies(res, tokens.refreshToken);
 
