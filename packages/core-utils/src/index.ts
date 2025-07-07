@@ -17,4 +17,4 @@ export * from './middlewares';
 export * from './utils';
 
 // Export auth types.
-export * from './auth/auth.types.js';
+export * from './types/auth.types.js';

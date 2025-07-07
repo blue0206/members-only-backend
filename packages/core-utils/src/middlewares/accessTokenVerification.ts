@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken';
 import { ErrorCodes } from '@blue0206/members-only-shared-types';
 import { UnauthorizedError } from '../errors/customErrors.js';
 import { jwtErrorHandler } from '../utils/jwtErrorHandler.js';
-import { AccessTokenPayloadSchema } from '../auth/auth.types.js';
-import type { AccessTokenPayload } from '../auth/auth.types.js';
+import { AccessTokenPayloadSchema } from '../types/auth.types.js';
+import type { AccessTokenPayload } from '../types/auth.types.js';
 import type {
     ApiErrorPayload,
     ApiResponseError,

@@ -1,4 +1,4 @@
-import type { AccessTokenPayload } from '../../auth/auth.types.ts';
+import type { AccessTokenPayload } from '../auth.types.js';
 import type { ClientDetailsType } from '../../middlewares/assignClientDetails.ts';
 import type { Logger } from 'pino';
 
