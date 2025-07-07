@@ -1,11 +1,17 @@
-// import { userActivityPing } from '../scheduler/batchUpdateLastActive.js';
+import { config } from '../config';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import type { Request, Response, NextFunction } from 'express';
+import type { UserActivityPayload } from '../types/activity.types';
 
-export function lastActiveUpdateMiddleware(
+const sqsClient = new SQSClient({
+    region: config.AWS_REGION,
+});
+
+export async function lastActiveUpdateMiddleware(
     req: Request,
     _res: Response,
     next: NextFunction
-): void {
+): Promise<void> {
     next();
 
     if (!req.user) {
@@ -13,6 +19,21 @@ export function lastActiveUpdateMiddleware(
         return;
     }
 
-    // userActivityPing.set(req.user.id, Date.now());
-    req.log.trace('User activity ping recorded.');
+    const message = new SendMessageCommand({
+        QueueUrl: config.SQS_USER_ACTIVITY_QUEUE_URL,
+        MessageBody: JSON.stringify({
+            userId: req.user.id,
+            timestamp: new Date(),
+        } satisfies UserActivityPayload),
+    });
+
+    try {
+        await sqsClient.send(message);
+        req.log.trace('User activity ping recorded.');
+    } catch (error: unknown) {
+        req.log.error(
+            { error, userId: req.user.id },
+            'Failed to send user activity ping to SQS.'
+        );
+    }
 }
