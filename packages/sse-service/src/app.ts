@@ -8,7 +8,10 @@ import { assignRequestIdAndChildLogger } from '@members-only/core-utils/middlewa
 import { loggerMiddleware } from '@members-only/core-utils/middlewares/loggerMiddleware';
 import { errorHandler } from '@members-only/core-utils/middlewares/errorHandler';
 import { NotFoundError } from '@members-only/core-utils/errors';
+import { logger } from '@members-only/core-utils/logger';
+import { sseService } from './sse.service.js';
 import type { Request, Response } from 'express';
+import type { Server } from 'http';
 
 const app = express();
 
@@ -46,3 +49,82 @@ app.use((req: Request, _res: Response) => {
 
 // Error Middleware
 app.use(errorHandler);
+
+// Server
+const PORT = config.PORT;
+const server: Server = app.listen(PORT, () => {
+    logger.info(
+        `Server running on port ${config.PORT.toString()} in ${config.NODE_ENV} mode`
+    );
+
+    // Schedule heartbeat to send to all SSE clients every 35 seconds.
+    setInterval(() => {
+        sseService.sendHeartbeat();
+    }, 35000);
+    logger.info('Scheduled heartbeat to send to all SSE clients every 35 seconds.');
+});
+
+//---------GRACEFUL SHUTDOWN--------
+
+// Signals to listen for.
+const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
+let shuttingDown = false;
+
+// eslint-disable-next-line @typescript-eslint/require-await
+async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
+    // Set flag to prevent multiple shutdown calls.
+    if (shuttingDown) {
+        logger.warn(`Already shutting down. Ignoring signal: ${signal}`);
+        return;
+    }
+    shuttingDown = true;
+    logger.warn(`Received ${signal}. Gracefully shutting down....`);
+
+    // Disconnect all SSE clients before shutting down.
+    sseService.clearSseClients();
+
+    // Stop server.
+    server.close((err) => {
+        if (err) {
+            logger.error({ err }, 'Error shutting down server.');
+            // Set exit code to indicate failure. But we don't exit yet
+            // here because we want to try disconnecting the DB.
+            process.exitCode = 1;
+        } else {
+            logger.info('Server has shutdown successfully.');
+        }
+
+        // Exit the process.
+        logger.info('Graceful shutdown complete. Exiting....');
+        // We don't set exitCode here. By default it should be 0, else 1 if error
+        // was encountered before.
+        process.exit();
+    });
+
+    // Failsafe Timeout
+    const shutDownTimeout = 11000;
+    setTimeout(() => {
+        logger.error(
+            `Graceful shutdown timed out after ${(shutDownTimeout / 1000).toString()}s. Forcing exit....`
+        );
+        process.exit(1);
+    }, shutDownTimeout).unref(); // Allow exit on pending timeout.
+}
+
+// Register Signal Handlers
+signals.forEach((signal: NodeJS.Signals) => {
+    process.on(signal, async () => {
+        console.log(`Received ${signal}. Gracefully shutting down....`);
+        await gracefulShutdown(signal);
+    });
+});
+
+// Uncaught Exceptions / Unhandled Rejections
+process.on('uncaughtException', (error) => {
+    logger.fatal({ err: error }, 'Uncaught Exception');
+    process.exit(1);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    logger.fatal({ err: reason, promise }, 'Unhandled Rejection');
+    process.exit(1);
+});
