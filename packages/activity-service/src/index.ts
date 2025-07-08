@@ -58,9 +58,12 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 
     // Prepare batch of updates.
     const updateBatch = [...latestUpdates].map(([userId, timestamp]) =>
-        prisma.user.update({
+        prisma.user.updateMany({
             where: {
                 id: userId,
+                lastActive: {
+                    lt: timestamp, // Update only if timestamp is newer.
+                },
             },
             data: {
                 lastActive: timestamp,
