@@ -6,6 +6,9 @@ import {
     ForbiddenError,
     InternalServerError,
 } from '@members-only/core-utils/errors';
+import { SseEventNames } from '@blue0206/members-only-shared-types/api/event-names';
+import { EventReason } from '@blue0206/members-only-shared-types/enums/eventReason.enum';
+import { eventDispatch } from '@members-only/core-utils/utils/eventDispatch';
 import type {
     CreateMessageServiceReturnType,
     EditMessageServiceReturnType,
@@ -14,8 +17,8 @@ import type {
 import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
 import type { Logger } from '@members-only/core-utils/logger';
 import type { Like, Message } from '@members-only/database';
+import type { EventRequestDto } from '@blue0206/members-only-shared-types/dtos/event.dto';
 
-// TODO: Handle SSE events for real-time updates.
 class MessageService {
     async getMessages(log: Logger): Promise<GetMessagesServiceReturnType> {
         log.info('Getting messages from database.');
@@ -82,15 +85,20 @@ class MessageService {
 
         log.info({ message }, 'Message created successfully.');
 
-        // Broadcast event to all connected SSE clients to show real-time updates.
-        // sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
-        //     event: SseEventNames.MESSAGE_EVENT,
-        //     data: {
-        //         reason: EventReason.MESSAGE_CREATED,
-        //         originId: createdMessage.author.id,
-        //     },
-        //     id: uuidv4(),
-        // });
+        // Dispatch event to SSE service to broadcast event to clients.
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MESSAGE_EVENT,
+                    payload: {
+                        originId: createdMessage.author.id,
+                        reason: EventReason.MESSAGE_CREATED,
+                    },
+                    transmissionType: 'broadcast',
+                },
+            ],
+        };
+        eventDispatch(body, log);
 
         return createdMessage;
     }
@@ -133,15 +141,20 @@ class MessageService {
 
         log.info({ newMessage, messageId }, 'Message edited successfully.');
 
-        // Broadcast event to all connected SSE clients to show real-time updates.
-        // sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
-        //     event: SseEventNames.MESSAGE_EVENT,
-        //     data: {
-        //         reason: EventReason.MESSAGE_UPDATED,
-        //         originId: user.id,
-        //     },
-        //     id: uuidv4(),
-        // });
+        // Dispatch event to SSE service to broadcast event to clients.
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MESSAGE_EVENT,
+                    payload: {
+                        originId: user.id,
+                        reason: EventReason.MESSAGE_UPDATED,
+                    },
+                    transmissionType: 'broadcast',
+                },
+            ],
+        };
+        eventDispatch(body, log);
 
         return editedMessageDetails;
     }
@@ -170,15 +183,20 @@ class MessageService {
 
         log.info({ messageId }, 'Message deleted successfully.');
 
-        // Broadcast event to all connected SSE clients to show real-time updates.
-        // sseService.broadcastEvent<SseEventNamesType, MessageEventPayloadDto>({
-        //     event: SseEventNames.MESSAGE_EVENT,
-        //     data: {
-        //         reason: EventReason.MESSAGE_DELETED,
-        //         originId: user.id,
-        //     },
-        //     id: uuidv4(),
-        // });
+        // Dispatch event to SSE service to broadcast event to clients.
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MESSAGE_EVENT,
+                    payload: {
+                        originId: user.id,
+                        reason: EventReason.MESSAGE_DELETED,
+                    },
+                    transmissionType: 'broadcast',
+                },
+            ],
+        };
+        eventDispatch(body, log);
     }
 
     async likeMessage(
