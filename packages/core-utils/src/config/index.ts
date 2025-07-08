@@ -40,10 +40,14 @@ const EnvironmentSchema = z.object({
     CLOUDINARY_API_SECRET: z.string(),
     // member role access secret key
     MEMBER_ROLE_SECRET_KEY: z.string(),
-    // Internal API Secret
+    // Internal API Secret and URL
     INTERNAL_API_SECRET: z
         .string()
         .min(1, { message: 'Internal API secret is missing.' }),
+    DISPATCH_EVENT_API_URL: z
+        .string()
+        .url({ message: 'Invalid API URL.' })
+        .min(1, { message: 'API URL is missing.' }),
     // AWS
     AWS_REGION: z.string().min(1, { message: 'AWS region is missing.' }),
     SQS_USER_ACTIVITY_QUEUE_URL: z
