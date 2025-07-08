@@ -17,6 +17,7 @@ import {
 import { SseEventNames } from '@blue0206/members-only-shared-types/api/event-names';
 import { EventReason } from '@blue0206/members-only-shared-types/enums/eventReason.enum';
 import { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
+import { eventDispatch } from '@members-only/core-utils/utils/eventDispatch';
 import type { RefreshToken, User } from '@members-only/database';
 import type { StringValue } from 'ms';
 import type { ClientDetailsType } from '@members-only/core-utils/middlewares/assignClientDetails';
@@ -168,23 +169,7 @@ export class AuthService {
                 },
             ],
         };
-        fetch(config.DISPATCH_EVENT_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-internal-api-secret': config.INTERNAL_API_SECRET,
-            },
-            body: JSON.stringify(body),
-        })
-            .then(() => {
-                log.info(
-                    { username: user.username, role: user.role },
-                    'User registration event sent to admins.'
-                );
-            })
-            .catch((error: unknown) => {
-                log.error({ error }, 'Failed to dispatch event.');
-            });
+        eventDispatch(body, log);
 
         return {
             ...user,
