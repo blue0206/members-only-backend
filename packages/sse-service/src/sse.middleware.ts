@@ -1,7 +1,8 @@
 import { sseService } from './sse.service.js';
 import type { Request, Response, NextFunction } from 'express';
 
-export default function sseClientCleanup(
+// Middleware to cleanup SSE clients.
+export function sseClientCleanup(
     req: Request,
     res: Response,
     next: NextFunction
