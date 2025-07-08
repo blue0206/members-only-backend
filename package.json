@@ -5,7 +5,7 @@
     "description": "Monorepo for the Members Only serverless backend services.",
     "scripts": {
         "db:generate": "pnpm --filter @members-only/database db:generate",
-        "build": "pnpm --filter @members-only/database --filter @members-only/core-utils --filter @members-only/auth-service --filter @members-only/message-service --filter @members-only/user-service --filter @members-only/activity-service build",
+        "build": "pnpm -r build",
         "lint": "pnpm -r lint",
         "cleanup": "rm -rf node_modules packages/*/node_modules packages/*/dist packages/*/tsconfig.tsbuildinfo"
     },
