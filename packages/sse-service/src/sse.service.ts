@@ -1,11 +1,9 @@
-import { logger } from '../../core/logger.js';
-import type { Logger } from 'pino';
+import { logger } from '@members-only/core-utils/logger';
+import type { Logger } from '@members-only/core-utils/logger';
 import type { SseClient, SseClientAddParamsType } from './sse.types.js';
-import type {
-    Role,
-    ServerSentEvent,
-    SseEventNamesType,
-} from '@blue0206/members-only-shared-types';
+import type { ServerSentEvent } from '@blue0206/members-only-shared-types/dtos/event.dto';
+import type { SseEventNamesType } from '@blue0206/members-only-shared-types/api/event-names';
+import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 
 const clients = new Map<string, SseClient>();
 

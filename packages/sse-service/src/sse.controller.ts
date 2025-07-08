@@ -1,18 +1,18 @@
 import jwt from 'jsonwebtoken';
-import jwtErrorHandler from '../../core/utils/jwtErrorHandler.js';
-import { ErrorCodes } from '@blue0206/members-only-shared-types';
-import { UnauthorizedError } from '../../core/errors/customErrors.js';
-import { config } from '../../core/config/index.js';
-import { AccessTokenPayloadSchema } from '../auth/auth.types.js';
+import { jwtErrorHandler } from '@members-only/core-utils/utils/jwtErrorHandler';
+import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
+import { UnauthorizedError } from '@members-only/core-utils/errors';
+import { config } from '@members-only/core-utils/env';
+import { AccessTokenPayloadSchema } from '@members-only/core-utils/authTypes';
 import { sseService } from './sse.service.js';
 import type { Request, Response } from 'express';
 import type {
     ApiErrorPayload,
     ApiResponseError,
-    EventRequestQueryDto,
-    Role,
-} from '@blue0206/members-only-shared-types';
-import type { AccessTokenPayload } from '../auth/auth.types.js';
+} from '@blue0206/members-only-shared-types/api/base';
+import type { EventRequestQueryDto } from '@blue0206/members-only-shared-types/dtos/event.dto';
+import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
+import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
 
 export const sseConnectionHandler = (
     req: Request<unknown, unknown, unknown, EventRequestQueryDto>,

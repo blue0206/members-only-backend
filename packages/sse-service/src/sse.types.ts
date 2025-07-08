@@ -1,9 +1,7 @@
 import type { Response, Request } from 'express';
-import type {
-    EventRequestQueryDto,
-    Role,
-} from '@blue0206/members-only-shared-types';
-import type { Logger } from 'pino';
+import type { EventRequestQueryDto } from '@blue0206/members-only-shared-types/dtos/event.dto';
+import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
+import type { Logger } from '@members-only/core-utils/logger';
 
 export interface SseClient {
     id: string; // Client ID
