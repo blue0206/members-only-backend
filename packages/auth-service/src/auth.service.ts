@@ -14,24 +14,28 @@ import {
     InternalServerError,
     UnauthorizedError,
 } from '@members-only/core-utils/errors';
+import { SseEventNames } from '@blue0206/members-only-shared-types/api/event-names';
+import { EventReason } from '@blue0206/members-only-shared-types/enums/eventReason.enum';
+import { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
+import type { RefreshToken, User } from '@members-only/database';
+import type { StringValue } from 'ms';
+import type { ClientDetailsType } from '@members-only/core-utils/middlewares/assignClientDetails';
 import type {
     LoginRequestDto,
     RegisterRequestDto,
 } from '@blue0206/members-only-shared-types/dtos/auth.dto';
-import type { RefreshToken, User } from '@members-only/database';
-import type { StringValue } from 'ms';
 import type {
     LoginServiceReturnType,
     RegisterServiceReturnType,
     GetSessionsServiceReturnType,
 } from './auth.types.js';
-import type { ClientDetailsType } from '@members-only/core-utils/middlewares/assignClientDetails';
 import type {
     RefreshTokenPayload,
     AccessTokenPayload,
 } from '@members-only/core-utils/authTypes';
 import type { Logger } from '@members-only/core-utils/logger';
 import type { RefreshServiceReturnType } from './auth.types.js';
+import type { EventRequestDto } from '@blue0206/members-only-shared-types/dtos/event.dto';
 
 export class AuthService {
     async register(
@@ -149,18 +153,38 @@ export class AuthService {
             ' User registration successful'
         );
 
-        // TODO: Handle when SNS is set up.
-        // Send event to all admins to update their user list.
-        // sseService.multicastEventToRoles<SseEventNamesType, UserEventPayloadDto>(
-        //     [Role.ADMIN],
-        //     {
-        //         event: SseEventNames.USER_EVENT,
-        //         data: {
-        //             originId: user.id,
-        //             reason: EventReason.USER_CREATED,
-        //         },
-        //     }
-        // );
+        // Send an api call with event data to SSE service running on EC2 which will
+        // in turn, dispatch an event to all admins.
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.USER_EVENT,
+                    payload: {
+                        originId: user.id,
+                        reason: EventReason.USER_CREATED,
+                    },
+                    transmissionType: 'multicast',
+                    targetRoles: [Role.ADMIN],
+                },
+            ],
+        };
+        fetch(config.DISPATCH_EVENT_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-internal-api-secret': config.INTERNAL_API_SECRET,
+            },
+            body: JSON.stringify(body),
+        })
+            .then(() => {
+                log.info(
+                    { username: user.username, role: user.role },
+                    'User registration event sent to admins.'
+                );
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
 
         return {
             ...user,
