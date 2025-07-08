@@ -87,18 +87,6 @@ export const dispatchEvent = (
     req: Request<unknown, unknown, EventRequestDto>,
     res: Response
 ): void => {
-    // Verify api secret key to ensure request is coming from internal API.
-    if (!req.headers['x-internal-api-secret']) {
-        req.log.error('Missing x-internal-api-secret header.');
-        res.status(204).end();
-        return;
-    }
-    if (req.headers['x-internal-api-secret'] !== config.INTERNAL_API_SECRET) {
-        req.log.error('Invalid internal API Secret Key.');
-        res.status(204).end();
-        return;
-    }
-
     for (const event of req.body.events) {
         switch (event.transmissionType) {
             case 'unicast': {

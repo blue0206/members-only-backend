@@ -1,3 +1,4 @@
+import { config } from '@members-only/core-utils/env';
 import { sseService } from './sse.service.js';
 import { requestValidator } from '@members-only/core-utils/middlewares/requestValidator';
 import type { RequestValidatorArgsType } from '@members-only/core-utils/middlewares/requestValidator';
@@ -79,3 +80,25 @@ export const requestValidatorWrapper =
             }
         }
     };
+
+// Middleware to verify internal API Secret Key
+// to ensure request is coming from internal API.
+export function verifyInternalApiSecret(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): void {
+    if (!req.headers['x-internal-api-secret']) {
+        req.log.error('Missing x-internal-api-secret header.');
+        res.status(204).end();
+        return;
+    }
+
+    if (req.headers['x-internal-api-secret'] !== config.INTERNAL_API_SECRET) {
+        req.log.error('Invalid internal API Secret Key.');
+        res.status(204).end();
+        return;
+    }
+
+    next();
+}

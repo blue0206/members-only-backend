@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { dispatchEvent, sseConnectionHandler } from './sse.controller.js';
-import { sseClientCleanup, requestValidatorWrapper } from './sse.middleware.js';
+import {
+    sseClientCleanup,
+    requestValidatorWrapper,
+    verifyInternalApiSecret,
+} from './sse.middleware.js';
 import {
     EventRequestQuerySchema,
     EventRequestSchema,
@@ -20,6 +24,7 @@ sseRouter.get(
 );
 sseRouter.post(
     '/internal/dispatch',
+    verifyInternalApiSecret,
     requestValidatorWrapper({ schema: EventRequestSchema, type: 'body' }),
     dispatchEvent
 );
