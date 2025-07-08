@@ -8,7 +8,9 @@ import {
 } from '@members-only/core-utils/errors';
 import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
 import bcrypt from 'bcrypt';
-// import { v4 as uuidv4 } from 'uuid';
+import { eventDispatch } from '@members-only/core-utils/utils/eventDispatch';
+import { SseEventNames } from '@blue0206/members-only-shared-types/api/event-names';
+import { EventReason } from '@blue0206/members-only-shared-types/enums/eventReason.enum';
 import type {
     EditUserServiceReturnType,
     GetUserBookmarksServiceReturnType,
@@ -19,12 +21,12 @@ import type {
     EditUserRequestDto,
     ResetPasswordRequestDto,
 } from '@blue0206/members-only-shared-types/dtos/user.dto';
-import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
+import { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 import type { Bookmark, User } from '@members-only/database';
 import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
 import type { Logger } from '@members-only/core-utils/logger';
+import type { EventRequestDto } from '@blue0206/members-only-shared-types/dtos/event.dto';
 
-// TODO: Handle SSE events for real-time updates.
 class UserService {
     async getUsers(log: Logger): Promise<GetUsersServiceReturnType> {
         log.info('Getting all users from database.');
@@ -81,18 +83,23 @@ class UserService {
         );
 
         // We need only send this event to the roles who can actually view the
-        // profile details of users, i.e. ADMIN and MEMBER roles.
-        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-        //     [Role.ADMIN, Role.MEMBER],
-        //     {
-        //         event: SseEventNames.MULTI_EVENT,
-        //         data: {
-        //             reason: EventReason.USER_UPDATED,
-        //             originId: user.id,
-        //         },
-        //         id: uuidv4(),
-        //     }
-        // );
+        // profile details of users, i.e. ADMIN and MEMBER roles. Hence, we
+        // dispatch event to SSE service to multicast event to ADMIN and MEMBER
+        // roles.
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MULTI_EVENT,
+                    payload: {
+                        reason: EventReason.USER_UPDATED,
+                        originId: user.id,
+                    },
+                    transmissionType: 'multicast',
+                    targetRoles: [Role.ADMIN, Role.MEMBER],
+                },
+            ],
+        };
+        eventDispatch(body, log);
 
         return user;
     }
@@ -120,31 +127,36 @@ class UserService {
 
         // We only send this to the roles who can actually view the other users,
         // i.e. ADMIN and MEMBER roles.
-        // const multiEventPayloadDto: MultiEventPayloadDto = {
-        //     reason: EventReason.USER_DELETED_BY_ADMIN,
-        //     originId: adminId,
-        //     targetId: deletedUser.id,
-        // };
-        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-        //     [Role.ADMIN, Role.MEMBER],
-        //     {
-        //         event: SseEventNames.MULTI_EVENT,
-        //         data: multiEventPayloadDto,
-        //         id: uuidv4(),
-        //     }
-        // );
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MULTI_EVENT,
+                    payload: {
+                        reason: EventReason.USER_DELETED_BY_ADMIN,
+                        originId: adminId,
+                        targetId: deletedUser.id,
+                    },
+                    transmissionType: 'multicast',
+                    targetRoles: [Role.ADMIN, Role.MEMBER],
+                },
+            ],
+        };
         // In case the affected user is of USER role, we send the
-        // event to the user as well in order clear their client state.
-        // if (deletedUser.role === 'USER') {
-        //     sseService.unicastEvent<SseEventNamesType, MultiEventPayloadDto>(
-        //         deletedUser.id,
-        //         {
-        //             event: SseEventNames.MULTI_EVENT,
-        //             data: multiEventPayloadDto,
-        //             id: uuidv4(),
-        //         }
-        //     );
-        // }
+        // event to the user as well in order to clear their client state.
+        if (deletedUser.role === 'USER') {
+            body.events.push({
+                eventName: SseEventNames.MULTI_EVENT,
+                payload: {
+                    reason: EventReason.USER_DELETED_BY_ADMIN,
+                    originId: adminId,
+                    targetId: deletedUser.id,
+                },
+                transmissionType: 'unicast',
+                targetId: deletedUser.id,
+            });
+        }
+        // Dispatch event to SSE service.
+        eventDispatch(body, log);
 
         if (deletedUser.avatar) {
             await deleteFile(deletedUser.avatar, log);
@@ -169,19 +181,23 @@ class UserService {
 
         log.info('User deleted from database successfully.');
 
-        // We only send this to the roles who can actually view the other users,
-        // i.e. ADMIN and MEMBER roles.
-        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-        //     [Role.ADMIN, Role.MEMBER],
-        //     {
-        //         event: SseEventNames.MULTI_EVENT,
-        //         data: {
-        //             reason: EventReason.USER_DELETED,
-        //             originId: deletedUser.id,
-        //         },
-        //         id: uuidv4(),
-        //     }
-        // );
+        // We need only send this event to the roles who can actually view the
+        // profile details of users, i.e. ADMIN and MEMBER roles.
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MULTI_EVENT,
+                    payload: {
+                        reason: EventReason.USER_DELETED,
+                        originId: deletedUser.id,
+                    },
+                    transmissionType: 'multicast',
+                    targetRoles: [Role.ADMIN, Role.MEMBER],
+                },
+            ],
+        };
+        // Dispatch event to SSE service.
+        eventDispatch(body, log);
 
         if (deletedUser.avatar) {
             await deleteFile(deletedUser.avatar, log);
@@ -285,20 +301,23 @@ class UserService {
             'User role set in database successfully.'
         );
 
-        // Since this is a role change event, we need only send this to the roles who
-        // can actually view the roles of users, i.e. ADMIN and MEMBER roles.
-        // const multiEventPayloadDto: MultiEventPayloadDto = {
-        //     reason: EventReason.MEMBER_UPDATE,
-        //     originId: updatedUser.id,
-        // };
-        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-        //     [Role.ADMIN, Role.MEMBER],
-        //     {
-        //         event: SseEventNames.MULTI_EVENT,
-        //         data: multiEventPayloadDto,
-        //         id: uuidv4(),
-        //     }
-        // );
+        // We need only send this event to the roles who can actually view the
+        // roles of users, i.e. ADMIN and MEMBER roles.
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MULTI_EVENT,
+                    payload: {
+                        reason: EventReason.MEMBER_UPDATE,
+                        originId: updatedUser.id,
+                    },
+                    transmissionType: 'multicast',
+                    targetRoles: [Role.ADMIN, Role.MEMBER],
+                },
+            ],
+        };
+        // Dispatch event to SSE service.
+        eventDispatch(body, log);
     }
 
     async updateRole(
@@ -353,35 +372,42 @@ class UserService {
             'User role updated successfully.'
         );
 
-        // Since this is a role change event, we need only send this to the roles who
-        // can actually view the roles of users, i.e. ADMIN and MEMBER roles.
-        // const multiEventPayloadDto: MultiEventPayloadDto = {
-        //     reason: EventReason.ROLE_CHANGE,
-        //     originId: adminId,
-        //     originUsername: adminUsername,
-        //     targetId: userDetails.id,
-        //     targetUserRole: role,
-        // };
-        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-        //     [Role.ADMIN, Role.MEMBER],
-        //     {
-        //         event: SseEventNames.MULTI_EVENT,
-        //         data: multiEventPayloadDto,
-        //         id: uuidv4(),
-        //     }
-        // );
-        // In case the user whose role is being updated is of USER role, we send the
+        // We only send this to the roles who can actually view the other
+        // users' roles, i.e. ADMIN and MEMBER roles.
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MULTI_EVENT,
+                    payload: {
+                        reason: EventReason.ROLE_CHANGE,
+                        originId: adminId,
+                        originUsername: adminUsername,
+                        targetId: userDetails.id,
+                        targetUserRole: role,
+                    },
+                    transmissionType: 'multicast',
+                    targetRoles: [Role.ADMIN, Role.MEMBER],
+                },
+            ],
+        };
+        // In case the affected user is of USER role, we send the
         // event to the user as well in order to show UI updates.
         if (userDetails.initialRole === 'USER') {
-            // sseService.unicastEvent<SseEventNamesType, MultiEventPayloadDto>(
-            //     userDetails.id,
-            //     {
-            //         event: SseEventNames.MULTI_EVENT,
-            //         data: multiEventPayloadDto,
-            //         id: uuidv4(),
-            //     }
-            // );
+            body.events.push({
+                eventName: SseEventNames.MULTI_EVENT,
+                payload: {
+                    reason: EventReason.ROLE_CHANGE,
+                    originId: adminId,
+                    originUsername: adminUsername,
+                    targetId: userDetails.id,
+                    targetUserRole: role,
+                },
+                transmissionType: 'unicast',
+                targetId: userDetails.id,
+            });
         }
+        // Dispatch event to SSE service.
+        eventDispatch(body, log);
     }
 
     async uploadUserAvatar(
@@ -437,18 +463,22 @@ class UserService {
         log.info('User avatar uploaded to database and cloudinary successfully.');
 
         // We need only send this event to the roles who can actually view the
-        // profile details of users, i.e. ADMIN and MEMBER roles.
-        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-        //     [Role.ADMIN, Role.MEMBER],
-        //     {
-        //         event: SseEventNames.MULTI_EVENT,
-        //         data: {
-        //             reason: EventReason.USER_UPDATED,
-        //             originId: userPayload.id,
-        //         },
-        //         id: uuidv4(),
-        //     }
-        // );
+        // avatar of users, i.e. ADMIN and MEMBER roles.
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MULTI_EVENT,
+                    payload: {
+                        reason: EventReason.USER_UPDATED,
+                        originId: userPayload.id,
+                    },
+                    transmissionType: 'multicast',
+                    targetRoles: [Role.ADMIN, Role.MEMBER],
+                },
+            ],
+        };
+        // Dispatch event to SSE service.
+        eventDispatch(body, log);
 
         return {
             avatar: avatarPublicId,
@@ -499,17 +529,21 @@ class UserService {
 
         // We need only send this event to the roles who can actually view the
         // avatar of users, i.e. ADMIN and MEMBER roles.
-        // sseService.multicastEventToRoles<SseEventNamesType, MultiEventPayloadDto>(
-        //     [Role.ADMIN, Role.MEMBER],
-        //     {
-        //         event: SseEventNames.MULTI_EVENT,
-        //         data: {
-        //             reason: EventReason.USER_UPDATED,
-        //             originId: user.userId,
-        //         },
-        //         id: uuidv4(),
-        //     }
-        // );
+        const body: EventRequestDto = {
+            events: [
+                {
+                    eventName: SseEventNames.MULTI_EVENT,
+                    payload: {
+                        reason: EventReason.USER_UPDATED,
+                        originId: user.userId,
+                    },
+                    transmissionType: 'multicast',
+                    targetRoles: [Role.ADMIN, Role.MEMBER],
+                },
+            ],
+        };
+        // Dispatch event to SSE service.
+        eventDispatch(body, log);
     }
 
     async getUserBookmarks(
