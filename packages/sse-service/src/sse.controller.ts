@@ -14,9 +14,14 @@ import type {
 import type {
     EventRequestDto,
     EventRequestQueryDto,
+    MessageEventPayloadDto,
+    MultiEventPayloadDto,
+    ServerSentEvent,
+    UserEventPayloadDto,
 } from '@blue0206/members-only-shared-types/dtos/event.dto';
 import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
+import type { SseEventNamesType } from '@blue0206/members-only-shared-types/api/event-names';
 
 export const sseConnectionHandler = (
     req: Request<unknown, unknown, unknown, EventRequestQueryDto>,
@@ -88,29 +93,26 @@ export const dispatchEvent = (
     res: Response
 ): void => {
     for (const event of req.body.events) {
+        const eventBody: ServerSentEvent<
+            SseEventNamesType,
+            MessageEventPayloadDto | UserEventPayloadDto | MultiEventPayloadDto
+        > = {
+            event: event.eventName,
+            data: event.payload,
+            id: uuidv4(),
+        };
+
         switch (event.transmissionType) {
             case 'unicast': {
-                sseService.unicastEvent(event.targetId, {
-                    event: event.eventName,
-                    data: event.payload,
-                    id: uuidv4(),
-                });
+                sseService.unicastEvent(event.targetId, eventBody);
                 break;
             }
             case 'multicast': {
-                sseService.multicastEventToRoles(event.targetRoles, {
-                    event: event.eventName,
-                    data: event.payload,
-                    id: uuidv4(),
-                });
+                sseService.multicastEventToRoles(event.targetRoles, eventBody);
                 break;
             }
             case 'broadcast': {
-                sseService.broadcastEvent({
-                    event: event.eventName,
-                    data: event.payload,
-                    id: uuidv4(),
-                });
+                sseService.broadcastEvent(eventBody);
                 break;
             }
         }
