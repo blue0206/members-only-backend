@@ -17,7 +17,7 @@ interface QueryArg {
     type: 'query';
 }
 
-type RequestValidatorArgsType =
+export type RequestValidatorArgsType =
     | [BodyArg]
     | [ParamsArg]
     | [QueryArg]
