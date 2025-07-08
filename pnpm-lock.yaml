@@ -87,8 +87,8 @@ importers:
   packages/auth-service:
     dependencies:
       '@blue0206/members-only-shared-types':
-        specifier: ^13.0.0
-        version: 13.0.0
+        specifier: ^14.0.0
+        version: 14.0.0
       '@codegenie/serverless-express':
         specifier: ^4.16.0
         version: 4.16.0
@@ -147,8 +147,8 @@ importers:
         specifier: ^3.840.0
         version: 3.840.0
       '@blue0206/members-only-shared-types':
-        specifier: ^13.0.0
-        version: 13.0.0
+        specifier: ^14.0.0
+        version: 14.0.0
       '@members-only/database':
         specifier: workspace:*
         version: link:../database
@@ -200,8 +200,8 @@ importers:
   packages/message-service:
     dependencies:
       '@blue0206/members-only-shared-types':
-        specifier: ^13.0.0
-        version: 13.0.0
+        specifier: ^14.0.0
+        version: 14.0.0
       '@codegenie/serverless-express':
         specifier: ^4.16.0
         version: 4.16.0
@@ -230,8 +230,8 @@ importers:
   packages/sse-service:
     dependencies:
       '@blue0206/members-only-shared-types':
-        specifier: ^13.0.0
-        version: 13.0.0
+        specifier: ^14.0.0
+        version: 14.0.0
       '@members-only/core-utils':
         specifier: workspace:*
         version: link:../core-utils
@@ -250,12 +250,15 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
 
   packages/user-service:
     dependencies:
       '@blue0206/members-only-shared-types':
-        specifier: ^13.0.0
-        version: 13.0.0
+        specifier: ^14.0.0
+        version: 14.0.0
       '@codegenie/serverless-express':
         specifier: ^4.16.0
         version: 4.16.0
@@ -399,8 +402,8 @@ packages:
     resolution: {integrity: sha512-DIIotRnefVL6DiaHtO6/21DhJ4JZnnIwdNbpwiAhdt/AVbttcE4yw925gsjur0OGv5BTYXQXU3YnANBYnZjuQA==}
     engines: {node: '>=18.0.0'}
 
-  '@blue0206/members-only-shared-types@13.0.0':
-    resolution: {integrity: sha512-Zwfek0TuQbLrd9VT85FTF0MuBad0ZWBD0A/pMvQK6fVWxy2tn7urHE6EAUVaBWPJjfl24VfPyh4FTfraeqTVjw==}
+  '@blue0206/members-only-shared-types@14.0.0':
+    resolution: {integrity: sha512-nYm5+/g2GfBMTrXXwmo2EVCKaeFyUCHxdfeJIq8PcvFx16Luf9szjFroG4CHzqCgSOfusJH6yB9mWkOqf8zTOg==}
 
   '@codegenie/serverless-express@4.16.0':
     resolution: {integrity: sha512-TlvAHQysphN3OW6Ziz6AD2DnN9IIy/KkKNImZwMJpwGHHqLATi/9hMg8H8VBRg2L15pGt8ad3R6j6mfvHVWrCg==}
@@ -2508,7 +2511,7 @@ snapshots:
       '@smithy/types': 4.3.1
       tslib: 2.8.1
 
-  '@blue0206/members-only-shared-types@13.0.0':
+  '@blue0206/members-only-shared-types@14.0.0':
     dependencies:
       zod: 3.25.74
 

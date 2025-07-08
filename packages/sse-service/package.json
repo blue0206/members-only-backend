@@ -10,7 +10,7 @@
         "lint": "eslint . --ext .ts"
     },
     "dependencies": {
-        "@blue0206/members-only-shared-types": "^13.0.0",
+        "@blue0206/members-only-shared-types": "^14.0.0",
         "@members-only/core-utils": "workspace:*",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",

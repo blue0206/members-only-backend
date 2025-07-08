@@ -52,7 +52,7 @@
     },
     "dependencies": {
         "@aws-sdk/client-sqs": "^3.840.0",
-        "@blue0206/members-only-shared-types": "^13.0.0",
+        "@blue0206/members-only-shared-types": "^14.0.0",
         "@members-only/database": "workspace:*",
         "cloudinary": "^2.6.0",
         "express": "^5.1.0",
