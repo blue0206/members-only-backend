@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { sseConnectionHandler } from './sse.controller.js';
-import sseClientCleanup from './sseClientCleanup.middleware.js';
-import { requestValidator } from '@members-only/core-utils/middlewares/requestValidator';
-import { EventRequestQuerySchema } from '@blue0206/members-only-shared-types/dtos/event.dto';
+import { dispatchEvent, sseConnectionHandler } from './sse.controller.js';
+import { sseClientCleanup, requestValidatorWrapper } from './sse.middleware.js';
+import {
+    EventRequestQuerySchema,
+    EventRequestSchema,
+} from '@blue0206/members-only-shared-types/dtos/event.dto';
 import type { Router as ExpressRouter } from 'express';
 
 const sseRouter: ExpressRouter = Router();
@@ -10,8 +12,16 @@ const sseRouter: ExpressRouter = Router();
 sseRouter.get(
     '/',
     sseClientCleanup,
-    requestValidator({ schema: EventRequestQuerySchema, type: 'query' }),
+    requestValidatorWrapper({
+        schema: EventRequestQuerySchema,
+        type: 'query',
+    }),
     sseConnectionHandler
+);
+sseRouter.post(
+    '/internal/dispatch',
+    requestValidatorWrapper({ schema: EventRequestSchema, type: 'body' }),
+    dispatchEvent
 );
 
 export default sseRouter;

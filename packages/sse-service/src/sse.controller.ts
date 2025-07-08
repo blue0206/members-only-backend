@@ -5,12 +5,16 @@ import { UnauthorizedError } from '@members-only/core-utils/errors';
 import { config } from '@members-only/core-utils/env';
 import { AccessTokenPayloadSchema } from '@members-only/core-utils/authTypes';
 import { sseService } from './sse.service.js';
+import { v4 as uuidv4 } from 'uuid';
 import type { Request, Response } from 'express';
 import type {
     ApiErrorPayload,
     ApiResponseError,
 } from '@blue0206/members-only-shared-types/api/base';
-import type { EventRequestQueryDto } from '@blue0206/members-only-shared-types/dtos/event.dto';
+import type {
+    EventRequestDto,
+    EventRequestQueryDto,
+} from '@blue0206/members-only-shared-types/dtos/event.dto';
 import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
 
@@ -76,4 +80,53 @@ export const sseConnectionHandler = (
     res.flushHeaders();
 
     sseService.addClient({ userId, userRole, res, req });
+};
+
+// Controller for Internal API to dispatch event
+export const dispatchEvent = (
+    req: Request<unknown, unknown, EventRequestDto>,
+    res: Response
+): void => {
+    // Verify api secret key to ensure request is coming from internal API.
+    if (!req.headers['x-internal-api-secret']) {
+        req.log.error('Missing x-internal-api-secret header.');
+        res.status(204).end();
+        return;
+    }
+    if (req.headers['x-internal-api-secret'] !== config.INTERNAL_API_SECRET) {
+        req.log.error('Invalid internal API Secret Key.');
+        res.status(204).end();
+        return;
+    }
+
+    for (const event of req.body.events) {
+        switch (event.transmissionType) {
+            case 'unicast': {
+                sseService.unicastEvent(event.targetId, {
+                    event: event.eventName,
+                    data: event.payload,
+                    id: uuidv4(),
+                });
+                break;
+            }
+            case 'multicast': {
+                sseService.multicastEventToRoles(event.targetRoles, {
+                    event: event.eventName,
+                    data: event.payload,
+                    id: uuidv4(),
+                });
+                break;
+            }
+            case 'broadcast': {
+                sseService.broadcastEvent({
+                    event: event.eventName,
+                    data: event.payload,
+                    id: uuidv4(),
+                });
+                break;
+            }
+        }
+    }
+
+    res.status(204).end();
 };
