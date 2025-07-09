@@ -2,6 +2,7 @@ import { config } from '@members-only/core-utils/env';
 import { logger } from '@members-only/core-utils/logger';
 import IORedis from 'ioredis';
 import type { Redis, RedisOptions } from 'ioredis';
+import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 
 const redisOptions: RedisOptions = {
     host: config.REDIS_HOST,
@@ -24,3 +25,8 @@ export function createRedisClient(): Redis {
 }
 
 export const publisher = createRedisClient();
+
+export const getBroadcastChannelName = (): string => 'channel:broadcast';
+export const getRoleChannelName = (role: Role): string => `channel:${role}`;
+export const getUserChannelName = (userId: number): string =>
+    `channel:user:${userId.toString()}`;
