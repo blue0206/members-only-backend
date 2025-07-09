@@ -22,6 +22,12 @@ import type {
 import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 import type { AccessTokenPayload } from '@members-only/core-utils/authTypes';
 import type { SseEventNamesType } from '@blue0206/members-only-shared-types/api/event-names';
+import {
+    getBroadcastChannelName,
+    getRoleChannelName,
+    getUserChannelName,
+    publisher,
+} from './core/redis.js';
 
 export const sseConnectionHandler = (
     req: Request<unknown, unknown, unknown, EventRequestQueryDto>,
@@ -88,10 +94,10 @@ export const sseConnectionHandler = (
 };
 
 // Controller for Internal API to dispatch event
-export const dispatchEvent = (
+export const dispatchEvent = async (
     req: Request<unknown, unknown, EventRequestDto>,
     res: Response
-): void => {
+): Promise<void> => {
     for (const event of req.body.events) {
         const eventBody: ServerSentEvent<
             SseEventNamesType,
@@ -104,15 +110,26 @@ export const dispatchEvent = (
 
         switch (event.transmissionType) {
             case 'unicast': {
-                sseService.unicastEvent(event.targetId, eventBody);
+                await publisher.publish(
+                    getUserChannelName(event.targetId),
+                    JSON.stringify(eventBody)
+                );
                 break;
             }
             case 'multicast': {
-                sseService.multicastEventToRoles(event.targetRoles, eventBody);
+                for (const role of event.targetRoles) {
+                    await publisher.publish(
+                        getRoleChannelName(role),
+                        JSON.stringify(eventBody)
+                    );
+                }
                 break;
             }
             case 'broadcast': {
-                sseService.broadcastEvent(eventBody);
+                await publisher.publish(
+                    getBroadcastChannelName(),
+                    JSON.stringify(eventBody)
+                );
                 break;
             }
         }
