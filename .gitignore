@@ -4,3 +4,4 @@ dist
 .env
 packages/database/src/generated
 *.tsbuildinfo
+generated

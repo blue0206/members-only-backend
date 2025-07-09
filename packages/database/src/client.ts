@@ -1,4 +1,4 @@
-import { PrismaClient } from './generated/client';
+import { PrismaClient } from '../generated/client';
 
 // Instantiate the extended Prisma client to infer its type
 const prismaInstance = new PrismaClient({
