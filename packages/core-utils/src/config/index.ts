@@ -53,6 +53,10 @@ const EnvironmentSchema = z.object({
     SQS_USER_ACTIVITY_QUEUE_URL: z
         .string()
         .min(1, { message: 'SQS activity queue URL is missing.' }),
+    // Redis
+    REDIS_HOST: z.string().min(1, { message: 'Redis host is missing.' }),
+    REDIS_PORT: z.coerce.number().int().positive().default(6379),
+    REDIS_PASSWORD: z.string().min(1, { message: 'Redis password is missing.' }),
 });
 
 const parsedEnv = EnvironmentSchema.safeParse(process.env);
