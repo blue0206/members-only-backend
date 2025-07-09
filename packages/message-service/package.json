@@ -5,9 +5,11 @@
     "description": "The microservice handling message-related operations.",
     "main": "dist/lambda.js",
     "types": "dist/lambda.d.ts",
+    "type": "module",
     "scripts": {
         "build": "tsc",
-        "lint": "eslint . --ext .ts"
+        "lint": "eslint . --ext .ts",
+        "start": "dotenv -e ../../.env -- node dist/lambda.js"
     },
     "dependencies": {
         "@blue0206/members-only-shared-types": "^14.0.0",
@@ -18,6 +20,7 @@
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^5.1.0",
-        "helmet": "^8.1.0"
+        "helmet": "^8.1.0",
+        "dotenv-cli": "^8.0.0"
     }
 }

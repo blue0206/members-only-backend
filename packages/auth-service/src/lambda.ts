@@ -10,4 +10,6 @@ process.on('unhandledRejection', (reason, promise) => {
     logger.fatal({ err: reason, promise }, 'Unhandled Rejection in Auth Service.');
 });
 
-export const handler: APIGatewayProxyHandlerV2 = serverlessExpress({ app });
+export const handler: APIGatewayProxyHandlerV2 = serverlessExpress.configure({
+    app,
+});

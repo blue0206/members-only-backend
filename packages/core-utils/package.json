@@ -4,6 +4,7 @@
     "private": true,
     "description": "Shared core utilities, errors, config, and middleware for the Members Only backend services.",
     "sideEffects": false,
+    "type": "module",
     "exports": {
         "./env": {
             "import": "./dist/config/index.js",
@@ -62,7 +63,8 @@
         "request-ip": "^3.3.0",
         "ua-parser-js": "^2.0.3",
         "uuid": "^11.1.0",
-        "zod": "^3.24.3"
+        "zod": "^3.24.3",
+        "jsonwebtoken": "^9.0.2"
     },
     "devDependencies": {
         "@types/request-ip": "^0.0.41",

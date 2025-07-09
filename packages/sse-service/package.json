@@ -5,15 +5,18 @@
     "description": "The microservice handling Server-Sent Events for real-time updates. This service is run on a small EC2 instance.",
     "main": "dist/app.js",
     "types": "dist/app.d.ts",
+    "type": "module",
     "scripts": {
         "build": "tsc",
-        "lint": "eslint . --ext .ts"
+        "lint": "eslint . --ext .ts",
+        "start": "dotenv -e ../../.env -- node dist/app.js"
     },
     "dependencies": {
         "@blue0206/members-only-shared-types": "^14.0.0",
         "@members-only/core-utils": "workspace:*",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
+        "dotenv-cli": "^8.0.0",
         "express": "^5.1.0",
         "helmet": "^8.1.0",
         "jsonwebtoken": "^9.0.2",

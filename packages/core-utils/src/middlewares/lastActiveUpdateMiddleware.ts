@@ -1,7 +1,7 @@
-import { config } from '../config';
+import { config } from '../config/index.js';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import type { Request, Response, NextFunction } from 'express';
-import type { UserActivityPayload } from '../types/activity.types';
+import type { UserActivityPayload } from '../types/activity.types.js';
 
 const sqsClient = new SQSClient({
     region: config.AWS_REGION,

@@ -13,11 +13,12 @@
         "db:generate": "prisma generate",
         "db:seed": "node ./dist/seed.js",
         "build": "tsc",
-        "migrate:dev": "prisma migrate dev",
-        "migrate:deploy": "prisma migrate deploy"
+        "migrate:dev": "dotenv -e ../../.env -- prisma migrate dev",
+        "migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy"
     },
     "dependencies": {
-        "@prisma/client": "6.11.1"
+        "@prisma/client": "6.11.1",
+        "dotenv-cli": "^8.0.0"
     },
     "devDependencies": {
         "prisma": "catalog:prisma"

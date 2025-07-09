@@ -1,4 +1,4 @@
-import { config } from '../config';
+import { config } from '../config/index.js';
 import type { Logger } from 'pino';
 import type { EventRequestDto } from '@blue0206/members-only-shared-types/dtos/event.dto';
 

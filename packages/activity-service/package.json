@@ -4,6 +4,7 @@
     "private": true,
     "description": "The microservice tasked with reading from SQS and flushing user activity pings to database.",
     "main": "dist/userActivityWorker.js",
+    "type": "module",
     "scripts": {
         "build": "esbuild src/index.ts --bundle --platform=node --format=esm --external:@members-only/database --outfile=dist/userActivityWorker.js",
         "lint": "eslint . --ext .ts"
