@@ -19,28 +19,28 @@ export function sseClientCleanup(
     };
 
     // Called when response has been successfully sent.
-    const onResFinish = (): void => {
+    const onResFinish = async (): Promise<void> => {
         if (isConcluded) return;
         isConcluded = true;
         cleanup();
 
         req.log.info('Response finished. Disconnecting Client.');
-        sseService.removeClient(req.requestId);
+        await sseService.removeClient(req.requestId);
     };
 
     // Called when request is aborted.
-    const onReqAborted = (): void => {
+    const onReqAborted = async (): Promise<void> => {
         if (isConcluded) return;
         isConcluded = true;
         cleanup();
 
         req.log.info('Request aborted. Removing client.');
-        sseService.removeClient(req.requestId);
+        await sseService.removeClient(req.requestId);
     };
 
     // Called when response is completed, or the underlying connection was terminated prematurely.
     // This serves as a defensive check in case either of the other two listeners fail.
-    const onReqClose = (): void => {
+    const onReqClose = async (): Promise<void> => {
         if (isConcluded) return;
         isConcluded = true;
         cleanup();
@@ -53,7 +53,7 @@ export function sseClientCleanup(
             req.log.info('Response completed. Removing client.');
         }
 
-        sseService.removeClient(req.requestId);
+        await sseService.removeClient(req.requestId);
     };
 
     res.on('finish', onResFinish);

@@ -29,10 +29,10 @@ import {
     publisher,
 } from './core/redis.js';
 
-export const sseConnectionHandler = (
+export const sseConnectionHandler = async (
     req: Request<unknown, unknown, unknown, EventRequestQueryDto>,
     res: Response
-): Promise<void> | void => {
+): Promise<void> => {
     let userId: number;
     let userRole: Role;
 
@@ -90,7 +90,7 @@ export const sseConnectionHandler = (
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    sseService.addClient({ userId, userRole, res, req });
+    await sseService.addClient({ userId, userRole, res, req });
 };
 
 // Controller for Internal API to dispatch event
