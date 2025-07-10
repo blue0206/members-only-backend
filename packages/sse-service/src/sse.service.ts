@@ -1,11 +1,17 @@
 import { logger } from '@members-only/core-utils/logger';
+import {
+    getBroadcastChannelName,
+    getRoleChannelName,
+    getUserChannelName,
+} from './core/redis.js';
+import { subscriberService } from './core/subscriber.js';
 import type { Logger } from '@members-only/core-utils/logger';
 import type { SseClient, SseClientAddParamsType } from './sse.types.js';
 import type { ServerSentEvent } from '@blue0206/members-only-shared-types/dtos/event.dto';
 import type { SseEventNamesType } from '@blue0206/members-only-shared-types/api/event-names';
 import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 
-const clients = new Map<string, SseClient>();
+export const clients = new Map<string, SseClient>();
 
 class SseService {
     constructor() {
@@ -14,32 +20,58 @@ class SseService {
 
     /**
      * Registers a new SSE client.
-     * @param {{ userId: number; userRole: Role; res: Response; req: Request<unknown, unknown, unknown, EventRequestQueryDto> }} client
+     * @param {{ userId: number; userRole: Role; res: Response; log: Logger }} client
      * @returns {string} The id for the client.
      */
-    addClient({ userId, userRole, res, req }: SseClientAddParamsType): string {
+    async addClient({
+        userId,
+        userRole,
+        res,
+        req,
+    }: SseClientAddParamsType): Promise<void> {
+        // Subscribe to broadcast channel, role channel, and dedicated user channel.
+        await subscriberService.subscribeToChannels(
+            getBroadcastChannelName(),
+            getRoleChannelName(userRole),
+            getUserChannelName(userId)
+        );
+
         // Request ID is used inside sseClientCleanup middleware to remove the client.
         const clientId = req.requestId;
 
-        clients.set(clientId, { id: clientId, userId, userRole, res, log: req.log });
+        clients.set(clientId, {
+            id: clientId,
+            userId,
+            userRole,
+            res,
+            log: req.log,
+        });
         req.log.info({ clientId }, 'SSE client connected.');
-
-        return clientId;
     }
 
     /**
      * Removes a client from the list of connected SSE clients and closes its connection.
      * @param {string} clientId - The id for the client to be removed.
      */
-    removeClient(clientId: string): void {
+    async removeClient(clientId: string): Promise<void> {
         if (clients.has(clientId)) {
             const client = clients.get(clientId);
-            const log = client?.log;
-            if (client) client.res.end();
+
+            if (client) {
+                const { log, userId, userRole } = client;
+                log.info({ clientId }, 'SSE client disconnected and removed.');
+                client.res.end();
+                clients.delete(clientId);
+                await subscriberService.unsubscribeFromChannels(
+                    clientId,
+                    userId,
+                    userRole
+                );
+                return;
+            }
+
             clients.delete(clientId);
-            log?.info({ clientId }, 'SSE client disconnected and removed.');
-            if (!log)
-                logger.info({ clientId }, 'SSE client disconnected and removed.');
+            logger.info({ clientId }, 'SSE client disconnected and removed.');
         }
     }
 
@@ -67,15 +99,15 @@ class SseService {
      * which is admin-only.
      * @template EventName - The name of the event.
      * @template Payload - The type of the event payload (data).
-     * @param {Role[]} roles - The roles to send the event to.
+     * @param {Role} role - The role to send the event to.
      * @param {ServerSentEvent<EventName, Payload>} eventBody - The event body to send.
      */
-    multicastEventToRoles<EventName extends SseEventNamesType, Payload>(
-        roles: Role[],
+    multicastEventToRole<EventName extends SseEventNamesType, Payload>(
+        role: Role,
         eventBody: ServerSentEvent<EventName, Payload>
     ): void {
         clients.forEach((client) => {
-            if (roles.includes(client.userRole)) {
+            if (role === client.userRole) {
                 this.sendEventToClient(client.id, eventBody, client.log);
             }
         });
@@ -115,7 +147,9 @@ class SseService {
             if (!client.res.writableEnded) {
                 client.res.write(': keepalive\n\n');
             } else {
-                this.removeClient(client.id);
+                this.removeClient(client.id)
+                    .then(() => null)
+                    .catch(() => null);
             }
         });
     }
@@ -155,7 +189,9 @@ class SseService {
                 'SSE event sent to client.'
             );
         } else if (client?.res.writableEnded) {
-            this.removeClient(client.id);
+            this.removeClient(client.id)
+                .then(() => null)
+                .catch(() => null);
             log.warn(
                 { clientId, event: eventBody.event },
                 'Could not send SSE to closed client connection. Removing client'
