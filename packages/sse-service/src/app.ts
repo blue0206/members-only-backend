@@ -12,6 +12,8 @@ import { logger } from '@members-only/core-utils/logger';
 import { sseService } from './sse.service.js';
 import type { Request, Response } from 'express';
 import type { Server } from 'http';
+import { publisher } from './core/redis.js';
+import { subscriberService } from './core/subscriber.js';
 
 const app = express();
 
@@ -84,7 +86,7 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
     sseService.clearSseClients();
 
     // Stop server.
-    server.close((err) => {
+    server.close(async (err) => {
         if (err) {
             logger.error({ err }, 'Error shutting down server.');
             // Set exit code to indicate failure. But we don't exit yet
@@ -93,6 +95,12 @@ async function gracefulShutdown(signal: NodeJS.Signals): Promise<void> {
         } else {
             logger.info('Server has shutdown successfully.');
         }
+
+        // Disconnect redis publisher instance.
+        await publisher.quit();
+
+        // Disconnect redis subscriber service.
+        await subscriberService.disconnect();
 
         // Exit the process.
         logger.info('Graceful shutdown complete. Exiting....');
