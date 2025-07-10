@@ -271,6 +271,9 @@ importers:
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
+      zod:
+        specifier: ^3.24.3
+        version: 3.25.74
 
   packages/user-service:
     dependencies:
