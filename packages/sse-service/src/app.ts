@@ -1,8 +1,6 @@
 import 'dotenv/config';
 import { config } from '@members-only/core-utils/env';
 import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
 import sseRouter from './sse.routes.js';
 import { assignRequestIdAndChildLogger } from '@members-only/core-utils/middlewares/assignRequestIdAndChildLogger';
 import { loggerMiddleware } from '@members-only/core-utils/middlewares/loggerMiddleware';
@@ -21,16 +19,8 @@ const app = express();
 app.use(assignRequestIdAndChildLogger);
 // Assign logger middleware for http logging.
 app.use(loggerMiddleware);
-// Cors Middleware
-app.use(
-    cors({
-        credentials: true,
-        origin: config.CORS_ORIGIN.split(','),
-    })
-);
 
 // Middlewares
-app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

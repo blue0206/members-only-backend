@@ -1,12 +1,9 @@
 import 'dotenv/config';
-import { config } from '@members-only/core-utils/env';
 import express from 'express';
-import cors from 'cors';
 import { assignRequestIdAndChildLogger } from '@members-only/core-utils/middlewares/assignRequestIdAndChildLogger';
 import { loggerMiddleware } from '@members-only/core-utils/middlewares/loggerMiddleware';
 import { errorHandler } from '@members-only/core-utils/middlewares/errorHandler';
 import { NotFoundError } from '@members-only/core-utils/errors';
-import helmet from 'helmet';
 import userRouter from './user.route.js';
 import cookieParser from 'cookie-parser';
 import type { Request, Response, Application } from 'express';
@@ -18,18 +15,11 @@ app.use(assignRequestIdAndChildLogger);
 // Assign logger middleware for http logging.
 app.use(loggerMiddleware);
 // Cors Middleware
-app.use(
-    cors({
-        credentials: true,
-        origin: config.CORS_ORIGIN.split(','),
-    })
-);
 
 // Setup cookie-parser for parsing cookies.
 app.use(cookieParser());
 
 // Middlewares
-app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

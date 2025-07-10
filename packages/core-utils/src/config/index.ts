@@ -7,8 +7,6 @@ const EnvironmentSchema = z.object({
     NODE_ENV: z.enum(['development', 'production']).default('development'),
     // server
     PORT: z.coerce.number().int().positive().default(8000),
-    // cors
-    CORS_ORIGIN: z.string().min(1, { message: 'CORS origin is missing.' }),
     // db
     DATABASE_URL: z.string().min(1, { message: 'DATABASE URL is missing.' }),
     // jsonwebtoken
@@ -49,7 +47,7 @@ const EnvironmentSchema = z.object({
         .url({ message: 'Invalid API URL.' })
         .min(1, { message: 'API URL is missing.' }),
     // AWS
-    AWS_REGION: z.string().min(1, { message: 'AWS region is missing.' }),
+    AWS_REGION: z.string().default('ap-south-1'),
     SQS_USER_ACTIVITY_QUEUE_URL: z
         .string()
         .min(1, { message: 'SQS activity queue URL is missing.' }),

@@ -1,8 +1,5 @@
 import 'dotenv/config';
-import { config } from '@members-only/core-utils/env';
 import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
 import messageRouter from './message.route.js';
 import cookieParser from 'cookie-parser';
 import { assignRequestIdAndChildLogger } from '@members-only/core-utils/middlewares/assignRequestIdAndChildLogger';
@@ -17,19 +14,11 @@ const app: Application = express();
 app.use(assignRequestIdAndChildLogger);
 // Assign logger middleware for http logging.
 app.use(loggerMiddleware);
-// Cors Middleware
-app.use(
-    cors({
-        credentials: true,
-        origin: config.CORS_ORIGIN.split(','),
-    })
-);
 
 // Setup cookie-parser for parsing cookies.
 app.use(cookieParser());
 
 // Middlewares
-app.use(helmet());
 app.use(express.json());
 
 // Routes
