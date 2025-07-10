@@ -27,6 +27,6 @@ export function createRedisClient(): Redis {
 export const publisher = createRedisClient();
 
 export const getBroadcastChannelName = (): string => 'channel:broadcast';
-export const getRoleChannelName = (role: Role): string => `channel:${role}`;
+export const getRoleChannelName = (role: Role): string => `channel:role:${role}`;
 export const getUserChannelName = (userId: number): string =>
     `channel:user:${userId.toString()}`;
