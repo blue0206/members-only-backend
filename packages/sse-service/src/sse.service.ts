@@ -6,9 +6,7 @@ import {
 } from './core/redis.js';
 import { subscriberService } from './core/subscriber.js';
 import type { Logger } from '@members-only/core-utils/logger';
-import type { SseClient, SseClientAddParamsType } from './sse.types.js';
-import type { ServerSentEvent } from '@blue0206/members-only-shared-types/dtos/event.dto';
-import type { SseEventNamesType } from '@blue0206/members-only-shared-types/api/event-names';
+import type { EventBody, SseClient, SseClientAddParamsType } from './sse.types.js';
 import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 
 export const clients = new Map<string, SseClient>();
@@ -54,24 +52,17 @@ class SseService {
      * @param {string} clientId - The id for the client to be removed.
      */
     async removeClient(clientId: string): Promise<void> {
-        if (clients.has(clientId)) {
-            const client = clients.get(clientId);
-
-            if (client) {
-                const { log, userId, userRole } = client;
-                log.info({ clientId }, 'SSE client disconnected and removed.');
-                client.res.end();
-                clients.delete(clientId);
-                await subscriberService.unsubscribeFromChannels(
-                    clientId,
-                    userId,
-                    userRole
-                );
-                return;
-            }
-
+        const client = clients.get(clientId);
+        if (client) {
+            const { log, userId, userRole } = client;
+            log.info({ clientId }, 'SSE client disconnected and removed.');
+            client.res.end();
             clients.delete(clientId);
-            logger.info({ clientId }, 'SSE client disconnected and removed.');
+            await subscriberService.unsubscribeFromChannels(
+                clientId,
+                userId,
+                userRole
+            );
         }
     }
 
@@ -80,12 +71,9 @@ class SseService {
      * @template EventName - The name of the event.
      * @template Payload - The type of the event payload (data).
      * @param {number} userId - The id of the user to send the event to.
-     * @param {ServerSentEvent<EventName, Payload>} eventBody - The event body to send.
+     * @param {EventBody} eventBody - The event body to send.
      */
-    unicastEvent<EventName extends SseEventNamesType, Payload>(
-        userId: number,
-        eventBody: ServerSentEvent<EventName, Payload>
-    ): void {
+    unicastEvent(userId: number, eventBody: EventBody): void {
         clients.forEach((client) => {
             if (client.userId === userId) {
                 this.sendEventToClient(client.id, eventBody, client.log);
@@ -100,12 +88,9 @@ class SseService {
      * @template EventName - The name of the event.
      * @template Payload - The type of the event payload (data).
      * @param {Role} role - The role to send the event to.
-     * @param {ServerSentEvent<EventName, Payload>} eventBody - The event body to send.
+     * @param {EventBody} eventBody - The event body to send.
      */
-    multicastEventToRole<EventName extends SseEventNamesType, Payload>(
-        role: Role,
-        eventBody: ServerSentEvent<EventName, Payload>
-    ): void {
+    multicastEventToRole(role: Role, eventBody: EventBody): void {
         clients.forEach((client) => {
             if (role === client.userRole) {
                 this.sendEventToClient(client.id, eventBody, client.log);
@@ -118,11 +103,9 @@ class SseService {
      * Will mostly be used to trigger refetch of messages/bookmarks of clients.
      * @template EventName - The name of the event.
      * @template Payload - The type of the event payload (data).
-     * @param {ServerSentEvent<EventName, Payload>} eventBody - The event body to send.
+     * @param {EventBody} eventBody - The event body to send.
      */
-    broadcastEvent<EventName extends SseEventNamesType, Payload>(
-        eventBody: ServerSentEvent<EventName, Payload>
-    ): void {
+    broadcastEvent(eventBody: EventBody): void {
         clients.forEach((client) => {
             this.sendEventToClient(client.id, eventBody, client.log);
         });
@@ -166,13 +149,13 @@ class SseService {
      * @template EventName - The type of the event name, constrained by SseEventNamesType.
      * @template Payload - The type of the event payload.
      * @param {string} clientId - The unique identifier of the client to send the event to.
-     * @param {ServerSentEvent<EventName, Payload>} eventBody - The event object containing the event name, data, and optional ID.
+     * @param {EventBody} eventBody - The event object containing the event name, data, and optional ID.
      * @param {Logger} log
      * @returns {void}
      */
-    private sendEventToClient<EventName extends SseEventNamesType, Payload>(
+    private sendEventToClient(
         clientId: string,
-        eventBody: ServerSentEvent<EventName, Payload>,
+        eventBody: EventBody,
         log: Logger
     ): void {
         const client = clients.get(clientId);
