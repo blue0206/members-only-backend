@@ -3,7 +3,7 @@
 import 'dotenv/config';
 import { PrismaClient } from '@members-only/database';
 import { logger } from '../logger.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import type { Role } from '@blue0206/members-only-shared-types/enums/roles.enum';
 
 const config = {

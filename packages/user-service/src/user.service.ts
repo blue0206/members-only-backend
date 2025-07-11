@@ -7,7 +7,7 @@ import {
     UnauthorizedError,
 } from '@members-only/core-utils/errors';
 import { ErrorCodes } from '@blue0206/members-only-shared-types/api/error-codes';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { eventDispatch } from '@members-only/core-utils/utils/eventDispatch';
 import { SseEventNames } from '@blue0206/members-only-shared-types/api/event-names';
 import { EventReason } from '@blue0206/members-only-shared-types/enums/eventReason.enum';
