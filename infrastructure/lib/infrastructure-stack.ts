@@ -12,6 +12,8 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import { DomainName } from 'aws-cdk-lib/aws-apigatewayv2';
 import { getEnv } from './envConfig';
 
@@ -218,6 +220,27 @@ export class InfrastructureStack extends cdk.Stack {
         userActivityQueue.grantSendMessages(authServiceLambda);
         userActivityQueue.grantSendMessages(userServiceLambda);
         userActivityQueue.grantSendMessages(messageServiceLambda);
+
+        //---------------------------5. Expired Refresh Token Cleanup
+
+        const tokenCleanupWorkerLambda = this.createLambda(
+            'TokenCleanupWorkerLambda',
+            'token-cleanup-worker',
+            128,
+            cdk.Duration.seconds(16),
+            '../packages/cleanup-service/src/index.ts',
+            vpc,
+            [lambdaSubnetOne, lambdaSubnetTwo],
+            [lambdaSecurityGroup]
+        );
+
+        // Setup Event Scheduler to create a schedule to trigger
+        // token cleanup lambda every day.
+        new events.Rule(this, 'TokenCleanupScheduleRule', {
+            ruleName: 'expired-token-cleanup-rule',
+            schedule: events.Schedule.rate(cdk.Duration.days(1)),
+            targets: [new targets.LambdaFunction(tokenCleanupWorkerLambda)],
+        });
 
         //--------------------------------SSE SERVICE + NAT EC2 INSTANCE--------------------------------
 
