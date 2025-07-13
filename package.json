@@ -7,10 +7,12 @@
         "db:generate": "pnpm --filter @members-only/database db:generate",
         "build": "pnpm -r build",
         "lint": "pnpm -r lint",
-        "cleanup": "rm -rf node_modules packages/*/node_modules packages/*/dist packages/*/tsconfig.tsbuildinfo"
+        "cleanup": "rm -rf node_modules packages/*/node_modules packages/*/dist packages/*/tsconfig.tsbuildinfo",
+        "rebuild:packages": "pnpm cleanup && pnpm install && pnpm db:generate && pnpm build"
     },
     "devDependencies": {
         "@eslint/js": "^9.24.0",
+        "@types/aws-lambda": "^8.10.150",
         "@types/cookie-parser": "^1.4.8",
         "@types/express": "^5.0.1",
         "@types/jsonwebtoken": "^9.0.9",
@@ -25,8 +27,7 @@
         "nodemon": "^3.1.9",
         "prettier": "3.5.3",
         "typescript": "^5.8.3",
-        "typescript-eslint": "^8.29.1",
-        "@types/aws-lambda": "^8.10.150"
+        "typescript-eslint": "^8.29.1"
     },
     "pnpm": {
         "onlyBuiltDependencies": [
