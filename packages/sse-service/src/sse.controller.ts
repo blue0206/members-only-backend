@@ -133,6 +133,8 @@ export const dispatchEvent = async (
                 break;
             }
         }
+
+        req.log.info('Event Dispatched.');
     }
 
     res.status(204).end();
