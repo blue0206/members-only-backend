@@ -151,6 +151,32 @@ export class InfrastructureStack extends cdk.Stack {
             methods: [apiGatewayV2.HttpMethod.ANY],
             integration: userLambdaIntegration,
         });
+
+        //---------------------------3. Message Service
+
+        const messageServiceLambda = this.createServiceLambda(
+            'MessageServiceLambda',
+            'message-service',
+            256,
+            cdk.Duration.seconds(25),
+            '../packages/message-service/src/lambda.ts',
+            vpc,
+            [lambdaSubnetOne, lambdaSubnetTwo],
+            [lambdaSecurityGroup]
+        );
+
+        // Message service lambda integration with API Gateway.
+        const messageLambdaIntegration = new HttpLambdaIntegration(
+            'MessageLambdaIntegration',
+            messageServiceLambda
+        );
+
+        // Setup message routes to trigger message lambda.
+        httpApi.addRoutes({
+            path: '/api/v1/messages/{proxy+}',
+            methods: [apiGatewayV2.HttpMethod.ANY],
+            integration: messageLambdaIntegration,
+        });
     }
 
     // Helper method to create service lambda functions.
