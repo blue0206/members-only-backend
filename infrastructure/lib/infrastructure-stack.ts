@@ -172,6 +172,9 @@ export class InfrastructureStack extends cdk.Stack {
             entry,
             handler: 'handler',
             bundling: {
+                minify: true,
+                sourceMap: true,
+                banner: 'require("source-map-support").install();',
                 commandHooks: {
                     beforeBundling(): string[] {
                         return [];
