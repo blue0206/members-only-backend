@@ -105,7 +105,7 @@ export class InfrastructureStack extends cdk.Stack {
 
         //---------------------------1. Auth Service
 
-        const authServiceLambda = this.createServiceLambda(
+        const authServiceLambda = this.createLambda(
             'AuthServiceLambda',
             'auth-service',
             256,
@@ -113,7 +113,8 @@ export class InfrastructureStack extends cdk.Stack {
             '../packages/auth-service/src/lambda.ts',
             vpc,
             [lambdaSubnetOne, lambdaSubnetTwo],
-            [lambdaSecurityGroup]
+            [lambdaSecurityGroup],
+            getEnv()
         );
 
         // Auth service lambda integration with API Gateway.
@@ -131,7 +132,7 @@ export class InfrastructureStack extends cdk.Stack {
 
         //---------------------------2. User Service
 
-        const userServiceLambda = this.createServiceLambda(
+        const userServiceLambda = this.createLambda(
             'UserServiceLambda',
             'user-service',
             256,
@@ -139,7 +140,8 @@ export class InfrastructureStack extends cdk.Stack {
             '../packages/user-service/src/lambda.ts',
             vpc,
             [lambdaSubnetOne, lambdaSubnetTwo],
-            [lambdaSecurityGroup]
+            [lambdaSecurityGroup],
+            getEnv()
         );
 
         // User service lambda integration with API Gateway.
@@ -157,7 +159,7 @@ export class InfrastructureStack extends cdk.Stack {
 
         //---------------------------3. Message Service
 
-        const messageServiceLambda = this.createServiceLambda(
+        const messageServiceLambda = this.createLambda(
             'MessageServiceLambda',
             'message-service',
             256,
@@ -165,7 +167,8 @@ export class InfrastructureStack extends cdk.Stack {
             '../packages/message-service/src/lambda.ts',
             vpc,
             [lambdaSubnetOne, lambdaSubnetTwo],
-            [lambdaSecurityGroup]
+            [lambdaSecurityGroup],
+            getEnv()
         );
 
         // Message service lambda integration with API Gateway.
@@ -219,7 +222,7 @@ export class InfrastructureStack extends cdk.Stack {
     }
 
     // Helper method to create service lambda functions.
-    private createServiceLambda(
+    private createLambda(
         id: string,
         functionName: string,
         memorySize: number,
@@ -227,7 +230,8 @@ export class InfrastructureStack extends cdk.Stack {
         entry: string,
         vpc: ec2.IVpc,
         subnets: ec2.ISubnet[],
-        securityGroups: ec2.ISecurityGroup[]
+        securityGroups: ec2.ISecurityGroup[],
+        env?: Record<string, string>
     ): NodejsFunction {
         return new NodejsFunction(this, id, {
             functionName,
@@ -253,7 +257,7 @@ export class InfrastructureStack extends cdk.Stack {
                     },
                 },
             },
-            environment: getEnv(),
+            environment: env,
             vpc,
             vpcSubnets: {
                 subnets,
