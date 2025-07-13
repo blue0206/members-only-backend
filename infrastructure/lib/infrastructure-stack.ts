@@ -10,6 +10,8 @@ import {
 } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { DomainName } from 'aws-cdk-lib/aws-apigatewayv2';
 import { getEnv } from './envConfig';
 
@@ -183,6 +185,34 @@ export class InfrastructureStack extends cdk.Stack {
             methods: [apiGatewayV2.HttpMethod.ANY],
             integration: messageLambdaIntegration,
         });
+
+        //---------------------------4. User Activity Ping Flush
+
+        const userActivityWorkerLambda = this.createLambda(
+            'UserActivityWorkerLambda',
+            'user-activity-worker',
+            128,
+            cdk.Duration.seconds(16),
+            '../packages/activity-service/src/index.ts',
+            vpc,
+            [lambdaSubnetOne, lambdaSubnetTwo],
+            [lambdaSecurityGroup]
+        );
+
+        // SQS queue for storing user activity pings.
+        const userActivityQueue = new sqs.Queue(this, 'UserActivityQueue', {
+            queueName: 'user-activity-queue',
+            fifo: false,
+        });
+
+        // Set SQS as trigger. The lambda function will be trigger either if
+        // there are at least 11 records in queue or every 5 minutes.
+        userActivityWorkerLambda.addEventSource(
+            new lambdaEventSources.SqsEventSource(userActivityQueue, {
+                batchSize: 11,
+                maxBatchingWindow: cdk.Duration.minutes(5),
+            })
+        );
 
         //--------------------------------SSE SERVICE + NAT EC2 INSTANCE--------------------------------
 
