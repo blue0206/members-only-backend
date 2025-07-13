@@ -4,7 +4,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { UserActivityPayload } from '../types/activity.types.js';
 
 const sqsClient = new SQSClient({
-    region: config.AWS_REGION,
+    region: config.SQS_AWS_REGION,
 });
 
 export async function lastActiveUpdateMiddleware(

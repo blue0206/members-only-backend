@@ -2,7 +2,7 @@ import { z } from 'zod';
 import ms from 'ms';
 import type { StringValue } from 'ms';
 
-const EnvironmentSchema = z.object({
+export const EnvironmentSchema = z.object({
     // node
     NODE_ENV: z.enum(['development', 'production']).default('development'),
     // server
@@ -47,7 +47,7 @@ const EnvironmentSchema = z.object({
         .url({ message: 'Invalid API URL.' })
         .min(1, { message: 'API URL is missing.' }),
     // AWS
-    AWS_REGION: z.string().default('ap-south-1'),
+    SQS_AWS_REGION: z.string().default('ap-south-1'),
     SQS_USER_ACTIVITY_QUEUE_URL: z
         .string()
         .min(1, { message: 'SQS activity queue URL is missing.' }),
