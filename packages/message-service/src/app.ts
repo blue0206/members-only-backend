@@ -23,10 +23,6 @@ app.use(express.json());
 
 // Routes
 app.use('/api/v1/messages', messageRouter);
-// Healthcheck
-app.use('/api/v1/messages/healthcheck', (_req: Request, res: Response) => {
-    res.status(200).json({ status: 'ok', service: 'message-service' });
-});
 // Catch-all route.
 app.use((req: Request, _res: Response) => {
     req.log.warn(

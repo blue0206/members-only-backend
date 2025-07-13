@@ -25,10 +25,6 @@ app.set('trust proxy', 1); // Trust proxy to ensure accurate IP address resoluti
 
 // Routes
 app.use('/api/v1/auth', authRouter);
-// Healthcheck
-app.use('/api/v1/auth/healthcheck', (_req: Request, res: Response) => {
-    res.status(200).json({ status: 'ok', service: 'auth-service' });
-});
 // Catch-all route.
 app.use((req: Request, _res: Response) => {
     req.log.warn(

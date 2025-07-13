@@ -18,9 +18,13 @@ import {
     EditMessageRequestSchema,
     MessageParamsSchema,
 } from '@blue0206/members-only-shared-types/dtos/message.dto';
-import type { Router as ExpressRouter } from 'express';
+import type { Router as ExpressRouter, Request, Response } from 'express';
 
 const messageRouter: ExpressRouter = Router();
+
+messageRouter.get('/healthcheck', (_req: Request, res: Response) => {
+    res.status(200).json({ status: 'ok', service: 'message-service' });
+});
 
 // Get all messages (unregistered/user)
 messageRouter.get('/public', getMessagesWithoutAuthor);

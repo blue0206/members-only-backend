@@ -28,9 +28,13 @@ import {
     SetRoleRequestQuerySchema,
     UsernameParamsSchema,
 } from '@blue0206/members-only-shared-types/dtos/user.dto';
-import type { Router as ExpressRouter } from 'express';
+import type { Router as ExpressRouter, Request, Response } from 'express';
 
 const userRouter: ExpressRouter = Router();
+
+userRouter.get('/healthcheck', (_req: Request, res: Response) => {
+    res.status(200).json({ status: 'ok', service: 'user-service' });
+});
 
 //-----------Protected Routes-----------
 

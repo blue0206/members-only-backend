@@ -20,7 +20,7 @@ import { assignClientDetails } from '@members-only/core-utils/middlewares/assign
 import { tokenRotationCleanupMiddleware } from '@members-only/core-utils/middlewares/tokenRotationCleanupMiddleware';
 import { lastActiveUpdateMiddleware } from '@members-only/core-utils/middlewares/lastActiveUpdateMiddleware';
 import { requestValidator } from '@members-only/core-utils/middlewares/requestValidator';
-import type { Router as ExpressRouter } from 'express';
+import type { Router as ExpressRouter, Request, Response } from 'express';
 
 const authRouter: ExpressRouter = Router();
 
@@ -53,6 +53,9 @@ authRouter.post(
     assignClientDetails,
     refreshUserTokens
 );
+authRouter.get('/healthcheck', (_req: Request, res: Response) => {
+    res.status(200).json({ status: 'ok', service: 'auth-service' });
+});
 authRouter.get(
     '/sessions',
     accessTokenVerification,

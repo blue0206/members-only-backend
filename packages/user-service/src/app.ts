@@ -25,10 +25,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/v1/users', userRouter);
-// Healthcheck
-app.use('/api/v1/users/healthcheck', (_req: Request, res: Response) => {
-    res.status(200).json({ status: 'ok', service: 'user-service' });
-});
 // Catch-all route.
 app.use((req: Request, _res: Response) => {
     req.log.warn(
