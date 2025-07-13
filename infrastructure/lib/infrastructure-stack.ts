@@ -244,6 +244,23 @@ export class InfrastructureStack extends cdk.Stack {
 
         //--------------------------------SSE SERVICE + NAT EC2 INSTANCE--------------------------------
 
+        // This is a NAT + SSE Service EC2 instance. Acts as SSE service which NEEDS to be stateful to work.
+        // Also acts as NAT by ip-forwarding the requests from lambdas to the public internet.
+        // Lambdas by themselves don't have public internet access as they are in private subnet.
+        // The lambdas could not be placed in public subnet either as it would prevent RDS database access.
+        // The standard solution for this is to use NAT Gateway which costs a lot of $$$$. The free tier solution
+        // is to turn an EC2 instance into a NAT instance. We send all public-internet bound traffic
+        // from service lambdas to this EC2 instance and the EC2 instance then forwards the requests to
+        // the public internet by replacing the source IP with its own (stores the actual source IP in table).
+        // When a response is returned, the EC2 instance checks the table and replaces the source IP with
+        // the actual source IP.
+        // This allows our lambdas to access the public internet as well as access the database.
+
+        // This EC2 instance has been created from AWS console as creating it here would have been messy.
+        // I had to create a NAT AMI first and then create an instance from that and then test it as well.
+        // See the following docs for guide: https://docs.aws.amazon.com/vpc/latest/userguide/work-with-nat-instances.html
+        // Fortunately, we only require public IP of EC2 to connect it with API Gateway for SSE.
+
         const ec2PublicIp = '52.66.49.111';
         const sseServerPort = 8000;
 
