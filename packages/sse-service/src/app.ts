@@ -26,10 +26,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/v1/events', sseRouter);
-// Healthcheck
-app.use('/api/v1/events/healthcheck', (_req: Request, res: Response) => {
-    res.status(200).json({ status: 'ok', service: 'sse-service' });
-});
 // Catch-all route.
 app.use((req: Request, _res: Response) => {
     req.log.warn(
@@ -44,7 +40,7 @@ app.use(errorHandler);
 
 // Server
 const PORT = config.PORT;
-const server: Server = app.listen(PORT, () => {
+const server: Server = app.listen(PORT, '0.0.0.0', () => {
     logger.info(
         `Server running on port ${config.PORT.toString()} in ${config.NODE_ENV} mode`
     );

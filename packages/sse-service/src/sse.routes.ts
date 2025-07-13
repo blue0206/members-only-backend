@@ -13,6 +13,10 @@ import type { Router as ExpressRouter } from 'express';
 
 const sseRouter: ExpressRouter = Router();
 
+sseRouter.get('/healthcheck', (_req, res) => {
+    res.status(200).json({ status: 'ok', service: 'sse-service' });
+});
+
 sseRouter.get(
     '/',
     sseClientCleanup,
@@ -22,6 +26,7 @@ sseRouter.get(
     }),
     sseConnectionHandler
 );
+
 sseRouter.post(
     '/internal/dispatch',
     verifyInternalApiSecret,
