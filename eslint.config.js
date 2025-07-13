@@ -13,6 +13,7 @@ export default tseslint.config(
             'packages/*/dist/',
             'eslint.config.js',
             '.prettierrc',
+            'infrastructure/node_modules',
         ],
     },
     // 2. Core ESLint Recommended rules
