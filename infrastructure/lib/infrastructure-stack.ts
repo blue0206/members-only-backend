@@ -4,7 +4,10 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apiGatewayV2 from 'aws-cdk-lib/aws-apigatewayv2';
-import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import {
+    HttpLambdaIntegration,
+    HttpUrlIntegration,
+} from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { DomainName } from 'aws-cdk-lib/aws-apigatewayv2';
@@ -18,7 +21,7 @@ export class InfrastructureStack extends cdk.Stack {
             vpcId: 'vpc-0ee4e8f7eacd0b7c1',
         });
 
-        //------------------------API Gateway--------------------------------
+        //---------------------------------API GATEWAY-------------------------------------
 
         const apiDomainName = 'api-v2.nevery.shop';
 
@@ -176,6 +179,42 @@ export class InfrastructureStack extends cdk.Stack {
             path: '/api/v1/messages/{proxy+}',
             methods: [apiGatewayV2.HttpMethod.ANY],
             integration: messageLambdaIntegration,
+        });
+
+        //--------------------------------SSE SERVICE + NAT EC2 INSTANCE--------------------------------
+
+        const ec2PublicIp = '52.66.49.111';
+        const sseServerPort = 8000;
+
+        // Setup events routes. The requests on these routes are forwarded to SSE+NAT EC2 instance
+        // by API Gateway.
+
+        // Route for clients to set up SSE connection.
+        const sseSetupEc2Integration = new HttpUrlIntegration(
+            'SseSetupIntegration',
+            `http://${ec2PublicIp}:${sseServerPort.toString()}/api/v1/events`,
+            {
+                method: apiGatewayV2.HttpMethod.GET,
+            }
+        );
+        httpApi.addRoutes({
+            path: '/api/v1/events',
+            methods: [apiGatewayV2.HttpMethod.GET],
+            integration: sseSetupEc2Integration,
+        });
+
+        // Route for SSE service healthcheck.
+        const sseHealthcheckEc2Integration = new HttpUrlIntegration(
+            'SseHealthcheckIntegration',
+            `http://${ec2PublicIp}:${sseServerPort.toString()}/api/v1/events/healthcheck`,
+            {
+                method: apiGatewayV2.HttpMethod.GET,
+            }
+        );
+        httpApi.addRoutes({
+            path: '/api/v1/events/healthcheck',
+            methods: [apiGatewayV2.HttpMethod.GET],
+            integration: sseHealthcheckEc2Integration,
         });
     }
 
