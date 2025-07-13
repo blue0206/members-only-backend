@@ -214,6 +214,11 @@ export class InfrastructureStack extends cdk.Stack {
             })
         );
 
+        // Grant service lambdas permission to send messages to queue.
+        userActivityQueue.grantSendMessages(authServiceLambda);
+        userActivityQueue.grantSendMessages(userServiceLambda);
+        userActivityQueue.grantSendMessages(messageServiceLambda);
+
         //--------------------------------SSE SERVICE + NAT EC2 INSTANCE--------------------------------
 
         const ec2PublicIp = '52.66.49.111';
