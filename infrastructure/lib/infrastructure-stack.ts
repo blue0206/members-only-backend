@@ -102,12 +102,74 @@ export class InfrastructureStack extends cdk.Stack {
 
         //---------------------------1. Auth Service
 
-        const authServiceLambda = new NodejsFunction(this, 'AuthServiceLambda', {
-            functionName: 'auth-service',
+        const authServiceLambda = this.createServiceLambda(
+            'AuthServiceLambda',
+            'auth-service',
+            256,
+            cdk.Duration.seconds(25),
+            '../packages/auth-service/src/lambda.ts',
+            vpc,
+            [lambdaSubnetOne, lambdaSubnetTwo],
+            [lambdaSecurityGroup]
+        );
+
+        // Auth service lambda integration with API Gateway.
+        const authLambdaIntegration = new HttpLambdaIntegration(
+            'AuthServiceIntegration',
+            authServiceLambda
+        );
+
+        // Setup auth routes to trigger auth lambda.
+        httpApi.addRoutes({
+            path: '/api/v1/auth/{proxy+}',
+            methods: [apiGatewayV2.HttpMethod.ANY],
+            integration: authLambdaIntegration,
+        });
+
+        //---------------------------2. User Service
+
+        const userServiceLambda = this.createServiceLambda(
+            'UserServiceLambda',
+            'user-service',
+            256,
+            cdk.Duration.seconds(25),
+            '../packages/user-service/src/lambda.ts',
+            vpc,
+            [lambdaSubnetOne, lambdaSubnetTwo],
+            [lambdaSecurityGroup]
+        );
+
+        // User service lambda integration with API Gateway.
+        const userLambdaIntegration = new HttpLambdaIntegration(
+            'UserLambdaIntegration',
+            userServiceLambda
+        );
+
+        // Setup user routes to trigger user lambda.
+        httpApi.addRoutes({
+            path: '/api/v1/users/{proxy+}',
+            methods: [apiGatewayV2.HttpMethod.ANY],
+            integration: userLambdaIntegration,
+        });
+    }
+
+    // Helper method to create service lambda functions.
+    private createServiceLambda(
+        id: string,
+        functionName: string,
+        memorySize: number,
+        timeout: cdk.Duration,
+        entry: string,
+        vpc: ec2.IVpc,
+        subnets: ec2.ISubnet[],
+        securityGroups: ec2.ISecurityGroup[]
+    ): NodejsFunction {
+        return new NodejsFunction(this, id, {
+            functionName,
             runtime: lambda.Runtime.NODEJS_20_X,
-            memorySize: 256,
-            timeout: cdk.Duration.seconds(25),
-            entry: '../packages/auth-service/src/lambda.ts',
+            memorySize,
+            timeout,
+            entry,
             handler: 'handler',
             bundling: {
                 externalModules: [
@@ -134,69 +196,10 @@ export class InfrastructureStack extends cdk.Stack {
             environment: getEnv(),
             vpc,
             vpcSubnets: {
-                subnets: [lambdaSubnetOne, lambdaSubnetTwo],
+                subnets,
             },
-            securityGroups: [lambdaSecurityGroup],
+            securityGroups,
             allowPublicSubnet: false,
-        });
-
-        // Auth service lambda integration with API Gateway.
-        const authLambdaIntegration = new HttpLambdaIntegration(
-            'AuthServiceIntegration',
-            authServiceLambda
-        );
-
-        // Setup auth routes to trigger auth lambda.
-        httpApi.addRoutes({
-            path: '/api/v1/auth/{proxy+}',
-            methods: [apiGatewayV2.HttpMethod.ANY],
-            integration: authLambdaIntegration,
-        });
-
-        //---------------------------1. Auth Service
-
-        const userServiceLambda = new NodejsFunction(this, 'UserServiceLambda', {
-            functionName: 'user-service',
-            runtime: lambda.Runtime.NODEJS_20_X,
-            memorySize: 256,
-            timeout: cdk.Duration.seconds(25),
-            entry: '../packages/user-service/src/lambda.ts',
-            handler: 'handler',
-            bundling: {
-                commandHooks: {
-                    beforeBundling(): string[] {
-                        return [];
-                    },
-                    beforeInstall(): string[] {
-                        return [];
-                    },
-                    afterBundling(_inputDir: string, outputDir: string): string[] {
-                        return [
-                            `cp -R ../packages/database/generated ${outputDir}/`,
-                        ];
-                    },
-                },
-            },
-            environment: getEnv(),
-            vpc,
-            vpcSubnets: {
-                subnets: [lambdaSubnetOne, lambdaSubnetTwo],
-            },
-            securityGroups: [lambdaSecurityGroup],
-            allowPublicSubnet: false,
-        });
-
-        // User service lambda integration with API Gateway.
-        const userLambdaIntegration = new HttpLambdaIntegration(
-            'UserLambdaIntegration',
-            userServiceLambda
-        );
-
-        // Setup user routes to trigger user lambda.
-        httpApi.addRoutes({
-            path: '/api/v1/users/{proxy+}',
-            methods: [apiGatewayV2.HttpMethod.ANY],
-            integration: userLambdaIntegration,
         });
     }
 }
