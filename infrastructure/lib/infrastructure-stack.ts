@@ -172,13 +172,6 @@ export class InfrastructureStack extends cdk.Stack {
             entry,
             handler: 'handler',
             bundling: {
-                externalModules: [
-                    '@aws-sdk/client-sqs',
-                    'aws-sdk',
-                    '@aws-sdk',
-                    'mock-aws-s3',
-                    'nock',
-                ],
                 commandHooks: {
                     beforeBundling(): string[] {
                         return [];
