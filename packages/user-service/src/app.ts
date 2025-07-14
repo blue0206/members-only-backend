@@ -14,7 +14,6 @@ const app: Application = express();
 app.use(assignRequestIdAndChildLogger);
 // Assign logger middleware for http logging.
 app.use(loggerMiddleware);
-// Cors Middleware
 
 // Setup cookie-parser for parsing cookies.
 app.use(cookieParser());
