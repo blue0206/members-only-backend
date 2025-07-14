@@ -60,10 +60,7 @@ export class InfrastructureStack extends cdk.Stack {
                     apiGatewayV2.CorsHttpMethod.PATCH,
                 ],
                 allowCredentials: true,
-                allowOrigins: [
-                    'https://app.nevery.shop',
-                    'https://cloud.nevery.shop',
-                ],
+                allowOrigins: ['https://cloud.nevery.shop'],
             },
             defaultDomainMapping: {
                 domainName,
