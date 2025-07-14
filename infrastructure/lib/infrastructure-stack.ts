@@ -117,8 +117,7 @@ export class InfrastructureStack extends cdk.Stack {
             '../packages/auth-service/src/lambda.ts',
             vpc,
             [lambdaSubnetOne, lambdaSubnetTwo],
-            [lambdaSecurityGroup],
-            getEnv()
+            [lambdaSecurityGroup]
         );
 
         // Auth service lambda integration with API Gateway.
@@ -144,8 +143,7 @@ export class InfrastructureStack extends cdk.Stack {
             '../packages/user-service/src/lambda.ts',
             vpc,
             [lambdaSubnetOne, lambdaSubnetTwo],
-            [lambdaSecurityGroup],
-            getEnv()
+            [lambdaSecurityGroup]
         );
 
         // User service lambda integration with API Gateway.
@@ -171,8 +169,7 @@ export class InfrastructureStack extends cdk.Stack {
             '../packages/message-service/src/lambda.ts',
             vpc,
             [lambdaSubnetOne, lambdaSubnetTwo],
-            [lambdaSecurityGroup],
-            getEnv()
+            [lambdaSecurityGroup]
         );
 
         // Message service lambda integration with API Gateway.
@@ -305,8 +302,7 @@ export class InfrastructureStack extends cdk.Stack {
         entry: string,
         vpc: ec2.IVpc,
         subnets: ec2.ISubnet[],
-        securityGroups: ec2.ISecurityGroup[],
-        env?: Record<string, string>
+        securityGroups: ec2.ISecurityGroup[]
     ): NodejsFunction {
         return new NodejsFunction(this, id, {
             functionName,
@@ -332,7 +328,7 @@ export class InfrastructureStack extends cdk.Stack {
                     },
                 },
             },
-            environment: env,
+            environment: getEnv(),
             vpc,
             vpcSubnets: {
                 subnets,
