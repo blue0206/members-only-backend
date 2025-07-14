@@ -65,6 +65,7 @@ export class InfrastructureStack extends cdk.Stack {
             defaultDomainMapping: {
                 domainName,
             },
+            disableExecuteApiEndpoint: true,
         });
 
         // Output regional domain name on terminal after deploy.
