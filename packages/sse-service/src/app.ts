@@ -16,6 +16,8 @@ import { subscriberService } from './core/subscriber.js';
 
 const app = express();
 
+// Trust proxy to ensure accurate IP address resolution when behind Nginx.
+app.set('trust proxy', 1);
 // Assign request id and child logger via middleware.
 app.use(assignRequestIdAndChildLogger);
 // Assign logger middleware for http logging.
