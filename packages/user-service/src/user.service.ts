@@ -99,7 +99,13 @@ class UserService {
                 },
             ],
         };
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
 
         return user;
     }
@@ -156,7 +162,13 @@ class UserService {
             });
         }
         // Dispatch event to SSE service.
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
 
         if (deletedUser.avatar) {
             await deleteFile(deletedUser.avatar, log);
@@ -197,7 +209,13 @@ class UserService {
             ],
         };
         // Dispatch event to SSE service.
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
 
         if (deletedUser.avatar) {
             await deleteFile(deletedUser.avatar, log);
@@ -317,7 +335,13 @@ class UserService {
             ],
         };
         // Dispatch event to SSE service.
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
     }
 
     async updateRole(
@@ -407,7 +431,13 @@ class UserService {
             });
         }
         // Dispatch event to SSE service.
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
     }
 
     async uploadUserAvatar(
@@ -478,7 +508,13 @@ class UserService {
             ],
         };
         // Dispatch event to SSE service.
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
 
         return {
             avatar: avatarPublicId,
@@ -543,7 +579,13 @@ class UserService {
             ],
         };
         // Dispatch event to SSE service.
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
     }
 
     async getUserBookmarks(

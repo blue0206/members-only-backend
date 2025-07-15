@@ -169,7 +169,13 @@ export class AuthService {
                 },
             ],
         };
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
 
         return {
             ...user,

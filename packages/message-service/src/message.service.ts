@@ -98,7 +98,13 @@ class MessageService {
                 },
             ],
         };
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
 
         return createdMessage;
     }
@@ -154,7 +160,13 @@ class MessageService {
                 },
             ],
         };
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
 
         return editedMessageDetails;
     }
@@ -196,7 +208,13 @@ class MessageService {
                 },
             ],
         };
-        eventDispatch(body, log);
+        await eventDispatch(body)
+            .then(() => {
+                log.info('Event dispatched successfully.');
+            })
+            .catch((error: unknown) => {
+                log.error({ error }, 'Failed to dispatch event.');
+            });
     }
 
     async likeMessage(
