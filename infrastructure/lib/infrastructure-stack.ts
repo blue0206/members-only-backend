@@ -4,10 +4,7 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apiGatewayV2 from 'aws-cdk-lib/aws-apigatewayv2';
-import {
-    HttpLambdaIntegration,
-    HttpUrlIntegration,
-} from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
@@ -270,39 +267,11 @@ export class InfrastructureStack extends cdk.Stack {
         // See the following docs for guide: https://docs.aws.amazon.com/vpc/latest/userguide/work-with-nat-instances.html
         // Fortunately, we only require public IP of EC2 to connect it with API Gateway for SSE.
 
-        const ec2PublicIp = '52.66.49.111';
-        const sseServerPort = 8000;
-
-        // Setup events routes. The requests on these routes are forwarded to SSE+NAT EC2 instance
-        // by API Gateway.
-
-        // Route for clients to set up SSE connection.
-        const sseSetupEc2Integration = new HttpUrlIntegration(
-            'SseSetupIntegration',
-            `http://${ec2PublicIp}:${sseServerPort.toString()}/api/v1/events`,
-            {
-                method: apiGatewayV2.HttpMethod.GET,
-            }
-        );
-        httpApi.addRoutes({
-            path: '/api/v1/events',
-            methods: [apiGatewayV2.HttpMethod.GET],
-            integration: sseSetupEc2Integration,
-        });
-
-        // Route for SSE service healthcheck.
-        const sseHealthcheckEc2Integration = new HttpUrlIntegration(
-            'SseHealthcheckIntegration',
-            `http://${ec2PublicIp}:${sseServerPort.toString()}/api/v1/events/healthcheck`,
-            {
-                method: apiGatewayV2.HttpMethod.GET,
-            }
-        );
-        httpApi.addRoutes({
-            path: '/api/v1/events/healthcheck',
-            methods: [apiGatewayV2.HttpMethod.GET],
-            integration: sseHealthcheckEc2Integration,
-        });
+        // UPDATE: The EC2 instance has been removed from cdk setup entirely because API Gateway doesn't support
+        // a connection longer than 29 seconds. Therefore, the EC2 instance is now connected to by clients
+        // directly. For that we have set up Nginx for reverse proxying and maintaining long-lived connections.
+        // Also we've used Let's Encrypt for free SSL certificate so that we are able to make connection from
+        // browser properly with no issues.
     }
 
     // Helper method to create service lambda functions.
