@@ -10,6 +10,8 @@ import type { Request, Response, Application } from 'express';
 
 const app: Application = express();
 
+// Trust proxy to ensure accurate IP address resolution behind API Gateway.
+app.set('trust proxy', true);
 // Assign request id and child logger via middleware.
 app.use(assignRequestIdAndChildLogger);
 // Assign logger middleware for http logging.
