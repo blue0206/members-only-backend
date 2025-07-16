@@ -83,7 +83,15 @@ class MessageService {
             );
         }
 
-        log.info({ message }, 'Message created successfully.');
+        log.info(
+            {
+                messageId: createdMessage.id,
+                message,
+                author: createdMessage.author.username,
+                authorId: createdMessage.author.id,
+            },
+            'Message created successfully.'
+        );
 
         // Dispatch event to SSE service to broadcast event to clients.
         const body: EventRequestDto = {
