@@ -6,6 +6,7 @@ import { assignRequestIdAndChildLogger } from '@members-only/core-utils/middlewa
 import { loggerMiddleware } from '@members-only/core-utils/middlewares/loggerMiddleware';
 import { errorHandler } from '@members-only/core-utils/middlewares/errorHandler';
 import { NotFoundError } from '@members-only/core-utils/errors';
+import { requestDurationMiddleware } from '@members-only/core-utils/middlewares/requestDurationMiddleware';
 import type { Request, Response, Application } from 'express';
 
 const app: Application = express();
@@ -16,6 +17,8 @@ app.set('trust proxy', true);
 app.use(assignRequestIdAndChildLogger);
 // Assign logger middleware for http logging.
 app.use(loggerMiddleware);
+// Assign request duration middleware for request duration and completion logging.
+app.use(requestDurationMiddleware);
 
 // Setup cookie-parser for parsing cookies.
 app.use(cookieParser());
