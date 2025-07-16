@@ -14,7 +14,7 @@ const app: Application = express();
 // Trust proxy to ensure accurate IP address resolution behind API Gateway.
 app.set('trust proxy', true);
 // Assign request id and child logger via middleware.
-app.use(assignRequestIdAndChildLogger);
+app.use(assignRequestIdAndChildLogger('auth-service'));
 // Assign logger middleware for http logging.
 app.use(loggerMiddleware);
 // Assign request duration middleware for request duration and completion logging.
