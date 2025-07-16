@@ -27,7 +27,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 // Routes
-app.use('/api/v1/messages', messageRouter);
+app.use('/api/v2/messages', messageRouter);
 // Catch-all route.
 app.use((req: Request, _res: Response) => {
     req.log.warn(

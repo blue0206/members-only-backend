@@ -35,7 +35,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api/v1/events', sseRouter);
+app.use('/api/v2/events', sseRouter);
 // Catch-all route.
 app.use((req: Request, _res: Response) => {
     req.log.warn(

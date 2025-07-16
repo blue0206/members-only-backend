@@ -29,7 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', 1); // Trust proxy to ensure accurate IP address resolution when behind a proxy.
 
 // Routes
-app.use('/api/v1/auth', authRouter);
+app.use('/api/v2/auth', authRouter);
 // Catch-all route.
 app.use((req: Request, _res: Response) => {
     req.log.warn(

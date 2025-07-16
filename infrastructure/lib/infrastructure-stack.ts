@@ -123,7 +123,7 @@ export class InfrastructureStack extends cdk.Stack {
 
         // Setup auth routes to trigger auth lambda.
         httpApi.addRoutes({
-            path: '/api/v1/auth/{proxy+}',
+            path: '/api/v2/auth/{proxy+}',
             methods: [apiGatewayV2.HttpMethod.ANY],
             integration: authLambdaIntegration,
         });
@@ -151,12 +151,12 @@ export class InfrastructureStack extends cdk.Stack {
         httpApi.addRoutes({
             // Absence of this route causes NOT FOUND errors with a false positive
             // CORS issue on frontend making request without a trailing slash.
-            path: '/api/v1/users', // Allow requests at root level without requiring a trailing slash.
+            path: '/api/v2/users', // Allow requests at root level without requiring a trailing slash.
             methods: [apiGatewayV2.HttpMethod.ANY],
             integration: userLambdaIntegration,
         });
         httpApi.addRoutes({
-            path: '/api/v1/users/{proxy+}',
+            path: '/api/v2/users/{proxy+}',
             methods: [apiGatewayV2.HttpMethod.ANY],
             integration: userLambdaIntegration,
         });
@@ -184,12 +184,12 @@ export class InfrastructureStack extends cdk.Stack {
         httpApi.addRoutes({
             // Absence of this route causes NOT FOUND errors with a false positive
             // CORS issue on frontend making request without a trailing slash.
-            path: '/api/v1/messages', // Allow requests at root level without requiring a trailing slash.
+            path: '/api/v2/messages', // Allow requests at root level without requiring a trailing slash.
             methods: [apiGatewayV2.HttpMethod.ANY],
             integration: messageLambdaIntegration,
         });
         httpApi.addRoutes({
-            path: '/api/v1/messages/{proxy+}',
+            path: '/api/v2/messages/{proxy+}',
             methods: [apiGatewayV2.HttpMethod.ANY],
             integration: messageLambdaIntegration,
         });

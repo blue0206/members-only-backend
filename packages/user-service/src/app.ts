@@ -28,7 +28,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api/v1/users', userRouter);
+app.use('/api/v2/users', userRouter);
 // Catch-all route.
 app.use((req: Request, _res: Response) => {
     req.log.warn(

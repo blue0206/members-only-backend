@@ -44,7 +44,7 @@ const setAuthCookies = (res: Response, refreshToken: string): void => {
     };
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        path: '/api/v1/auth',
+        path: '/api/v2/auth',
         ...commonCookieOptions,
     });
 
@@ -148,7 +148,7 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
 
     res.clearCookie('refreshToken', {
         httpOnly: true,
-        path: '/api/v1/auth',
+        path: '/api/v2/auth',
         ...commonCookieOptions,
     });
 
