@@ -9,7 +9,12 @@ export const requestDurationMiddleware = (
     res.on('finish', () => {
         const duration = Date.now() - start;
         req.log.info(
-            { duration, status: res.statusCode, path: req.path, method: req.method },
+            {
+                duration,
+                status: res.statusCode,
+                path: req.originalUrl,
+                method: req.method,
+            },
             'Request completed.'
         );
     });
