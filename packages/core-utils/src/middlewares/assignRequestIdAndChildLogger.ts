@@ -12,6 +12,10 @@ export const assignRequestIdAndChildLogger =
             requestId: req.requestId,
             service,
         });
+        req.log.info(
+            { method: req.method, path: req.originalUrl },
+            'Incoming request.'
+        );
         res.setHeader('x-request-id', req.requestId);
         next();
     };
