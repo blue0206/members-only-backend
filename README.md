@@ -10,8 +10,8 @@
 
 This repository contains the backend infrastructure for the **Members Only** application, a modern clubhouse-style message board. This backend is created using a serverless-first, microservice-oriented approach on AWS to build a scalable, and cost-effective system.
 
-**Live Frontend:** **[cloud.nevery.shop](https://cloud.nevery.shop)**
-**Live API Base URL:** `https://api-v2.nevery.shop/api/v2`
+**Live Frontend:** **[cloud.nevery.shop](https://cloud.nevery.shop)**  
+**Live API Base URL:** `https://api-v2.nevery.shop/api/v2`  
 **Live SSE Endpoint:** `https://event.nevery.shop/api/v2/events`
 
 ---
