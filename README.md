@@ -8,7 +8,7 @@
 ![Prisma](https://img.shields.io/badge/Prisma-6.x-2D3748?style=for-the-badge&logo=prisma)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis)
 
-This repository contains the backend infrastructure for the **Members Only** application, a modern clubhouse-style message board. This backend is created using a serverless-first, microservice-oriented approach on AWS to build a scalable, and cost-effective system.
+This repository contains the backend infrastructure for the **Members Only** application, a real-time message board. This backend is created using a serverless-first, microservice-oriented approach on AWS to build a scalable, and cost-effective system.
 
 **Live Frontend:** **[cloud.nevery.shop](https://cloud.nevery.shop)**  
 **Live API Base URL:** `https://api-v2.nevery.shop/api/v2`  
